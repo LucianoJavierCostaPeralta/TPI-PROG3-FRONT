@@ -1,23 +1,25 @@
+import { useColorScheme } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
+import { PaperProvider } from 'react-native-paper';
 
 import { HomeScreen } from './src/screens/HomeScreen';
-import { ThemeProvider, useAppTheme } from './src/hooks/useAppTheme';
+import { createAppTheme } from './src/styles/theme';
 
 export default function App() {
-  return (
-    <ThemeProvider>
-      <AppContent />
-    </ThemeProvider>
-  );
-}
-
-function AppContent() {
-  const theme = useAppTheme();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const theme = createAppTheme(isDark);
 
   return (
-    <>
-      <StatusBar style={theme.mode === 'dark' ? 'light' : 'dark'} />
+    <PaperProvider
+      theme={theme}
+      settings={{
+        icon: (props) => <MaterialCommunityIcons {...props} />,
+      }}
+    >
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <HomeScreen />
-    </>
+    </PaperProvider>
   );
 }

@@ -1,48 +1,37 @@
-import { SafeAreaView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet } from 'react-native';
+import { useTheme, type MD3Theme } from 'react-native-paper';
 
-import { useAppTheme } from '../../hooks/useAppTheme';
-import { BottomTabBar } from '../organisms/BottomTabBar';
-import { TopBar } from '../organisms/TopBar';
+import { AppHeader } from '../atoms/AppHeader';
 
 type HomeTemplateProps = {
-  headerLabel: string;
-  content: React.ReactNode;
-  activeTab: 'home' | 'profile' | 'settings';
-  onTabPress: (tab: 'home' | 'profile' | 'settings') => void;
+  children: React.ReactNode;
 };
 
-export function HomeTemplate({
-  headerLabel,
-  content,
-  activeTab,
-  onTabPress,
-}: HomeTemplateProps) {
-  const theme = useAppTheme();
+export function HomeTemplate({ children }: HomeTemplateProps) {
+  const theme = useTheme<MD3Theme>();
   const styles = createStyles(theme);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.phoneFrame}>
-        <TopBar label={headerLabel} />
-        <View style={styles.content}>{content}</View>
-        <BottomTabBar activeTab={activeTab} onTabPress={onTabPress} />
-      </View>
-    </SafeAreaView>
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+    >
+      <AppHeader />
+      {children}
+    </ScrollView>
   );
 }
 
-const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
+const createStyles = (theme: MD3Theme) =>
   StyleSheet.create({
-    safeArea: {
+    screen: {
       flex: 1,
-      backgroundColor: theme.colors.appBackground,
-    },
-    phoneFrame: {
-      flex: 1,
-      backgroundColor: theme.colors.surface,
-      overflow: 'hidden',
+      backgroundColor: theme.colors.background,
     },
     content: {
-      flex: 1,
+      gap: 16,
+      padding: 18,
+      paddingBottom: 32,
     },
   });
