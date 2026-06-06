@@ -1,12 +1,5 @@
-import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { PrimaryButton } from '../atoms/PrimaryButton';
 import { TextInputField } from '../atoms/TextInputField';
-
-type RegisterFormProps = {
-  onSubmit: (data: RegisterData) => void;
-  loading?: boolean;
-};
 
 export type RegisterData = {
   companyName: string;
@@ -15,14 +8,14 @@ export type RegisterData = {
   phone: string;
 };
 
-export function RegisterForm({ onSubmit, loading = false }: RegisterFormProps) {
-  const [companyName, setCompanyName] = useState('');
-  const [cuit, setCuit] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
+type RegisterFormProps = {
+  value: RegisterData;
+  onChange: (data: RegisterData) => void;
+};
 
-  const handleSubmit = () => {
-    onSubmit({ companyName, cuit, email, phone });
+export function RegisterForm({ value, onChange }: RegisterFormProps) {
+  const updateField = (field: keyof RegisterData, fieldValue: string) => {
+    onChange({ ...value, [field]: fieldValue });
   };
 
   return (
@@ -30,16 +23,16 @@ export function RegisterForm({ onSubmit, loading = false }: RegisterFormProps) {
       <TextInputField
         label="Nombre de la empresa"
         placeholder="Nombre de su empresa"
-        value={companyName}
-        onChangeText={setCompanyName}
+        value={value.companyName}
+        onChangeText={(fieldValue) => updateField('companyName', fieldValue)}
       />
 
       <TextInputField
         label="CUIT"
         placeholder="20-12345678-9"
         keyboardType="number-pad"
-        value={cuit}
-        onChangeText={setCuit}
+        value={value.cuit}
+        onChangeText={(fieldValue) => updateField('cuit', fieldValue)}
       />
 
       <TextInputField
@@ -47,24 +40,17 @@ export function RegisterForm({ onSubmit, loading = false }: RegisterFormProps) {
         placeholder="correo@empresa.com"
         keyboardType="email-address"
         autoCapitalize="none"
-        value={email}
-        onChangeText={setEmail}
+        value={value.email}
+        onChangeText={(fieldValue) => updateField('email', fieldValue)}
       />
 
       <TextInputField
         label="Teléfono de contacto"
         placeholder="(011) 1234-5678"
         keyboardType="phone-pad"
-        value={phone}
-        onChangeText={setPhone}
+        value={value.phone}
+        onChangeText={(fieldValue) => updateField('phone', fieldValue)}
       />
-
-      <PrimaryButton
-        onPress={handleSubmit}
-        disabled={loading}
-      >
-        {loading ? 'Creando...' : 'Registrar'}
-      </PrimaryButton>
     </View>
   );
 }

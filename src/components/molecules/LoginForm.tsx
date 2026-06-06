@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { PrimaryButton } from '../atoms/PrimaryButton';
+import { CTAButton } from '../atoms/CTAButton';
 import { TextInputField } from '../atoms/TextInputField';
 
 type LoginFormProps = {
@@ -42,12 +42,9 @@ export function LoginForm({ onSubmit, loading = false }: LoginFormProps) {
         onChangeText={setPassword}
       />
 
-      <PrimaryButton
-        onPress={handleSubmit}
-        disabled={loading}
-      >
+      <CTAButton onPress={handleSubmit} disabled={loading}>
         {loading ? 'Ingresando...' : 'Ingresar'}
-      </PrimaryButton>
+      </CTAButton>
     </View>
   );
 }

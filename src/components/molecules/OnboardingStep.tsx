@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { SecondaryButton } from '../atoms/SecondaryButton';
-import { Title, Subtitle, Body } from '../atoms/Typography';
+import { CTAButton } from '../atoms/CTAButton';
+import { Title, Body } from '../atoms/Typography';
 
 type OnboardingStepProps = {
   illustration: string;
@@ -54,9 +54,9 @@ export function OnboardingStep({
         </View>
       </View>
 
-      <SecondaryButton onPress={onNext}>
+      <CTAButton variant="secondary" onPress={onNext}>
         {buttonText} →
-      </SecondaryButton>
+      </CTAButton>
     </View>
   );
 }

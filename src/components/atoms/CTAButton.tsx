@@ -1,22 +1,34 @@
-import { useState } from 'react';
-import { Animated, Pressable, StyleSheet, Text, ViewStyle } from 'react-native';
+import { useRef, type ReactNode } from 'react';
+import {
+  Animated,
+  Pressable,
+  StyleSheet,
+  Text,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native';
 
-type PrimaryButtonProps = {
+type CTAButtonVariant = 'primary' | 'secondary';
+
+type CTAButtonProps = {
   onPress: () => void;
-  children: string;
+  children: ReactNode;
   disabled?: boolean;
-  style?: ViewStyle;
   icon?: string;
+  variant?: CTAButtonVariant;
+  style?: StyleProp<ViewStyle>;
 };
 
-export function PrimaryButton({
+export function CTAButton({
   onPress,
   children,
   disabled = false,
-  style,
   icon,
-}: PrimaryButtonProps) {
-  const [scale] = useState(new Animated.Value(1));
+  variant = 'primary',
+  style,
+}: CTAButtonProps) {
+  const scale = useRef(new Animated.Value(1)).current;
+  const isPrimary = variant === 'primary';
 
   const handlePressIn = () => {
     Animated.spring(scale, {
@@ -37,7 +49,8 @@ export function PrimaryButton({
       <Pressable
         style={[
           styles.button,
-          disabled && styles.buttonDisabled,
+          isPrimary ? styles.primaryButton : styles.secondaryButton,
+          disabled && (isPrimary ? styles.primaryDisabled : styles.secondaryDisabled),
           style,
         ]}
         onPress={onPress}
@@ -45,9 +58,10 @@ export function PrimaryButton({
         onPressOut={handlePressOut}
         disabled={disabled}
       >
-        <Text style={styles.text}>
+        <Text style={[styles.text, isPrimary ? styles.primaryText : styles.secondaryText]}>
           {icon && <Text style={styles.icon}>{icon}</Text>}
-          {icon ? ' ' : ''}{children}
+          {icon ? ' ' : ''}
+          {children}
         </Text>
       </Pressable>
     </Animated.View>
@@ -58,25 +72,43 @@ const styles = StyleSheet.create({
   button: {
     height: 54,
     borderRadius: 12,
-    backgroundColor: '#1976D2',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 20,
+  },
+  primaryButton: {
+    backgroundColor: '#1976D2',
     shadowColor: '#1976D2',
     shadowOpacity: 0.25,
     shadowRadius: 10,
     elevation: 4,
   },
-  buttonDisabled: {
+  secondaryButton: {
+    height: 50,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 2,
+    borderColor: '#1976D2',
+  },
+  primaryDisabled: {
     backgroundColor: '#BDBDBD',
     shadowOpacity: 0,
     elevation: 0,
   },
+  secondaryDisabled: {
+    borderColor: '#BDBDBD',
+    backgroundColor: '#F5F5F5',
+  },
   text: {
-    color: '#FFFFFF',
-    fontSize: 16,
     fontWeight: '700',
     letterSpacing: 0.2,
+  },
+  primaryText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+  },
+  secondaryText: {
+    color: '#1976D2',
+    fontSize: 15,
   },
   icon: {
     marginRight: 4,

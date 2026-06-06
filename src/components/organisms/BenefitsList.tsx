@@ -1,5 +1,5 @@
 import { StyleSheet, View } from 'react-native';
-import { InfoCard } from './InfoCard';
+import { InfoCard } from '../molecules/InfoCard';
 import { Title } from '../atoms/Typography';
 
 type BenefitsListProps = {
@@ -15,9 +15,9 @@ export function BenefitsList({ benefits }: BenefitsListProps) {
     <View style={styles.container}>
       <Title style={styles.title}>¿Por qué elegirnos?</Title>
       <View style={styles.benefitsContainer}>
-        {benefits.map((benefit, index) => (
+        {benefits.map((benefit) => (
           <InfoCard
-            key={index}
+            key={benefit.title}
             icon={benefit.icon}
             title={benefit.title}
             description={benefit.description}

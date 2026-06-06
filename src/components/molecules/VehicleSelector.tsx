@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Title } from '../atoms/Typography';
 
-type FleetSize = '1-10' | '11-30' | '31-100' | 'Más de 100';
+export type FleetSize = '1-10' | '11-30' | '31-100' | 'Más de 100';
 
 type VehicleSelectorProps = {
   value: FleetSize;

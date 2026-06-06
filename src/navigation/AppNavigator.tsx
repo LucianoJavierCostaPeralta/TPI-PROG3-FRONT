@@ -15,7 +15,6 @@ export default function AppNavigator() {
       initialRouteName="SplashScreen"
       screenOptions={{
         headerShown: false,
-        animationEnabled: true,
       }}
     >
       {/* Splash Screen - Entrada */}
@@ -23,7 +22,7 @@ export default function AppNavigator() {
         name="SplashScreen"
         component={SplashScreen}
         options={{
-          animationEnabled: false,
+          animation: 'none',
         }}
       />
 
@@ -67,7 +66,7 @@ export default function AppNavigator() {
           animationDuration: 350,
           gestureEnabled: true,
           gestureDirection: 'vertical',
-          cardStyle: {
+          contentStyle: {
             backgroundColor: 'rgba(0, 0, 0, 0.2)',
           },
         }}

@@ -1,5 +1,5 @@
 import { StyleSheet, View } from 'react-native';
-import { SecondaryButton } from '../atoms/SecondaryButton';
+import { CTAButton } from '../atoms/CTAButton';
 import { Body, Caption } from '../atoms/Typography';
 
 type RegisterFooterProps = {
@@ -15,9 +15,9 @@ export function RegisterFooter({ onConsultWithAdvisor }: RegisterFooterProps) {
         configurar su cuenta.
       </Caption>
 
-      <SecondaryButton onPress={onConsultWithAdvisor}>
+      <CTAButton variant="secondary" onPress={onConsultWithAdvisor}>
         Consultar con un asesor
-      </SecondaryButton>
+      </CTAButton>
     </View>
   );
 }
