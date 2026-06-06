@@ -6,24 +6,26 @@ import {
   Text,
   View,
 } from 'react-native';
+import { useTheme, type MD3Theme } from 'react-native-paper';
+import { palette, spacing } from '../../styles/theme';
 
 type SplashTemplateProps = {
   onAnimationComplete: () => void;
 };
 
 export function SplashTemplate({ onAnimationComplete }: SplashTemplateProps) {
+  const theme = useTheme<MD3Theme>();
+  const styles = createStyles(theme);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const spinAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Fade-in animation para el logo
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 800,
       useNativeDriver: true,
     }).start();
 
-    // Spin animation continua para el loader
     Animated.loop(
       Animated.timing(spinAnim, {
         toValue: 1,
@@ -32,7 +34,6 @@ export function SplashTemplate({ onAnimationComplete }: SplashTemplateProps) {
       })
     ).start();
 
-    // Navegación automática después de 3 segundos
     const timer = setTimeout(() => {
       onAnimationComplete();
     }, 3000);
@@ -82,55 +83,56 @@ export function SplashTemplate({ onAnimationComplete }: SplashTemplateProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0066ff',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  content: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logoContainer: {
-    marginBottom: 60,
-    alignItems: 'center',
-  },
-  logoText: {
-    color: '#ffffff',
-    fontSize: 48,
-    fontWeight: '900',
-    letterSpacing: 2,
-    textAlign: 'center',
-  },
-  logoSubtitle: {
-    color: 'rgba(255, 255, 255, 0.8)',
-    fontSize: 14,
-    fontWeight: '500',
-    letterSpacing: 1,
-    marginTop: 8,
-  },
-  spinnerContainer: {
-    width: 80,
-    height: 80,
-    marginBottom: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  spinner: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    borderWidth: 4,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-    borderTopColor: '#ffffff',
-    borderRightColor: '#ffffff',
-  },
-  loadingText: {
-    color: 'rgba(255, 255, 255, 0.9)',
-    fontSize: 16,
-    fontWeight: '500',
-    letterSpacing: 0.5,
-  },
-});
+const createStyles = (theme: MD3Theme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.primary,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    content: {
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    logoContainer: {
+      marginBottom: 60,
+      alignItems: 'center',
+    },
+    logoText: {
+      color: theme.colors.onPrimary,
+      fontSize: 48,
+      fontWeight: '900',
+      letterSpacing: 2,
+      textAlign: 'center',
+    },
+    logoSubtitle: {
+      color: palette.whiteAlpha80,
+      fontSize: 14,
+      fontWeight: '500',
+      letterSpacing: 1,
+      marginTop: spacing.sm,
+    },
+    spinnerContainer: {
+      width: 80,
+      height: 80,
+      marginBottom: 40,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    spinner: {
+      width: 60,
+      height: 60,
+      borderRadius: 30,
+      borderWidth: 4,
+      borderColor: palette.whiteAlpha30,
+      borderTopColor: theme.colors.onPrimary,
+      borderRightColor: theme.colors.onPrimary,
+    },
+    loadingText: {
+      color: palette.whiteAlpha90,
+      fontSize: 16,
+      fontWeight: '500',
+      letterSpacing: 0.5,
+    },
+  });

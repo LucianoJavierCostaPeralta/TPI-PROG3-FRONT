@@ -1,4 +1,5 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { palette } from '../styles/theme';
 
 import { SplashScreen } from '../screens/SplashScreen';
 import { Onboarding1 } from '../screens/Onboarding1';
@@ -67,7 +68,7 @@ export default function AppNavigator() {
           gestureEnabled: true,
           gestureDirection: 'vertical',
           contentStyle: {
-            backgroundColor: 'rgba(0, 0, 0, 0.2)',
+            backgroundColor: palette.blackAlpha20,
           },
         }}
       />

@@ -20,11 +20,20 @@ export const palette = {
   
   // Grises adicionales para transiciones
   neutral900: '#0F172A',
+  neutral800: '#111827',
   neutral700: '#334155',
+  neutral600: '#4B5563',
   neutral500: '#64748B',
+  neutral400: '#94A3B8',
   neutral300: '#CBD5E1',
+  neutral200: '#E5E7EB',
   neutral100: '#F1F5F9',
   neutral50: '#F8FAFC',
+  black: '#000000',
+  whiteAlpha30: 'rgba(255, 255, 255, 0.3)',
+  whiteAlpha80: 'rgba(255, 255, 255, 0.8)',
+  whiteAlpha90: 'rgba(255, 255, 255, 0.9)',
+  blackAlpha20: 'rgba(0, 0, 0, 0.2)',
 };
 
 // Tipografía moderna y legible
@@ -116,15 +125,15 @@ export const cardStyles = {
     backgroundColor: palette.lightGray,
     padding: spacing.lg,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: palette.neutral300,
   },
   elevated: {
     borderRadius: 12,
     backgroundColor: palette.white,
     padding: spacing.md,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
-    shadowColor: '#000',
+    borderColor: palette.neutral200,
+    shadowColor: palette.black,
     shadowOpacity: 0.04,
     shadowRadius: 6,
     elevation: 2,
@@ -150,7 +159,7 @@ const darkColors = {
   onPrimary: palette.darkGray,
   secondary: palette.primaryBlue,
   background: palette.neutral900,
-  surface: '#111827',
+  surface: palette.neutral800,
   surfaceVariant: palette.neutral700,
   outline: palette.neutral500,
   onSurface: palette.neutral50,

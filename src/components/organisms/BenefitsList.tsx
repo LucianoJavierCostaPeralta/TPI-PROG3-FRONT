@@ -1,6 +1,8 @@
 import { StyleSheet, View } from 'react-native';
+import { useTheme, type MD3Theme } from 'react-native-paper';
 import { InfoCard } from '../molecules/InfoCard';
 import { Title } from '../atoms/Typography';
+import { spacing, typography } from '../../styles/theme';
 
 type BenefitsListProps = {
   benefits: Array<{
@@ -11,6 +13,9 @@ type BenefitsListProps = {
 };
 
 export function BenefitsList({ benefits }: BenefitsListProps) {
+  const theme = useTheme<MD3Theme>();
+  const styles = createStyles(theme);
+
   return (
     <View style={styles.container}>
       <Title style={styles.title}>¿Por qué elegirnos?</Title>
@@ -28,17 +33,18 @@ export function BenefitsList({ benefits }: BenefitsListProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    marginBottom: 28,
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 16,
-  },
-  benefitsContainer: {
-    gap: 12,
-  },
-});
+const createStyles = (theme: MD3Theme) =>
+  StyleSheet.create({
+    container: {
+      marginBottom: 28,
+    },
+    title: {
+      ...typography.bodyLg,
+      color: theme.colors.onSurface,
+      fontWeight: '700',
+      marginBottom: spacing.lg,
+    },
+    benefitsContainer: {
+      gap: spacing.md,
+    },
+  });

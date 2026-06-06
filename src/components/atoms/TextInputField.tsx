@@ -1,54 +1,60 @@
-import { StyleSheet, Text, TextInput, TextInputProps, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import {
+  HelperText,
+  TextInput,
+  useTheme,
+  type MD3Theme,
+  type TextInputProps,
+} from 'react-native-paper';
+import { spacing } from '../../styles/theme';
 
-type TextInputFieldProps = TextInputProps & {
-  label: string;
+type TextInputFieldProps = Omit<TextInputProps, 'error' | 'mode'> & {
   error?: string;
 };
 
 export function TextInputField({
-  label,
   error,
+  style,
+  outlineStyle,
   ...props
 }: TextInputFieldProps) {
+  const theme = useTheme<MD3Theme>();
+  const styles = createStyles(theme);
+  const hasError = Boolean(error);
+
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>{label}</Text>
       <TextInput
-        style={[styles.input, error && styles.inputError]}
-        placeholderTextColor="#d1d5db"
+        mode="outlined"
+        error={hasError}
+        style={[styles.input, style]}
+        outlineStyle={[styles.outline, outlineStyle]}
+        outlineColor={theme.colors.outline}
+        activeOutlineColor={theme.colors.primary}
+        placeholderTextColor={theme.colors.outline}
         {...props}
       />
-      {error && <Text style={styles.error}>{error}</Text>}
+      <HelperText type="error" visible={hasError} style={styles.error}>
+        {error}
+      </HelperText>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    marginBottom: 18,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: 8,
-  },
-  input: {
-    height: 54,
-    borderColor: '#e5e7eb',
-    borderWidth: 1.5,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    fontSize: 16,
-    color: '#111827',
-    backgroundColor: '#f8fafc',
-  },
-  inputError: {
-    borderColor: '#EF4444',
-  },
-  error: {
-    color: '#EF4444',
-    fontSize: 12,
-    marginTop: 4,
-  },
-});
+const createStyles = (theme: MD3Theme) =>
+  StyleSheet.create({
+    container: {
+      marginBottom: spacing.sm,
+    },
+    input: {
+      backgroundColor: theme.colors.surfaceVariant,
+    },
+    outline: {
+      borderRadius: 12,
+      borderWidth: 1.5,
+    },
+    error: {
+      marginTop: 0,
+      paddingHorizontal: 0,
+    },
+  });

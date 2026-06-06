@@ -1,65 +1,56 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import {
+  Checkbox as PaperCheckbox,
+  useTheme,
+  type CheckboxItemProps,
+  type MD3Theme,
+} from 'react-native-paper';
+import { cardStyles } from '../../styles/theme';
 
-type CheckboxProps = {
+type CheckboxProps = Omit<CheckboxItemProps, 'status' | 'onPress' | 'label'> & {
   checked: boolean;
   onToggle: (checked: boolean) => void;
   label: string;
 };
 
-export function Checkbox({ checked, onToggle, label }: CheckboxProps) {
+export function Checkbox({ checked, onToggle, label, style, labelStyle, ...props }: CheckboxProps) {
+  const theme = useTheme<MD3Theme>();
+  const styles = createStyles(theme);
+
   return (
-    <View style={styles.container}>
-      <Pressable
-        style={styles.checkboxRow}
+    <View style={[styles.container, style]}>
+      <PaperCheckbox.Item
+        status={checked ? 'checked' : 'unchecked'}
         onPress={() => onToggle(!checked)}
-      >
-        <View style={[styles.checkboxBox, checked && styles.checkboxBoxChecked]}>
-          {checked && <Text style={styles.checkmark}>✓</Text>}
-        </View>
-        <Text style={styles.label}>{label}</Text>
-      </Pressable>
+        label={label}
+        labelStyle={[styles.label, labelStyle]}
+        color={theme.colors.primary}
+        uncheckedColor={theme.colors.primary}
+        position="leading"
+        mode="android"
+        style={styles.item}
+        {...props}
+      />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    marginBottom: 28,
-    backgroundColor: '#f8fafc',
-    borderRadius: 12,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-  },
-  checkboxRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-  },
-  checkboxBox: {
-    width: 24,
-    height: 24,
-    borderWidth: 2,
-    borderColor: '#1976D2',
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#ffffff',
-    marginTop: 2,
-  },
-  checkboxBoxChecked: {
-    backgroundColor: '#1976D2',
-    borderColor: '#1976D2',
-  },
-  checkmark: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  label: {
-    color: '#374151',
-    fontSize: 14,
-    lineHeight: 20,
-    flex: 1,
-  },
-});
+const createStyles = (theme: MD3Theme) =>
+  StyleSheet.create({
+    container: {
+      ...cardStyles.elevated,
+      marginBottom: 28,
+      backgroundColor: theme.colors.surfaceVariant,
+      borderColor: theme.colors.outline,
+      padding: 0,
+    },
+    item: {
+      paddingVertical: 2,
+      paddingHorizontal: 2,
+    },
+    label: {
+      color: theme.colors.onSurface,
+      fontSize: 14,
+      lineHeight: 20,
+    },
+  });

@@ -1,4 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
+import { useTheme, type MD3Theme } from 'react-native-paper';
+import { cardStyles, spacing, typography } from '../../styles/theme';
 
 type InfoCardProps = {
   icon: string;
@@ -7,6 +9,9 @@ type InfoCardProps = {
 };
 
 export function InfoCard({ icon, title, description }: InfoCardProps) {
+  const theme = useTheme<MD3Theme>();
+  const styles = createStyles(theme);
+
   return (
     <View style={styles.card}>
       <Text style={styles.icon}>{icon}</Text>
@@ -18,37 +23,33 @@ export function InfoCard({ icon, title, description }: InfoCardProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    flexDirection: 'row',
-    backgroundColor: '#f8fafc',
-    borderRadius: 12,
-    padding: 14,
-    alignItems: 'flex-start',
-    gap: 12,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  icon: {
-    fontSize: 28,
-    marginTop: 2,
-  },
-  content: {
-    flex: 1,
-  },
-  title: {
-    color: '#111827',
-    fontSize: 15,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  description: {
-    color: '#6b7280',
-    fontSize: 13,
-    lineHeight: 18,
-  },
-});
+const createStyles = (theme: MD3Theme) =>
+  StyleSheet.create({
+    card: {
+      ...cardStyles.elevated,
+      flexDirection: 'row',
+      backgroundColor: theme.colors.surfaceVariant,
+      borderColor: theme.colors.outline,
+      alignItems: 'flex-start',
+      gap: spacing.md,
+      shadowColor: theme.colors.onSurface,
+    },
+    icon: {
+      fontSize: 28,
+      marginTop: 2,
+    },
+    content: {
+      flex: 1,
+    },
+    title: {
+      ...typography.bodyMd,
+      color: theme.colors.onSurface,
+      fontWeight: '700',
+      marginBottom: spacing.xs,
+    },
+    description: {
+      ...typography.labelSm,
+      color: theme.colors.onSurfaceVariant,
+      fontWeight: '400',
+    },
+  });

@@ -1,5 +1,7 @@
 import { SafeAreaView, ScrollView, StyleSheet, View } from 'react-native';
+import { useTheme, type MD3Theme } from 'react-native-paper';
 import { Title } from '../atoms/Typography';
+import { spacing } from '../../styles/theme';
 
 type RegisterTemplateProps = {
   title: string;
@@ -7,6 +9,9 @@ type RegisterTemplateProps = {
 };
 
 export function RegisterTemplate({ title, children }: RegisterTemplateProps) {
+  const theme = useTheme<MD3Theme>();
+  const styles = createStyles(theme);
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
@@ -23,23 +28,23 @@ export function RegisterTemplate({ title, children }: RegisterTemplateProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#ffffff',
-  },
-  scrollContent: {
-    paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 40,
-  },
-  header: {
-    marginBottom: 28,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: '#333333',
-    letterSpacing: -0.5,
-  },
-});
+const createStyles = (theme: MD3Theme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    scrollContent: {
+      paddingHorizontal: spacing.xxl,
+      paddingTop: spacing.xl,
+      paddingBottom: 40,
+    },
+    header: {
+      marginBottom: 28,
+    },
+    title: {
+      color: theme.colors.onSurface,
+      fontSize: 28,
+      lineHeight: 36,
+    },
+  });

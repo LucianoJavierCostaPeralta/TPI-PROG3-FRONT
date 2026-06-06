@@ -1,5 +1,7 @@
 import { SafeAreaView, ScrollView, StyleSheet, View } from 'react-native';
+import { useTheme, type MD3Theme } from 'react-native-paper';
 import { Title, Subtitle } from '../atoms/Typography';
+import { spacing } from '../../styles/theme';
 
 type LoginTemplateProps = {
   title: string;
@@ -12,6 +14,9 @@ export function LoginTemplate({
   subtitle,
   children,
 }: LoginTemplateProps) {
+  const theme = useTheme<MD3Theme>();
+  const styles = createStyles(theme);
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
@@ -29,29 +34,27 @@ export function LoginTemplate({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#ffffff',
-  },
-  scrollContent: {
-    paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 40,
-  },
-  header: {
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '800',
-    color: '#333333',
-    marginBottom: 10,
-    letterSpacing: -0.5,
-  },
-  subtitle: {
-    fontSize: 15,
-    color: '#9ca3af',
-    lineHeight: 22,
-  },
-});
+const createStyles = (theme: MD3Theme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    scrollContent: {
+      paddingHorizontal: spacing.xxl,
+      paddingTop: spacing.xl,
+      paddingBottom: 40,
+    },
+    header: {
+      marginBottom: spacing.xl,
+    },
+    title: {
+      marginBottom: 10,
+    },
+    subtitle: {
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 15,
+      fontWeight: '400',
+      lineHeight: 22,
+    },
+  });

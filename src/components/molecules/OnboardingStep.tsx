@@ -1,6 +1,8 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useTheme, type MD3Theme } from 'react-native-paper';
 import { CTAButton } from '../atoms/CTAButton';
 import { Title, Body } from '../atoms/Typography';
+import { spacing } from '../../styles/theme';
 
 type OnboardingStepProps = {
   illustration: string;
@@ -23,6 +25,9 @@ export function OnboardingStep({
   onSkip,
   buttonText = 'Siguiente',
 }: OnboardingStepProps) {
+  const theme = useTheme<MD3Theme>();
+  const styles = createStyles(theme);
+
   return (
     <View style={styles.container}>
       {onSkip && (
@@ -61,65 +66,65 @@ export function OnboardingStep({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 24,
-    justifyContent: 'space-between',
-    paddingBottom: 32,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    paddingVertical: 16,
-  },
-  skipText: {
-    color: '#1976D2',
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 28,
-  },
-  illustration: {
-    width: 240,
-    height: 280,
-    borderRadius: 28,
-    backgroundColor: '#f0f4ff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    elevation: 4,
-  },
-  illustrationText: {
-    fontSize: 72,
-  },
-  title: {
-    textAlign: 'center',
-  },
-  subtitle: {
-    textAlign: 'center',
-    maxWidth: 320,
-    color: '#666666',
-  },
-  progressDots: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 12,
-  },
-  dot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#e5e7eb',
-  },
-  dotActive: {
-    backgroundColor: '#1976D2',
-  },
-});
+const createStyles = (theme: MD3Theme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+      paddingHorizontal: spacing.xxl,
+      justifyContent: 'space-between',
+      paddingBottom: spacing.xxxl,
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      paddingVertical: spacing.lg,
+    },
+    skipText: {
+      color: theme.colors.primary,
+      fontSize: 15,
+      fontWeight: '600',
+    },
+    content: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: 28,
+    },
+    illustration: {
+      width: 240,
+      height: 280,
+      borderRadius: 28,
+      backgroundColor: theme.colors.surfaceVariant,
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: theme.colors.onSurface,
+      shadowOpacity: 0.08,
+      shadowRadius: 16,
+      elevation: 4,
+    },
+    illustrationText: {
+      fontSize: 72,
+    },
+    title: {
+      textAlign: 'center',
+    },
+    subtitle: {
+      textAlign: 'center',
+      maxWidth: 320,
+    },
+    progressDots: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+      marginTop: spacing.md,
+    },
+    dot: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+      backgroundColor: theme.colors.outline,
+    },
+    dotActive: {
+      backgroundColor: theme.colors.primary,
+    },
+  });

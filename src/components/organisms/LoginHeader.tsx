@@ -1,10 +1,15 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useTheme, type MD3Theme } from 'react-native-paper';
+import { spacing, typography } from '../../styles/theme';
 
 type LoginHeaderProps = {
   onForgotPassword: () => void;
 };
 
 export function LoginHeader({ onForgotPassword }: LoginHeaderProps) {
+  const theme = useTheme<MD3Theme>();
+  const styles = createStyles(theme);
+
   return (
     <View style={styles.container}>
       <View style={styles.notice}>
@@ -20,33 +25,33 @@ export function LoginHeader({ onForgotPassword }: LoginHeaderProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    marginBottom: 20,
-  },
-  notice: {
-    backgroundColor: '#f3f4f6',
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    marginBottom: 14,
-    borderLeftWidth: 3,
-    borderLeftColor: '#6b7280',
-  },
-  noticeText: {
-    color: '#4b5563',
-    fontSize: 13,
-    lineHeight: 18,
-    letterSpacing: 0.1,
-    fontWeight: '500',
-  },
-  forgotButton: {
-    alignSelf: 'flex-end',
-    paddingVertical: 8,
-  },
-  forgotText: {
-    color: '#1976D2',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-});
+const createStyles = (theme: MD3Theme) =>
+  StyleSheet.create({
+    container: {
+      marginBottom: spacing.xl,
+    },
+    notice: {
+      backgroundColor: theme.colors.surfaceVariant,
+      borderRadius: 12,
+      paddingVertical: spacing.md,
+      paddingHorizontal: 14,
+      marginBottom: 14,
+      borderLeftWidth: 3,
+      borderLeftColor: theme.colors.outline,
+    },
+    noticeText: {
+      ...typography.labelSm,
+      color: theme.colors.onSurfaceVariant,
+      letterSpacing: 0.1,
+      fontWeight: '500',
+    },
+    forgotButton: {
+      alignSelf: 'flex-end',
+      paddingVertical: spacing.sm,
+    },
+    forgotText: {
+      color: theme.colors.primary,
+      fontSize: 14,
+      fontWeight: '700',
+    },
+  });
