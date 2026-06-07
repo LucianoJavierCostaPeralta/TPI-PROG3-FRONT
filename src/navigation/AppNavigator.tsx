@@ -7,6 +7,7 @@ import { Onboarding2 } from '../screens/Onboarding2';
 import { LoginScreen } from '../screens/LoginScreen';
 import { RegisterScreen } from '../screens/RegisterScreen';
 import { HomeScreen } from '../screens/HomeScreen';
+import { ResetPasswordScreen } from '../screens/ResetPasswordScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -70,6 +71,16 @@ export default function AppNavigator() {
           contentStyle: {
             backgroundColor: palette.blackAlpha20,
           },
+        }}
+      />
+
+      <Stack.Screen
+        name="ResetPasswordScreen"
+        component={ResetPasswordScreen}
+        options={{
+          animation: 'slide_from_right',
+          animationDuration: 300,
+          gestureEnabled: false,
         }}
       />
 
