@@ -12,15 +12,15 @@ import {
 type AppDrawerProps = {
   visible: boolean;
   onClose: () => void;
+  onSignOut: () => void;
 };
 
-export function AppDrawer({ visible, onClose }: AppDrawerProps) {
+export function AppDrawer({ visible, onClose, onSignOut }: AppDrawerProps) {
   const theme = useTheme<MD3Theme>();
   const styles = createStyles(theme);
 
   return (
     <Portal>
-      {/* Portal + Modal son los componentes de Paper para capas por encima de la pantalla. */}
       <Modal
         visible={visible}
         onDismiss={onClose}
@@ -33,7 +33,6 @@ export function AppDrawer({ visible, onClose }: AppDrawerProps) {
           <IconButton icon="close" size={22} onPress={onClose} />
         </View>
 
-        {/* Drawer.Section y Drawer.Item vienen de React Native Paper. */}
         <Drawer.Section showDivider={false} style={styles.section}>
           <Drawer.Item icon="account-outline" label="Mi Perfil" onPress={onClose} />
           <Drawer.Item icon="cog-outline" label="Configuracion" onPress={onClose} />
@@ -47,6 +46,17 @@ export function AppDrawer({ visible, onClose }: AppDrawerProps) {
             label="Contactar Asesor"
             onPress={onClose}
             theme={{ colors: { onSurfaceVariant: theme.colors.primary } }}
+          />
+        </Drawer.Section>
+
+        <View style={styles.divider} />
+
+        <Drawer.Section showDivider={false} style={styles.section}>
+          <Drawer.Item
+            icon="logout"
+            label="Cerrar sesión"
+            onPress={onSignOut}
+            theme={{ colors: { onSurfaceVariant: theme.colors.error } }}
           />
         </Drawer.Section>
 

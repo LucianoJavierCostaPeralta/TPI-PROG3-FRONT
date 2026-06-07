@@ -1,6 +1,14 @@
 import { useState } from 'react';
+import { Alert } from 'react-native';
 import { HomeTemplate } from '../components/templates';
 import { type BottomTabMenuItem } from '../components/molecules';
+import { signOut } from '../lib/auth';
+
+type HomeScreenProps = {
+  navigation?: {
+    reset: (state: { index: number; routes: Array<{ name: string }> }) => void;
+  };
+};
 
 type HomeTabKey = 'home' | 'deliveries' | 'drivers' | 'map';
 
@@ -31,9 +39,22 @@ const bottomTabs: Array<BottomTabMenuItem<HomeTabKey>> = [
   },
 ];
 
-export function HomeScreen() {
+export function HomeScreen({ navigation }: HomeScreenProps) {
   const [activeTab, setActiveTab] = useState<HomeTabKey>('home');
   const [drawerVisible, setDrawerVisible] = useState(false);
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      navigation?.reset({
+        index: 0,
+        routes: [{ name: 'LoginScreen' }],
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'No se pudo cerrar sesión.';
+      Alert.alert('Error', message);
+    }
+  };
 
   return (
     <HomeTemplate
@@ -45,6 +66,7 @@ export function HomeScreen() {
       onTabChange={setActiveTab}
       onOpenDrawer={() => setDrawerVisible(true)}
       onCloseDrawer={() => setDrawerVisible(false)}
+      onSignOut={handleSignOut}
       onBellPress={() => undefined}
     />
   );

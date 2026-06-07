@@ -16,6 +16,7 @@ type HomeTemplateProps<T extends string> = {
   onTabChange: (tab: T) => void;
   onOpenDrawer: () => void;
   onCloseDrawer: () => void;
+  onSignOut: () => void;
   onBellPress?: () => void;
 };
 
@@ -28,6 +29,7 @@ export function HomeTemplate<T extends string>({
   onTabChange,
   onOpenDrawer,
   onCloseDrawer,
+  onSignOut,
   onBellPress,
 }: HomeTemplateProps<T>) {
   const theme = useTheme<MD3Theme>();
@@ -52,7 +54,7 @@ export function HomeTemplate<T extends string>({
         />
       </View>
 
-      <AppDrawer visible={drawerVisible} onClose={onCloseDrawer} />
+      <AppDrawer visible={drawerVisible} onClose={onCloseDrawer} onSignOut={onSignOut} />
     </SafeAreaView>
   );
 }
