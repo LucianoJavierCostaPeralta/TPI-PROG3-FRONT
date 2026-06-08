@@ -32,19 +32,19 @@ const initialRegisterData: RegisterData = {
 
 const benefits = [
   {
-    icon: '📡',
+    icon: 'chart-line', // Ícono para monitoreo
     title: 'Monitoreo en tiempo real',
-    description: 'Seguimiento GPS instantáneo',
+    description: 'Visualice el estado de sus entregas y conductores desde un único panel.',
   },
   {
-    icon: '⚡',
+    icon: 'lightning-bolt', // Ícono del rayo
     title: 'Mayor eficiencia operativa',
-    description: 'Optimización automática de rutas',
+    description: 'Optimice rutas, tiempos de entrega y asignación de vehículos.',
   },
   {
-    icon: '📊',
+    icon: 'chart-scatter-plot', // Ícono de métricas
     title: 'Información para tomar decisiones',
-    description: 'Reportes detallados y análisis',
+    description: 'Acceda a métricas y reportes para mejorar el rendimiento de su flota.',
   },
 ];
 

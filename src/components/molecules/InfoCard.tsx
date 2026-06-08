@@ -1,9 +1,11 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { useTheme, type MD3Theme } from 'react-native-paper';
-import { cardStyles, spacing, typography } from '../../styles/theme';
+import { MaterialCommunityIcons } from '@expo/vector-icons'; // <-- Importamos los íconos de Expo
+import { spacing, typography } from '../../styles/theme';
 
 type InfoCardProps = {
-  icon: string;
+  // Aseguramos que 'icon' reciba un nombre válido de la librería
+  icon: keyof typeof MaterialCommunityIcons.glyphMap; 
   title: string;
   description: string;
 };
@@ -13,8 +15,15 @@ export function InfoCard({ icon, title, description }: InfoCardProps) {
   const styles = createStyles(theme);
 
   return (
-    <View style={styles.card}>
-      <Text style={styles.icon}>{icon}</Text>
+    <View style={styles.container}>
+      <View style={styles.iconContainer}>
+        {/* Renderizamos el componente de Ícono en lugar de Text */}
+        <MaterialCommunityIcons 
+          name={icon} 
+          size={24} 
+          color={theme.colors.primary} 
+        />
+      </View>
       <View style={styles.content}>
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.description}>{description}</Text>
@@ -25,31 +34,32 @@ export function InfoCard({ icon, title, description }: InfoCardProps) {
 
 const createStyles = (theme: MD3Theme) =>
   StyleSheet.create({
-    card: {
-      ...cardStyles.elevated,
+    container: {
       flexDirection: 'row',
-      backgroundColor: theme.colors.surfaceVariant,
-      borderColor: theme.colors.outline,
       alignItems: 'flex-start',
       gap: spacing.md,
-      shadowColor: theme.colors.onSurface,
     },
-    icon: {
-      fontSize: 28,
-      marginTop: 2,
+    iconContainer: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      backgroundColor: '#EDF2FC',
+      justifyContent: 'center',
+      alignItems: 'center',
     },
     content: {
       flex: 1,
+      paddingTop: 2,
     },
     title: {
       ...typography.bodyMd,
       color: theme.colors.onSurface,
       fontWeight: '700',
-      marginBottom: spacing.xs,
+      marginBottom: 2,
     },
     description: {
-      ...typography.labelSm,
-      color: theme.colors.onSurfaceVariant,
+      ...typography.bodyMd,
+      color: '#5F6368',
       fontWeight: '400',
     },
   });

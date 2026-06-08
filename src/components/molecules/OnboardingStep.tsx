@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context'; // nuevo: evita botones debajo del home indicator
 import { useTheme, type MD3Theme } from 'react-native-paper';
 import { CTAButton } from '../atoms/CTAButton';
 import { Title, Body } from '../atoms/Typography';
@@ -26,7 +27,8 @@ export function OnboardingStep({
   buttonText = 'Siguiente',
 }: OnboardingStepProps) {
   const theme = useTheme<MD3Theme>();
-  const styles = createStyles(theme);
+  const insets = useSafeAreaInsets(); // nuevo: safe area inferior real
+  const styles = createStyles(theme, insets);
 
   return (
     <View style={styles.container}>
@@ -50,10 +52,7 @@ export function OnboardingStep({
           {Array.from({ length: totalSteps }).map((_, index) => (
             <View
               key={index}
-              style={[
-                styles.dot,
-                index < currentStep && styles.dotActive,
-              ]}
+              style={[styles.dot, index < currentStep && styles.dotActive]}
             />
           ))}
         </View>
@@ -66,35 +65,41 @@ export function OnboardingStep({
   );
 }
 
-const createStyles = (theme: MD3Theme) =>
+const createStyles = (theme: MD3Theme, insets: any) =>
   StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: theme.colors.background,
       paddingHorizontal: spacing.xxl,
       justifyContent: 'space-between',
-      paddingBottom: spacing.xxxl,
+
+      // nuevo: evita que el botón quede debajo de la barra del sistema
+      paddingBottom: insets.bottom + spacing.xxl,
     },
+
     header: {
       flexDirection: 'row',
       justifyContent: 'flex-end',
       paddingVertical: spacing.lg,
     },
+
     skipText: {
       color: theme.colors.primary,
       fontSize: 15,
       fontWeight: '600',
     },
+
     content: {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
       gap: 28,
     },
+
     illustration: {
-      width: 240,
-      height: 280,
-      borderRadius: 28,
+      width: 220,
+      height: 240,
+      borderRadius: 24,
       backgroundColor: theme.colors.surfaceVariant,
       alignItems: 'center',
       justifyContent: 'center',
@@ -103,27 +108,34 @@ const createStyles = (theme: MD3Theme) =>
       shadowRadius: 16,
       elevation: 4,
     },
+
     illustrationText: {
       fontSize: 72,
     },
+
     title: {
       textAlign: 'center',
+      maxWidth: 300,
     },
+
     subtitle: {
       textAlign: 'center',
       maxWidth: 320,
     },
+
     progressDots: {
       flexDirection: 'row',
       gap: spacing.sm,
       marginTop: spacing.md,
     },
+
     dot: {
       width: 10,
       height: 10,
       borderRadius: 5,
       backgroundColor: theme.colors.outline,
     },
+
     dotActive: {
       backgroundColor: theme.colors.primary,
     },
