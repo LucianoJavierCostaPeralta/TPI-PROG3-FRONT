@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { AUTH_CALLBACK_URL } from './authRedirect'; // NUEVO: Se importa la URL dinamica configurada con el .env
 
 export type AuthCallbackRoute = 'HomeScreen' | 'ResetPasswordScreen';
 
@@ -15,7 +16,9 @@ function getAuthParams(url: string) {
 }
 
 export async function handleAuthCallbackUrl(url: string): Promise<AuthCallbackRoute | null> {
-  if (!url.startsWith('expo-app://auth/callback')) {
+  // NUEVO: Se cambia el string fijo 'expo-app://auth/callback' por la variable dinamica AUTH_CALLBACK_URL
+    console.log('AUTH CALLBACK URL RECIBIDA:', url);
+  if (!url.startsWith(AUTH_CALLBACK_URL)) {
     return null;
   }
 

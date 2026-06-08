@@ -30,6 +30,7 @@ export default function App() {
 
   useEffect(() => {
     const openAuthUrl = async (url: string | null) => {
+        console.log('OPEN AUTH URL:', url);
       if (!url) {
         return;
       }
