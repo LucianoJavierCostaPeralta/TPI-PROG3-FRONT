@@ -26,8 +26,9 @@ export function RegisterForm({ value, onChange, disabled = false }: RegisterForm
         label="Nombre de la empresa"
         placeholder="Nombre de su empresa"
         value={value.companyName}
-        onChangeText={(fieldValue) => updateField('companyName', fieldValue)}
+        onChangeText={(v) => updateField('companyName', v)}
         disabled={disabled}
+        icon="office-building-outline"   // nuevo
       />
 
       <TextInputField
@@ -35,8 +36,9 @@ export function RegisterForm({ value, onChange, disabled = false }: RegisterForm
         placeholder="20-12345678-9"
         keyboardType="number-pad"
         value={value.cuit}
-        onChangeText={(fieldValue) => updateField('cuit', fieldValue)}
+        onChangeText={(v) => updateField('cuit', v)}
         disabled={disabled}
+        icon="card-account-details-outline" // nuevo
       />
 
       <TextInputField
@@ -46,8 +48,9 @@ export function RegisterForm({ value, onChange, disabled = false }: RegisterForm
         autoCapitalize="none"
         autoCorrect={false}
         value={value.email}
-        onChangeText={(fieldValue) => updateField('email', fieldValue)}
+        onChangeText={(v) => updateField('email', v)}
         disabled={disabled}
+        icon="email-outline"   // nuevo
       />
 
       <TextInputField
@@ -55,8 +58,9 @@ export function RegisterForm({ value, onChange, disabled = false }: RegisterForm
         placeholder="Mínimo 6 caracteres"
         secureTextEntry
         value={value.password}
-        onChangeText={(fieldValue) => updateField('password', fieldValue)}
+        onChangeText={(v) => updateField('password', v)}
         disabled={disabled}
+        icon="lock-outline"    // nuevo
       />
 
       <TextInputField
@@ -64,8 +68,9 @@ export function RegisterForm({ value, onChange, disabled = false }: RegisterForm
         placeholder="(011) 1234-5678"
         keyboardType="phone-pad"
         value={value.phone}
-        onChangeText={(fieldValue) => updateField('phone', fieldValue)}
+        onChangeText={(v) => updateField('phone', v)}
         disabled={disabled}
+        icon="phone-outline"   // nuevo
       />
     </View>
   );

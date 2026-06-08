@@ -1,55 +1,64 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, TouchableOpacity } from 'react-native';
 import {
   Checkbox as PaperCheckbox,
+  Text,
   useTheme,
-  type CheckboxItemProps,
   type MD3Theme,
 } from 'react-native-paper';
-import { cardStyles } from '../../styles/theme';
 
-type CheckboxProps = Omit<CheckboxItemProps, 'status' | 'onPress' | 'label'> & {
+type CheckboxProps = {
   checked: boolean;
   onToggle: (checked: boolean) => void;
-  label: string;
+  // Ahora acepta un string normal O un componente de React para textos enriquecidos
+  label: string | React.ReactNode; 
+  disabled?: boolean;
+  style?: any;
 };
 
-export function Checkbox({ checked, onToggle, label, style, labelStyle, ...props }: CheckboxProps) {
+export function Checkbox({ checked, onToggle, label, disabled, style }: CheckboxProps) {
   const theme = useTheme<MD3Theme>();
   const styles = createStyles(theme);
 
   return (
-    <View style={[styles.container, style]}>
-      <PaperCheckbox.Item
+    // Usamos TouchableOpacity para que toda la fila sea clickeable, no solo el cuadrito
+    <TouchableOpacity
+      style={[styles.container, style]}
+      onPress={() => onToggle(!checked)}
+      activeOpacity={0.7}
+      disabled={disabled}
+    >
+      <PaperCheckbox.Android
         status={checked ? 'checked' : 'unchecked'}
         onPress={() => onToggle(!checked)}
-        label={label}
-        labelStyle={[styles.label, labelStyle]}
         color={theme.colors.primary}
-        uncheckedColor={theme.colors.primary}
-        position="leading"
-        mode="android"
-        style={styles.item}
-        {...props}
+        uncheckedColor={theme.colors.onSurfaceVariant}
+        disabled={disabled}
       />
-    </View>
+      <View style={styles.labelContainer}>
+        {typeof label === 'string' ? (
+          <Text style={styles.label}>{label}</Text>
+        ) : (
+          label
+        )}
+      </View>
+    </TouchableOpacity>
   );
 }
 
 const createStyles = (theme: MD3Theme) =>
   StyleSheet.create({
     container: {
-      ...cardStyles.elevated,
+      flexDirection: 'row',
+      alignItems: 'center',
       marginBottom: 28,
-      backgroundColor: theme.colors.surfaceVariant,
-      borderColor: theme.colors.outline,
-      padding: 0,
+  
     },
-    item: {
-      paddingVertical: 2,
-      paddingHorizontal: 2,
+    labelContainer: {
+      flex: 1, // Permite que el texto baje a la siguiente línea si es muy largo
+      marginLeft: 4,
     },
     label: {
-      color: theme.colors.onSurface,
+      color: theme.colors.onSurfaceVariant,
       fontSize: 14,
       lineHeight: 20,
     },

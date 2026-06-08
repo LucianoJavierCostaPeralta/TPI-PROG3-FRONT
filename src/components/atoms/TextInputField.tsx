@@ -6,16 +6,19 @@ import {
   type MD3Theme,
   type TextInputProps,
 } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons'; // nuevo: iconos
 import { spacing } from '../../styles/theme';
 
 type TextInputFieldProps = Omit<TextInputProps, 'error' | 'mode'> & {
   error?: string;
+  icon?: keyof typeof MaterialCommunityIcons.glyphMap; // nuevo: icono configurable
 };
 
 export function TextInputField({
   error,
   style,
   outlineStyle,
+  icon, // nuevo
   ...props
 }: TextInputFieldProps) {
   const theme = useTheme<MD3Theme>();
@@ -33,7 +36,17 @@ export function TextInputField({
         activeOutlineColor={theme.colors.primary}
         placeholderTextColor={theme.colors.outline}
         {...props}
+        left={
+          icon ? (
+            <TextInput.Icon
+              icon={() => (
+                <MaterialCommunityIcons name={icon} size={20} />
+              )}
+            />
+          ) : undefined
+        }
       />
+
       <HelperText type="error" visible={hasError} style={styles.error}>
         {error}
       </HelperText>
