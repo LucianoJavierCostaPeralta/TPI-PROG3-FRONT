@@ -1,8 +1,10 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Text, useTheme, type MD3Theme } from 'react-native-paper';
+// importamos la herramienta para evitar que el menu choque con los bordes del sistema
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-// Usamos los nombres reales disponibles en MaterialCommunityIcons.
+// definimos el tipo de icono usando el mapa de expo
 type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
 
 export type BottomTabMenuItem<T extends string> = {
@@ -24,7 +26,10 @@ export function BottomTabMenu<T extends string>({
   onChange,
 }: BottomTabMenuProps<T>) {
   const theme = useTheme<MD3Theme>();
-  const styles = createStyles(theme);
+  const insets = useSafeAreaInsets();
+  
+  // enviamos el espacio inferior disponible a los estilos
+  const styles = createStyles(theme, insets.bottom);
 
   return (
     <View style={styles.container}>
@@ -33,7 +38,7 @@ export function BottomTabMenu<T extends string>({
         const iconName = isActive && item.activeIcon ? item.activeIcon : item.icon;
 
         return (
-          // Cada Pressable representa una opcion del menu inferior.
+          // el componente pressable maneja el toque de cada boton
           <Pressable
             key={item.key}
             onPress={() => onChange(item.key)}
@@ -57,7 +62,8 @@ export function BottomTabMenu<T extends string>({
   );
 }
 
-const createStyles = (theme: MD3Theme) =>
+// agregamos el parametro de margen inferior a la funcion creadora de estilos
+const createStyles = (theme: MD3Theme, bottomInset: number) =>
   StyleSheet.create({
     container: {
       flexDirection: 'row',
@@ -65,7 +71,8 @@ const createStyles = (theme: MD3Theme) =>
       justifyContent: 'space-around',
       paddingHorizontal: 8,
       paddingTop: 8,
-      paddingBottom: 10,
+      // calculamos el margen sumando espacio extra si el celular tiene barra inferior
+      paddingBottom: bottomInset > 0 ? bottomInset + 8 : 16,
       borderTopWidth: 1,
       borderTopColor: theme.colors.outline,
       backgroundColor: theme.colors.surface,
