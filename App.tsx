@@ -5,6 +5,7 @@ import { PaperProvider } from 'react-native-paper';
 import AppNavigator from './src/navigation/AppNavigator';
 import { createAppTheme } from './src/styles/theme';
 import { handleAuthCallbackUrl, type AuthCallbackRoute } from './src/lib/authLinks';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 export default function App() {
   const colorScheme = useColorScheme();
@@ -67,10 +68,12 @@ export default function App() {
   };
 
   return (
+    <SafeAreaProvider>
     <PaperProvider theme={theme}>
       <NavigationContainer ref={navigationRef} onReady={handleNavigationReady}>
         <AppNavigator />
       </NavigationContainer>
     </PaperProvider>
+    </SafeAreaProvider>
   );
 }

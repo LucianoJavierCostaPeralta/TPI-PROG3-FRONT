@@ -1,16 +1,19 @@
 import { useEffect, useRef } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
 import { useTheme, type MD3Theme } from "react-native-paper";
+import { useSafeAreaInsets } from "react-native-safe-area-context"; // nuevo: respeta safe area en splash
 import { palette, spacing } from "../../styles/theme";
-import { SafeAreaView } from "react-native-safe-area-context";
 import LogoZoneScore from "../../../assets/logo-zonescore.svg";
+
 type SplashTemplateProps = {
   onAnimationComplete: () => void;
 };
 
 export function SplashTemplate({ onAnimationComplete }: SplashTemplateProps) {
   const theme = useTheme<MD3Theme>();
-  const styles = createStyles(theme);
+  const insets = useSafeAreaInsets(); // nuevo: evita contenido pegado al status bar
+  const styles = createStyles(theme, insets);
+
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const spinAnim = useRef(new Animated.Value(0)).current;
 
@@ -46,7 +49,9 @@ export function SplashTemplate({ onAnimationComplete }: SplashTemplateProps) {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+      {/* nuevo: padding seguro superior e inferior para evitar recortes en notch y gesture bar */}
+
       <View style={styles.content}>
         <Animated.View
           style={[
@@ -78,11 +83,11 @@ export function SplashTemplate({ onAnimationComplete }: SplashTemplateProps) {
 
         <Text style={styles.loadingText}>Preparando tu experiencia...</Text>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
-const createStyles = (theme: MD3Theme) =>
+const createStyles = (theme: MD3Theme ,insets: any) =>
   StyleSheet.create({
     container: {
       flex: 1,
@@ -90,14 +95,17 @@ const createStyles = (theme: MD3Theme) =>
       justifyContent: "center",
       alignItems: "center",
     },
+
     content: {
       alignItems: "center",
       justifyContent: "center",
     },
+
     logoContainer: {
       marginBottom: 60,
       alignItems: "center",
     },
+
     logoText: {
       color: theme.colors.onPrimary,
       fontSize: 48,
@@ -105,6 +113,7 @@ const createStyles = (theme: MD3Theme) =>
       letterSpacing: 2,
       textAlign: "center",
     },
+
     logoSubtitle: {
       color: palette.whiteAlpha80,
       fontSize: 14,
@@ -112,6 +121,7 @@ const createStyles = (theme: MD3Theme) =>
       letterSpacing: 1,
       marginTop: spacing.sm,
     },
+
     spinnerContainer: {
       width: 80,
       height: 80,
@@ -119,6 +129,7 @@ const createStyles = (theme: MD3Theme) =>
       alignItems: "center",
       justifyContent: "center",
     },
+
     spinner: {
       width: 60,
       height: 60,
@@ -128,12 +139,14 @@ const createStyles = (theme: MD3Theme) =>
       borderTopColor: theme.colors.onPrimary,
       borderRightColor: theme.colors.onPrimary,
     },
+
     loadingText: {
       color: palette.whiteAlpha90,
       fontSize: 16,
       fontWeight: "500",
       letterSpacing: 0.5,
     },
+
     brandRow: {
       flexDirection: "row",
       alignItems: "center",
