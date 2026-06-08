@@ -1,5 +1,8 @@
 import { supabase } from './supabase';
-import { EMAIL_CONFIRM_CALLBACK_URL, PASSWORD_RESET_CALLBACK_URL } from './authRedirect';
+import {
+  EMAIL_CONFIRM_CALLBACK_URL,
+  PASSWORD_RESET_CALLBACK_URL,
+} from './authRedirect';
 
 export type SignUpPayload = {
   companyName: string;
@@ -15,14 +18,14 @@ export async function signInWithEmail(email: string, password: string) {
     password,
   });
 
-  if (error) {
-    throw error;
-  }
+  if (error) throw error;
 
   return data;
 }
 
 export async function signUpCompany(payload: SignUpPayload) {
+  console.log('EMAIL_CONFIRM_CALLBACK_URL:', EMAIL_CONFIRM_CALLBACK_URL);
+
   const { data, error } = await supabase.auth.signUp({
     email: payload.email.trim(),
     password: payload.password,
@@ -37,9 +40,7 @@ export async function signUpCompany(payload: SignUpPayload) {
     },
   });
 
-  if (error) {
-    throw error;
-  }
+  if (error) throw error;
 
   return data;
 }
@@ -53,33 +54,28 @@ export async function sendEmailConfirmation(email: string) {
     },
   });
 
-  if (error) {
-    throw error;
-  }
+  if (error) throw error;
 }
 
 export async function sendPasswordReset(email: string) {
-  const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-    redirectTo: PASSWORD_RESET_CALLBACK_URL,
-  });
+  const { error } = await supabase.auth.resetPasswordForEmail(
+    email.trim(),
+    {
+      redirectTo: PASSWORD_RESET_CALLBACK_URL,
+    }
+  );
 
-  if (error) {
-    throw error;
-  }
+  if (error) throw error;
 }
 
 export async function updatePassword(password: string) {
   const { error } = await supabase.auth.updateUser({ password });
 
-  if (error) {
-    throw error;
-  }
+  if (error) throw error;
 }
 
 export async function signOut() {
   const { error } = await supabase.auth.signOut();
 
-  if (error) {
-    throw error;
-  }
+  if (error) throw error;
 }

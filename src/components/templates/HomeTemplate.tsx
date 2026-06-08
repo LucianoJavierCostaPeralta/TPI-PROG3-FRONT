@@ -1,5 +1,7 @@
-import { SafeAreaView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { Text, useTheme, type MD3Theme } from 'react-native-paper';
+// importamos safeareaview desde la libreria de context para tener control de los bordes
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   AppTopBar,
   BottomTabMenu,
@@ -36,8 +38,12 @@ export function HomeTemplate<T extends string>({
   const styles = createStyles(theme);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    // le decimos al area segura que solo aplique margenes arriba, izquierda y derecha
+    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+      
+      {/* quitamos el paddingbottom manual para dejar que el menu lo gestione solo */}
       <View style={styles.layout}>
+        
         <AppTopBar onMenuPress={onOpenDrawer} onBellPress={onBellPress} />
 
         <View style={styles.content}>
@@ -54,7 +60,11 @@ export function HomeTemplate<T extends string>({
         />
       </View>
 
-      <AppDrawer visible={drawerVisible} onClose={onCloseDrawer} onSignOut={onSignOut} />
+      <AppDrawer
+        visible={drawerVisible}
+        onClose={onCloseDrawer}
+        onSignOut={onSignOut}
+      />
     </SafeAreaView>
   );
 }

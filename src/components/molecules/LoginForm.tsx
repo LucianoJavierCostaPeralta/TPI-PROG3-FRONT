@@ -42,6 +42,7 @@ export function LoginForm({ onSubmit, loading = false, error }: LoginFormProps) 
         onChangeText={setEmail}
         error={emailError}
         disabled={loading}
+        icon="email-outline"   // nuevo
       />
 
       <TextInputField
@@ -52,6 +53,7 @@ export function LoginForm({ onSubmit, loading = false, error }: LoginFormProps) 
         onChangeText={setPassword}
         error={passwordError}
         disabled={loading}
+          icon="lock-outline"    // nuevo
       />
 
       <HelperText type="error" visible={Boolean(error)} style={styles.formError}>
