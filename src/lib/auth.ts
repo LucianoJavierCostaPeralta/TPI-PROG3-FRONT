@@ -40,21 +40,45 @@ export async function signUpCompany(payload: SignUpPayload) {
     },
   });
 
+  console.log('signUpCompany response:', { data, error });
+
   if (error) throw error;
 
   return data;
 }
 
 export async function sendEmailConfirmation(email: string) {
-  const { error } = await supabase.auth.resend({
+  const trimmedEmail = email.trim();
+  const { data, error } = await supabase.auth.resend({
     type: 'signup',
-    email: email.trim(),
+    email: trimmedEmail,
     options: {
       emailRedirectTo: EMAIL_CONFIRM_CALLBACK_URL,
     },
   });
 
+  console.log('resend confirmation email:', { email: trimmedEmail, data, error });
+
   if (error) throw error;
+
+  return data;
+}
+
+export async function confirmSignUpCode(email: string, token: string) {
+  const trimmedEmail = email.trim();
+  const trimmedToken = token.trim();
+
+  console.log('verifyOtp payload:', { email: trimmedEmail, token: trimmedToken });
+
+  const { data, error } = await supabase.auth.verifyOtp({
+    type: 'signup',
+    email: trimmedEmail,
+    token: trimmedToken,
+  });
+
+  if (error) throw error;
+
+  return data;
 }
 
 export async function sendPasswordReset(email: string) {

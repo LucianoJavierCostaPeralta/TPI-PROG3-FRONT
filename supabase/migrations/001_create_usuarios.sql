@@ -11,7 +11,8 @@ create table public.usuarios (
   updated_at timestamptz not null default now()
 );
 
-create or replace function public.set_updated_at()
+create or replace function public.set_updated_at(npx expo start
+)
 returns trigger
 language plpgsql
 as $$

@@ -9,6 +9,8 @@ import {
 } from '../molecules';
 import { AppDrawer } from '../organisms';
 
+import type { ReactNode } from 'react';
+
 type HomeTemplateProps<T extends string> = {
   title: string;
   subtitle: string;
@@ -20,6 +22,7 @@ type HomeTemplateProps<T extends string> = {
   onCloseDrawer: () => void;
   onSignOut: () => void;
   onBellPress?: () => void;
+  children?: ReactNode;
 };
 
 export function HomeTemplate<T extends string>({
@@ -33,6 +36,7 @@ export function HomeTemplate<T extends string>({
   onCloseDrawer,
   onSignOut,
   onBellPress,
+  children,
 }: HomeTemplateProps<T>) {
   const theme = useTheme<MD3Theme>();
   const styles = createStyles(theme);
@@ -51,6 +55,7 @@ export function HomeTemplate<T extends string>({
           <Text variant="bodyMedium" style={styles.subtitle}>
             {subtitle}
           </Text>
+          {children}
         </View>
 
         <BottomTabMenu

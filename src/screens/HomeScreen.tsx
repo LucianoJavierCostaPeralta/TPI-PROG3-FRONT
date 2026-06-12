@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { Alert } from 'react-native';
+import { Alert, View, StyleSheet } from 'react-native';
+import { Text } from 'react-native-paper';
 import { HomeTemplate } from '../components/templates';
+import { AdminMapScreen } from './AdminMapScreen';
 import { type BottomTabMenuItem } from '../components/molecules';
 import { signOut } from '../lib/auth';
 
@@ -68,8 +70,33 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
       onCloseDrawer={() => setDrawerVisible(false)}
       onSignOut={handleSignOut}
       onBellPress={() => undefined}
-    />
+    >
+      {activeTab === 'map' ? (
+        <AdminMapScreen />
+      ) : (
+        <View style={styles.placeholder}>
+          <Text>{getPlaceholder(activeTab)}</Text>
+        </View>
+      )}
+    </HomeTemplate>
   );
+}
+
+const styles = StyleSheet.create({
+  placeholder: {
+    marginTop: 24,
+  },
+});
+
+function getPlaceholder(activeTab: HomeTabKey) {
+  const placeholders: Record<HomeTabKey, string> = {
+    home: 'Bienvenido a tu panel principal.',
+    deliveries: 'Aquí verás el estado de las entregas.',
+    drivers: 'Aquí verás información de choferes.',
+    map: 'Mapa de proveedores',
+  };
+
+  return placeholders[activeTab];
 }
 
 function getTitle(activeTab: HomeTabKey) {
@@ -77,7 +104,7 @@ function getTitle(activeTab: HomeTabKey) {
     home: 'Home',
     deliveries: 'Entregas',
     drivers: 'Choferes',
-    map: 'Mapa',
+    map: 'Mapa de proveedores',
   };
 
   return labels[activeTab];

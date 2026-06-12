@@ -1,0 +1,11 @@
+{
+  "smtp": {
+    "host": "smtp.gmail.com",
+    "port": 587,
+    "secure": false,
+    "auth": {
+      "user": "TU_CORREO_GMAIL",
+      "pass": "TU_APP_PASSWORD_DE_GMAIL"
+    }
+  }
+}
