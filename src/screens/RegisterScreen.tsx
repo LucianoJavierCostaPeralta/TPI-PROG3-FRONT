@@ -1,8 +1,16 @@
 import { useState } from 'react';
-import { Alert } from 'react-native';
 import { RegisterContent, type RegisterSubmission } from '../components/organisms';
 import { RegisterTemplate } from '../components/templates';
-import { sendEmailConfirmation, signUpCompany } from '../lib/auth';
+import { signUpCompany } from '../lib/auth';
+
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error) return error.message;
+  if (error && typeof error === 'object' && 'message' in error) {
+    return String((error as { message: unknown }).message);
+  }
+
+  return fallback;
+}
 
 type RegisterScreenProps = {
   navigation?: {
@@ -20,29 +28,13 @@ export function RegisterScreen({ navigation }: RegisterScreenProps) {
     setError('');
 
     try {
-      const result = await signUpCompany(data);
-
-      if (result.session) {
-        navigation?.reset({
-          index: 0,
-          routes: [{ name: 'HomeScreen' }],
-        });
-        return;
-      }
-
-      try {
-        await sendEmailConfirmation(data.email);
-      } catch (confirmationError) {
-        console.warn('Could not resend confirmation email', confirmationError);
-      }
-
-      Alert.alert(
-        'Cuenta creada',
-        'Te enviamos el correo de confirmación. Revisá tu bandeja de entrada y spam antes de iniciar sesión.',
-        [{ text: 'Aceptar', onPress: () => navigation?.navigate('LoginScreen') }],
-      );
+      await signUpCompany(data);
+      navigation?.reset({
+        index: 0,
+        routes: [{ name: 'HomeScreen' }],
+      });
     } catch (registerError) {
-      const message = registerError instanceof Error ? registerError.message : 'No se pudo crear la cuenta.';
+      const message = getErrorMessage(registerError, 'No se pudo crear la cuenta.');
       setError(message);
     } finally {
       setLoading(false);

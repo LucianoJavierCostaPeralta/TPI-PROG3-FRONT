@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
 import { StyleSheet, View } from 'react-native';
 import { HelperText } from 'react-native-paper';
+import { z } from 'zod';
 import { CTAButton } from '../atoms/CTAButton';
 import { Checkbox } from '../atoms/Checkbox';
 import {
@@ -11,10 +13,30 @@ import {
 } from '../molecules';
 import { BenefitsList } from './BenefitsList';
 
-export type RegisterSubmission = RegisterData & {
-  fleetSize: FleetSize;
-  termsAccepted: boolean;
-};
+const fleetSizes = ['1-10', '11-30', '31-100', 'Más de 100'] as const;
+
+const registerSchema = z.object({
+  companyName: z.string().trim().min(1, 'Ingresá el nombre de la empresa.'),
+  cuit: z
+    .string()
+    .regex(/^\d+$/, 'El CUIT solo puede tener números.')
+    .length(11, 'El CUIT debe tener exactamente 11 números.'),
+  email: z
+    .string()
+    .trim()
+    .email('Ingresá un correo válido, por ejemplo nombre@empresa.com.')
+    .regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'El correo debe incluir dominio, por ejemplo nombre@empresa.com.'),
+  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres.'),
+  phone: z
+    .string()
+    .regex(/^\d+$/, 'El teléfono solo puede tener números.')
+    .min(8, 'El teléfono debe tener al menos 8 números.')
+    .max(15, 'El teléfono no puede superar 15 números.'),
+  fleetSize: z.enum(fleetSizes),
+  termsAccepted: z.boolean().refine((accepted) => accepted, 'Debés aceptar los términos y condiciones.'),
+});
+
+export type RegisterSubmission = z.infer<typeof registerSchema>;
 
 type RegisterContentProps = {
   onSubmit: (data: RegisterSubmission) => void;
@@ -32,61 +54,87 @@ const initialRegisterData: RegisterData = {
 
 const benefits = [
   {
-    icon: 'chart-line', // Ícono para monitoreo
+    icon: 'chart-line',
     title: 'Monitoreo en tiempo real',
     description: 'Visualice el estado de sus entregas y conductores desde un único panel.',
   },
   {
-    icon: 'lightning-bolt', // Ícono del rayo
+    icon: 'lightning-bolt',
     title: 'Mayor eficiencia operativa',
     description: 'Optimice rutas, tiempos de entrega y asignación de vehículos.',
   },
   {
-    icon: 'chart-scatter-plot', // Ícono de métricas
+    icon: 'chart-scatter-plot',
     title: 'Información para tomar decisiones',
     description: 'Acceda a métricas y reportes para mejorar el rendimiento de su flota.',
   },
-];
+] as const;
 
 export function RegisterContent({ onSubmit, loading = false, error }: RegisterContentProps) {
-  const [formData, setFormData] = useState<RegisterData>(initialRegisterData);
-  const [fleetSize, setFleetSize] = useState<FleetSize>('1-10');
-  const [termsAccepted, setTermsAccepted] = useState(false);
-  const [validationError, setValidationError] = useState('');
+  const {
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<RegisterSubmission>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      ...initialRegisterData,
+      fleetSize: '1-10',
+      termsAccepted: false,
+    },
+    mode: 'onSubmit',
+  });
 
-  const handleSubmit = () => {
-    if (!formData.companyName.trim() || !formData.email.trim() || !formData.password) {
-      setValidationError('Completá empresa, correo y contraseña para continuar.');
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      setValidationError('La contraseña debe tener al menos 6 caracteres.');
-      return;
-    }
-
-    if (!termsAccepted) {
-      setValidationError('Debés aceptar los términos y condiciones.');
-      return;
-    }
-
-    setValidationError('');
-    onSubmit({ ...formData, fleetSize, termsAccepted });
+  const formData = watch();
+  const registerData: RegisterData = {
+    companyName: formData.companyName,
+    cuit: formData.cuit,
+    email: formData.email,
+    password: formData.password,
+    phone: formData.phone,
   };
 
-  const visibleError = validationError || error;
+  const updateRegisterData = (data: RegisterData) => {
+    setValue('companyName', data.companyName, { shouldValidate: Boolean(errors.companyName) });
+    setValue('cuit', data.cuit, { shouldValidate: Boolean(errors.cuit) });
+    setValue('email', data.email, { shouldValidate: Boolean(errors.email) });
+    setValue('password', data.password, { shouldValidate: Boolean(errors.password) });
+    setValue('phone', data.phone, { shouldValidate: Boolean(errors.phone) });
+  };
+
+  const handleFleetSizeChange = (fleetSize: FleetSize) => {
+    setValue('fleetSize', fleetSize, { shouldValidate: Boolean(errors.fleetSize) });
+  };
+
+  const handleTermsChange = (termsAccepted: boolean) => {
+    setValue('termsAccepted', termsAccepted, { shouldValidate: true });
+  };
+
+  const visibleError = error || errors.termsAccepted?.message;
 
   return (
     <View style={styles.container}>
-      <RegisterForm value={formData} onChange={setFormData} disabled={loading} />
+      <RegisterForm
+        value={registerData}
+        errors={{
+          companyName: errors.companyName?.message,
+          cuit: errors.cuit?.message,
+          email: errors.email?.message,
+          password: errors.password?.message,
+          phone: errors.phone?.message,
+        }}
+        onChange={updateRegisterData}
+        disabled={loading}
+      />
 
-      <VehicleSelector value={fleetSize} onChange={setFleetSize} />
+      <VehicleSelector value={formData.fleetSize} onChange={handleFleetSizeChange} />
 
       <BenefitsList benefits={benefits} />
 
       <Checkbox
-        checked={termsAccepted}
-        onToggle={setTermsAccepted}
+        checked={formData.termsAccepted}
+        onToggle={handleTermsChange}
         label="He leído y acepto los términos y condiciones y la política de privacidad"
         disabled={loading}
       />
@@ -95,7 +143,7 @@ export function RegisterContent({ onSubmit, loading = false, error }: RegisterCo
         {visibleError}
       </HelperText>
 
-      <CTAButton onPress={handleSubmit} disabled={loading || !termsAccepted} loading={loading}>
+      <CTAButton onPress={handleSubmit(onSubmit)} disabled={loading} loading={loading}>
         {loading ? 'Creando cuenta...' : 'Crear cuenta'}
       </CTAButton>
     </View>

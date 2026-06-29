@@ -1,3 +1,4 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { StyleSheet, View } from 'react-native';
 import { useTheme, type MD3Theme } from 'react-native-paper';
 import { InfoCard } from '../molecules/InfoCard';
@@ -5,8 +6,8 @@ import { Title } from '../atoms/Typography';
 import { spacing, typography } from '../../styles/theme';
 
 type BenefitsListProps = {
-  benefits: Array<{
-    icon: string;
+  benefits: ReadonlyArray<{
+    icon: keyof typeof MaterialCommunityIcons.glyphMap;
     title: string;
     description: string;
   }>;

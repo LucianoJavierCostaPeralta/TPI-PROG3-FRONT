@@ -1,6 +1,6 @@
+import { type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Text, useTheme, type MD3Theme } from 'react-native-paper';
-// importamos safeareaview desde la libreria de context para tener control de los bordes
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   AppTopBar,
@@ -15,6 +15,7 @@ type HomeTemplateProps<T extends string> = {
   tabs: Array<BottomTabMenuItem<T>>;
   activeTab: T;
   drawerVisible: boolean;
+  children?: ReactNode;
   onTabChange: (tab: T) => void;
   onOpenDrawer: () => void;
   onCloseDrawer: () => void;
@@ -28,6 +29,7 @@ export function HomeTemplate<T extends string>({
   tabs,
   activeTab,
   drawerVisible,
+  children,
   onTabChange,
   onOpenDrawer,
   onCloseDrawer,
@@ -38,20 +40,18 @@ export function HomeTemplate<T extends string>({
   const styles = createStyles(theme);
 
   return (
-    // le decimos al area segura que solo aplique margenes arriba, izquierda y derecha
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-      
-      {/* quitamos el paddingbottom manual para dejar que el menu lo gestione solo */}
       <View style={styles.layout}>
-        
         <AppTopBar onMenuPress={onOpenDrawer} onBellPress={onBellPress} />
 
-        <View style={styles.content}>
-          <Text variant="headlineMedium">{title}</Text>
+        <View style={styles.header}>
+          <Text variant="headlineMedium" style={styles.title}>{title}</Text>
           <Text variant="bodyMedium" style={styles.subtitle}>
             {subtitle}
           </Text>
         </View>
+
+        <View style={styles.content}>{children}</View>
 
         <BottomTabMenu
           items={tabs}
@@ -79,14 +79,22 @@ const createStyles = (theme: MD3Theme) =>
       flex: 1,
       backgroundColor: theme.colors.background,
     },
-    content: {
-      flex: 1,
-      justifyContent: 'center',
-      gap: 8,
-      padding: 24,
+    header: {
+      paddingHorizontal: 20,
+      paddingTop: 12,
+      paddingBottom: 8,
+      gap: 4,
       backgroundColor: theme.colors.background,
+    },
+    title: {
+      color: theme.colors.onSurface,
+      fontWeight: '800',
     },
     subtitle: {
       color: theme.colors.onSurfaceVariant,
+    },
+    content: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
     },
   });

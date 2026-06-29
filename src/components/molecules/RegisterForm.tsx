@@ -9,13 +9,20 @@ export type RegisterData = {
   phone: string;
 };
 
+type RegisterFormErrors = Partial<Record<keyof RegisterData, string>>;
+
 type RegisterFormProps = {
   value: RegisterData;
+  errors?: RegisterFormErrors;
   onChange: (data: RegisterData) => void;
   disabled?: boolean;
 };
 
-export function RegisterForm({ value, onChange, disabled = false }: RegisterFormProps) {
+function onlyDigits(value: string) {
+  return value.replace(/\D/g, '');
+}
+
+export function RegisterForm({ value, errors = {}, onChange, disabled = false }: RegisterFormProps) {
   const updateField = (field: keyof RegisterData, fieldValue: string) => {
     onChange({ ...value, [field]: fieldValue });
   };
@@ -28,17 +35,19 @@ export function RegisterForm({ value, onChange, disabled = false }: RegisterForm
         value={value.companyName}
         onChangeText={(v) => updateField('companyName', v)}
         disabled={disabled}
-        icon="office-building-outline"   // nuevo
+        error={errors.companyName}
+        icon="office-building-outline"
       />
 
       <TextInputField
         label="CUIT"
-        placeholder="20-12345678-9"
+        placeholder="20123456789"
         keyboardType="number-pad"
         value={value.cuit}
-        onChangeText={(v) => updateField('cuit', v)}
+        onChangeText={(v) => updateField('cuit', onlyDigits(v).slice(0, 11))}
         disabled={disabled}
-        icon="card-account-details-outline" // nuevo
+        error={errors.cuit}
+        icon="card-account-details-outline"
       />
 
       <TextInputField
@@ -48,9 +57,10 @@ export function RegisterForm({ value, onChange, disabled = false }: RegisterForm
         autoCapitalize="none"
         autoCorrect={false}
         value={value.email}
-        onChangeText={(v) => updateField('email', v)}
+        onChangeText={(v) => updateField('email', v.trim())}
         disabled={disabled}
-        icon="email-outline"   // nuevo
+        error={errors.email}
+        icon="email-outline"
       />
 
       <TextInputField
@@ -60,17 +70,19 @@ export function RegisterForm({ value, onChange, disabled = false }: RegisterForm
         value={value.password}
         onChangeText={(v) => updateField('password', v)}
         disabled={disabled}
-        icon="lock-outline"    // nuevo
+        error={errors.password}
+        icon="lock-outline"
       />
 
       <TextInputField
         label="Teléfono de contacto"
-        placeholder="(011) 1234-5678"
+        placeholder="1134567890"
         keyboardType="phone-pad"
         value={value.phone}
-        onChangeText={(v) => updateField('phone', v)}
+        onChangeText={(v) => updateField('phone', onlyDigits(v).slice(0, 15))}
         disabled={disabled}
-        icon="phone-outline"   // nuevo
+        error={errors.phone}
+        icon="phone-outline"
       />
     </View>
   );

@@ -47,7 +47,7 @@ create policy "usuarios_select_own_or_admin"
 on public.usuarios
 for select
 to authenticated
-using (id = auth.uid() or public.is_admin());
+using (id = auth.uid() or public.is_admin() or public.is_advisor());
 
 create policy "usuarios_update_own_or_admin"
 on public.usuarios

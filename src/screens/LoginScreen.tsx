@@ -6,7 +6,16 @@ import { LoginTemplate } from '../components/templates/LoginTemplate';
 import { LoginHeader } from '../components/organisms/LoginHeader';
 import { LoginForm } from '../components/molecules/LoginForm';
 import { RegisterFooter } from '../components/molecules/RegisterFooter';
-import { sendEmailConfirmation, sendPasswordReset, signInWithEmail } from '../lib/auth';
+import { sendPasswordReset, signInWithEmail } from '../lib/auth';
+
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error) return error.message;
+  if (error && typeof error === 'object' && 'message' in error) {
+    return String((error as { message: unknown }).message);
+  }
+
+  return fallback;
+}
 
 type LoginScreenProps = {
   navigation?: {
@@ -18,10 +27,6 @@ type LoginScreenProps = {
 function getAuthErrorMessage(message: string) {
   if (message.toLowerCase().includes('invalid login credentials')) {
     return 'Correo o contraseña incorrectos.';
-  }
-
-  if (message.toLowerCase().includes('email not confirmed')) {
-    return 'Tenés que confirmar tu correo antes de ingresar.';
   }
 
   return message;
@@ -45,17 +50,7 @@ export function LoginScreen({ navigation }: LoginScreenProps) {
         routes: [{ name: 'HomeScreen' }],
       });
     } catch (authError) {
-      const message = authError instanceof Error ? authError.message : 'No se pudo iniciar sesión.';
-      if (message.toLowerCase().includes('email not confirmed')) {
-        try {
-          await sendEmailConfirmation(email);
-          setError('Tenés que confirmar tu correo antes de ingresar. Te reenviamos el email de confirmación.');
-        } catch (confirmationError) {
-          setError(getAuthErrorMessage(message));
-        }
-        return;
-      }
-
+      const message = getErrorMessage(authError, 'No se pudo iniciar sesión.');
       setError(getAuthErrorMessage(message));
     } finally {
       setLoading(false);
@@ -81,7 +76,7 @@ export function LoginScreen({ navigation }: LoginScreenProps) {
       setResetEmail('');
       Alert.alert('Correo enviado', 'Revisá tu bandeja para continuar.');
     } catch (resetError) {
-      const message = resetError instanceof Error ? resetError.message : 'No se pudo enviar el correo.';
+      const message = getErrorMessage(resetError, 'No se pudo enviar el correo.');
       setError(message);
     } finally {
       setResetLoading(false);
