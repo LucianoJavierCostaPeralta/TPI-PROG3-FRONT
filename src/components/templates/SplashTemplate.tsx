@@ -1,18 +1,16 @@
 import { useEffect, useRef } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
-import { useTheme, type MD3Theme } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context"; // nuevo: respeta safe area en splash
 import { palette, spacing } from "../../styles/theme";
-import LogoZoneScore from "../../../assets/logo-zonescore.svg";
+import LogoZoneScore from "../../assets/logo-zonescore.svg";
 
 type SplashTemplateProps = {
   onAnimationComplete: () => void;
 };
 
 export function SplashTemplate({ onAnimationComplete }: SplashTemplateProps) {
-  const theme = useTheme<MD3Theme>();
-  const insets = useSafeAreaInsets(); // nuevo: evita contenido pegado al status bar
-  const styles = createStyles(theme, insets);
+  const insets = useSafeAreaInsets();
+  const styles = createStyles();
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const spinAnim = useRef(new Animated.Value(0)).current;
@@ -87,11 +85,11 @@ export function SplashTemplate({ onAnimationComplete }: SplashTemplateProps) {
   );
 }
 
-const createStyles = (theme: MD3Theme ,insets: any) =>
+const createStyles = () =>
   StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: theme.colors.primary,
+      backgroundColor: palette.primaryBlue,
       justifyContent: "center",
       alignItems: "center",
     },
@@ -107,7 +105,7 @@ const createStyles = (theme: MD3Theme ,insets: any) =>
     },
 
     logoText: {
-      color: theme.colors.onPrimary,
+      color: palette.white,
       fontSize: 48,
       fontWeight: "900",
       letterSpacing: 2,
@@ -136,8 +134,8 @@ const createStyles = (theme: MD3Theme ,insets: any) =>
       borderRadius: 30,
       borderWidth: 4,
       borderColor: palette.whiteAlpha30,
-      borderTopColor: theme.colors.onPrimary,
-      borderRightColor: theme.colors.onPrimary,
+      borderTopColor: palette.white,
+      borderRightColor: palette.white,
     },
 
     loadingText: {

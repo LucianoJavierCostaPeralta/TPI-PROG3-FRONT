@@ -1,90 +1,73 @@
 import { MD3DarkTheme, MD3LightTheme } from 'react-native-paper';
+import { commonColors, darkTheme, lightTheme, neutralColors } from '../constants/colors';
 
-// Paleta de colores corporativa profesional
 export const palette = {
-  // Azules corporativos
-  primaryBlue: '#1976D2',
-  lightBlue: '#64B5F6',
-  
-  // Grises corporativos
-  darkGray: '#333333',
-  mediumGray: '#666666',
-  lightGray: '#F5F5F5',
-  
-  // Neutrales y especiales
-  white: '#FFFFFF',
-  success: '#22C55E',
-  warning: '#F59E0B',
-  error: '#EF4444',
-  info: '#3B82F6',
-  
-  // Grises adicionales para transiciones
-  neutral900: '#0F172A',
-  neutral800: '#111827',
-  neutral700: '#334155',
-  neutral600: '#4B5563',
-  neutral500: '#64748B',
-  neutral400: '#94A3B8',
-  neutral300: '#CBD5E1',
-  neutral200: '#E5E7EB',
-  neutral100: '#F1F5F9',
-  neutral50: '#F8FAFC',
-  black: '#000000',
-  whiteAlpha30: 'rgba(255, 255, 255, 0.3)',
-  whiteAlpha80: 'rgba(255, 255, 255, 0.8)',
-  whiteAlpha90: 'rgba(255, 255, 255, 0.9)',
-  blackAlpha20: 'rgba(0, 0, 0, 0.2)',
+  ...commonColors,
+  ...neutralColors,
+  primaryBlue: commonColors.primary,
+  lightBlue: '#54A8FF',
+  darkGray: neutralColors.neutral900,
+  mediumGray: neutralColors.neutral600,
+  lightGray: neutralColors.neutral50,
 };
 
-// Tipografía moderna y legible
 export const typography = {
-  // Títulos grandes en negrita
   headlineLg: {
     fontSize: 32,
     fontWeight: '800' as const,
     lineHeight: 40,
-    letterSpacing: -0.5,
+    letterSpacing: 0,
   },
-  // Títulos medianos
   headlineMd: {
     fontSize: 28,
     fontWeight: '800' as const,
     lineHeight: 36,
-    letterSpacing: -0.3,
+    letterSpacing: 0,
   },
-  // Títulos pequeños
   headlineSm: {
     fontSize: 24,
     fontWeight: '700' as const,
     lineHeight: 32,
+    letterSpacing: 0,
   },
-  // Texto corporal grande
   bodyLg: {
     fontSize: 16,
     fontWeight: '500' as const,
     lineHeight: 24,
+    letterSpacing: 0,
   },
-  // Texto corporal normal
   bodyMd: {
     fontSize: 15,
     fontWeight: '400' as const,
     lineHeight: 22,
+    letterSpacing: 0,
   },
-  // Texto pequeño
   bodySm: {
     fontSize: 14,
     fontWeight: '400' as const,
     lineHeight: 20,
+    letterSpacing: 0,
   },
-  // Labels y pequeños detalles
+  labelMd: {
+    fontSize: 13,
+    fontWeight: '700' as const,
+    lineHeight: 18,
+    letterSpacing: 0,
+  },
   labelSm: {
     fontSize: 12,
     fontWeight: '600' as const,
     lineHeight: 16,
+    letterSpacing: 0,
+  },
+  caption: {
+    fontSize: 11,
+    fontWeight: '500' as const,
+    lineHeight: 14,
+    letterSpacing: 0,
   },
 };
 
-// Espaciado uniforme
 export const spacing = {
   xs: 4,
   sm: 8,
@@ -95,100 +78,131 @@ export const spacing = {
   xxxl: 32,
 };
 
-// Estilos de botones
+export const radii = {
+  xs: 4,
+  sm: 6,
+  md: 8,
+  lg: 12,
+  xl: 16,
+  pill: 999,
+};
+
 export const buttonStyles = {
   primary: {
-    height: 54,
-    borderRadius: 12,
-    backgroundColor: palette.primaryBlue,
+    height: 48,
+    borderRadius: radii.md,
+    backgroundColor: commonColors.primary,
     paddingHorizontal: spacing.xl,
   },
   outline: {
-    height: 50,
-    borderRadius: 12,
-    backgroundColor: palette.white,
-    borderWidth: 2,
-    borderColor: palette.primaryBlue,
+    height: 48,
+    borderRadius: radii.md,
+    backgroundColor: commonColors.white,
+    borderWidth: 1.5,
+    borderColor: commonColors.primary,
+    paddingHorizontal: spacing.xl,
+  },
+  destructive: {
+    height: 48,
+    borderRadius: radii.md,
+    backgroundColor: commonColors.error,
     paddingHorizontal: spacing.xl,
   },
   small: {
-    height: 42,
-    borderRadius: 10,
+    height: 40,
+    borderRadius: radii.sm,
     paddingHorizontal: spacing.lg,
   },
 };
 
-// Estilos de cards
+export const inputStyles = {
+  height: 52,
+  borderRadius: radii.md,
+  borderWidth: 1.5,
+  paddingHorizontal: spacing.md,
+};
+
 export const cardStyles = {
   base: {
-    borderRadius: 14,
-    backgroundColor: palette.lightGray,
+    borderRadius: radii.md,
+    backgroundColor: lightTheme.surface,
     padding: spacing.lg,
     borderWidth: 1,
-    borderColor: palette.neutral300,
+    borderColor: lightTheme.outline,
   },
   elevated: {
-    borderRadius: 12,
-    backgroundColor: palette.white,
+    borderRadius: radii.md,
+    backgroundColor: lightTheme.surface,
     padding: spacing.md,
     borderWidth: 1,
-    borderColor: palette.neutral200,
-    shadowColor: palette.black,
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
+    borderColor: neutralColors.neutral200,
+    shadowColor: commonColors.black,
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
     elevation: 2,
   },
 };
 
-const lightColors = {
-  primary: palette.primaryBlue,
-  onPrimary: palette.white,
-  secondary: palette.lightBlue,
-  background: palette.white,
-  surface: palette.lightGray,
-  surfaceVariant: palette.neutral100,
-  outline: palette.neutral300,
-  onSurface: palette.darkGray,
-  onSurfaceVariant: palette.mediumGray,
-  error: palette.error,
-  onError: palette.white,
-};
-
-const darkColors = {
-  primary: palette.lightBlue,
-  onPrimary: palette.darkGray,
-  secondary: palette.primaryBlue,
-  background: palette.neutral900,
-  surface: palette.neutral800,
-  surfaceVariant: palette.neutral700,
-  outline: palette.neutral500,
-  onSurface: palette.neutral50,
-  onSurfaceVariant: palette.neutral300,
-  error: palette.error,
-  onError: palette.white,
-};
-
-export const appColors = {
-  light: lightColors,
-  dark: darkColors,
-  status: {
-    success: palette.success,
-    warning: palette.warning,
-    error: palette.error,
-    info: palette.info,
+export const statusStyles = {
+  assigned: {
+    backgroundColor: '#E8F8EF',
+    color: '#087A3D',
+    borderColor: '#B8EBCB',
+  },
+  onWay: {
+    backgroundColor: '#EAF3FF',
+    color: '#075DB6',
+    borderColor: '#B9D9FF',
+  },
+  pending: {
+    backgroundColor: '#FFF4E4',
+    color: '#A45A00',
+    borderColor: '#FFD8A3',
+  },
+  error: {
+    backgroundColor: '#FFE8EB',
+    color: '#B51025',
+    borderColor: '#FFB8C1',
   },
 };
 
+export const appColors = {
+  light: lightTheme,
+  dark: darkTheme,
+  status: {
+    success: commonColors.success,
+    warning: commonColors.warning,
+    error: commonColors.error,
+    info: commonColors.info,
+  },
+};
+
+function mapToPaperColors(colors: typeof lightTheme) {
+  return {
+    primary: colors.primary,
+    onPrimary: colors.onPrimary,
+    secondary: colors.secondary,
+    background: colors.background,
+    surface: colors.surface,
+    surfaceVariant: colors.surfaceVariant,
+    outline: colors.outline,
+    onSurface: colors.text,
+    onSurfaceVariant: colors.textMuted,
+    error: colors.error,
+    onError: colors.onError,
+    onBackground: colors.text,
+  };
+}
+
 export function createAppTheme(isDark: boolean) {
   const baseTheme = isDark ? MD3DarkTheme : MD3LightTheme;
-  const colors = isDark ? appColors.dark : appColors.light;
+  const colors = isDark ? darkTheme : lightTheme;
 
   return {
     ...baseTheme,
     colors: {
       ...baseTheme.colors,
-      ...colors,
-      onBackground: colors.onSurface,
+      ...mapToPaperColors(colors),
     },
   };
 }

@@ -1,9 +1,9 @@
 import { type ReactNode } from 'react';
 import { StyleSheet, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
 import { Button, useTheme, type ButtonProps, type MD3Theme } from 'react-native-paper';
-import { buttonStyles } from '../../styles/theme';
+import { buttonStyles, typography } from '../../styles/theme';
 
-type CTAButtonVariant = 'primary' | 'secondary';
+type CTAButtonVariant = 'primary' | 'secondary' | 'destructive';
 
 type CTAButtonProps = Omit<ButtonProps, 'children' | 'mode' | 'style' | 'labelStyle'> & {
   children: ReactNode;
@@ -16,26 +16,35 @@ export function CTAButton({
   children,
   disabled = false,
   variant = 'primary',
+  compact = false,
   style,
   labelStyle,
   ...props
 }: CTAButtonProps) {
   const theme = useTheme<MD3Theme>();
-  const styles = createStyles(theme);
+  const styles = createStyles(theme, compact);
   const isPrimary = variant === 'primary';
+  const isDestructive = variant === 'destructive';
 
   return (
     <Button
-      mode={isPrimary ? 'contained' : 'outlined'}
+      mode={isPrimary || isDestructive ? 'contained' : 'outlined'}
       disabled={disabled}
+      compact={compact}
       style={[
         styles.button,
-        isPrimary ? styles.primaryButton : styles.secondaryButton,
+        isPrimary ? styles.primaryButton : null,
+        variant === 'secondary' ? styles.secondaryButton : null,
+        isDestructive ? styles.destructiveButton : null,
+        disabled ? styles.disabledButton : null,
         style,
       ]}
       labelStyle={[
         styles.label,
-        isPrimary ? styles.primaryLabel : styles.secondaryLabel,
+        isPrimary ? styles.primaryLabel : null,
+        variant === 'secondary' ? styles.secondaryLabel : null,
+        isDestructive ? styles.destructiveLabel : null,
+        disabled ? styles.disabledLabel : null,
         labelStyle,
       ]}
       contentStyle={styles.content}
@@ -46,37 +55,43 @@ export function CTAButton({
   );
 }
 
-const createStyles = (theme: MD3Theme) =>
+const createStyles = (theme: MD3Theme, compact: boolean) =>
   StyleSheet.create({
     button: {
       borderRadius: buttonStyles.primary.borderRadius,
     },
     primaryButton: {
       backgroundColor: theme.colors.primary,
-      shadowColor: theme.colors.primary,
-      shadowOpacity: 0.25,
-      shadowRadius: 10,
-      elevation: 4,
     },
     secondaryButton: {
-      backgroundColor: theme.colors.background,
+      backgroundColor: theme.colors.surface,
       borderColor: theme.colors.primary,
       borderWidth: buttonStyles.outline.borderWidth,
     },
+    destructiveButton: {
+      backgroundColor: theme.colors.error,
+    },
+    disabledButton: {
+      backgroundColor: theme.colors.surfaceDisabled,
+      borderColor: theme.colors.surfaceDisabled,
+    },
     content: {
-      height: buttonStyles.primary.height,
-      paddingHorizontal: buttonStyles.primary.paddingHorizontal,
+      height: compact ? buttonStyles.small.height : buttonStyles.primary.height,
+      paddingHorizontal: compact ? buttonStyles.small.paddingHorizontal : buttonStyles.primary.paddingHorizontal,
     },
     label: {
-      fontWeight: '700',
-      letterSpacing: 0.2,
+      ...typography.labelMd,
     },
     primaryLabel: {
       color: theme.colors.onPrimary,
-      fontSize: 16,
     },
     secondaryLabel: {
       color: theme.colors.primary,
-      fontSize: 15,
+    },
+    destructiveLabel: {
+      color: theme.colors.onError,
+    },
+    disabledLabel: {
+      color: theme.colors.onSurfaceDisabled,
     },
   });

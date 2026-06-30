@@ -26,12 +26,14 @@ export function LoginTemplate({
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={styles.header}>
-          <Title style={styles.title}>{title}</Title>
-          <Subtitle style={styles.subtitle}>{subtitle}</Subtitle>
-        </View>
+        <View style={styles.content}>
+          <View style={styles.header}>
+            <Title style={styles.title}>{title}</Title>
+            <Subtitle style={styles.subtitle}>{subtitle}</Subtitle>
+          </View>
 
-        {children}
+          {children}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -45,13 +47,15 @@ const createStyles = (theme: MD3Theme, insets: any) =>
     },
 
     scrollContent: {
+      alignItems: 'center',
       paddingHorizontal: spacing.xxl,
-
-      // nuevo: evita que el texto quede pegado al status bar
       paddingTop: insets.top + spacing.xl,
-
-      // nuevo: evita que el contenido quede debajo de la barra inferior del sistema
       paddingBottom: insets.bottom + spacing.xl,
+    },
+
+    content: {
+      width: '100%',
+      maxWidth: 520,
     },
 
     header: {

@@ -11,14 +11,14 @@ export function AppTopBar({ onMenuPress, onBellPress }: AppTopBarProps) {
   const styles = createStyles(theme);
 
   return (
-    <Appbar.Header mode="center-aligned" style={styles.header}>
+    <Appbar.Header mode="center-aligned" elevated={false} style={styles.header}>
       {/* Appbar.Action ya trae el boton con icono de Paper. */}
-      <Appbar.Action icon="menu" iconColor={theme.colors.onPrimary} onPress={onMenuPress} />
+      <Appbar.Action icon="menu" size={30} iconColor={theme.colors.onPrimary} onPress={onMenuPress} style={styles.action} />
 
       {/* Titulo central de la app. */}
       <Appbar.Content title="ZoneScore" titleStyle={styles.title} />
 
-      <Appbar.Action icon="bell-outline" iconColor={theme.colors.onPrimary} onPress={onBellPress} />
+      <Appbar.Action icon="bell-outline" size={28} iconColor={theme.colors.onPrimary} onPress={onBellPress} style={styles.action} />
     </Appbar.Header>
   );
 }
@@ -26,11 +26,23 @@ export function AppTopBar({ onMenuPress, onBellPress }: AppTopBarProps) {
 const createStyles = (theme: MD3Theme) =>
   StyleSheet.create({
     header: {
-      height: 48,
+      minHeight: 72,
+      paddingHorizontal: 24,
+      paddingVertical: 14,
       backgroundColor: theme.colors.primary,
+      elevation: 0,
+      shadowOpacity: 0,
+    },
+    action: {
+      width: 44,
+      height: 44,
+      marginHorizontal: 0,
     },
     title: {
       color: theme.colors.onPrimary,
-      fontWeight: '700',
+      fontSize: 28,
+      lineHeight: 34,
+      fontWeight: '800',
+      letterSpacing: 0,
     },
   });

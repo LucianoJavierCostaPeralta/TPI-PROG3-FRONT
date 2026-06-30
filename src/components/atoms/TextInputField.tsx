@@ -6,19 +6,19 @@ import {
   type MD3Theme,
   type TextInputProps,
 } from 'react-native-paper';
-import { MaterialCommunityIcons } from '@expo/vector-icons'; // nuevo: iconos
-import { spacing } from '../../styles/theme';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { inputStyles, spacing } from '../../styles/theme';
 
 type TextInputFieldProps = Omit<TextInputProps, 'error' | 'mode'> & {
   error?: string;
-  icon?: keyof typeof MaterialCommunityIcons.glyphMap; // nuevo: icono configurable
+  icon?: keyof typeof MaterialCommunityIcons.glyphMap;
 };
 
 export function TextInputField({
   error,
   style,
   outlineStyle,
-  icon, // nuevo
+  icon,
   ...props
 }: TextInputFieldProps) {
   const theme = useTheme<MD3Theme>();
@@ -34,13 +34,15 @@ export function TextInputField({
         outlineStyle={[styles.outline, outlineStyle]}
         outlineColor={theme.colors.outline}
         activeOutlineColor={theme.colors.primary}
-        placeholderTextColor={theme.colors.outline}
+        placeholderTextColor={theme.colors.onSurfaceVariant}
+        textColor={theme.colors.onSurface}
+        dense
         {...props}
         left={
           icon ? (
             <TextInput.Icon
               icon={() => (
-                <MaterialCommunityIcons name={icon} size={20} />
+                <MaterialCommunityIcons name={icon} size={20} color={theme.colors.onSurfaceVariant} />
               )}
             />
           ) : undefined
@@ -60,14 +62,16 @@ const createStyles = (theme: MD3Theme) =>
       marginBottom: spacing.sm,
     },
     input: {
-      backgroundColor: theme.colors.surfaceVariant,
+      minHeight: inputStyles.height,
+      backgroundColor: theme.colors.surface,
     },
     outline: {
-      borderRadius: 12,
-      borderWidth: 1.5,
+      borderRadius: inputStyles.borderRadius,
+      borderWidth: inputStyles.borderWidth,
     },
     error: {
       marginTop: 0,
       paddingHorizontal: 0,
+      color: theme.colors.error,
     },
   });

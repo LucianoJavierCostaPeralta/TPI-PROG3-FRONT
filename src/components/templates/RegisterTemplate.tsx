@@ -21,11 +21,13 @@ export function RegisterTemplate({ title, children }: RegisterTemplateProps) {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={styles.header}>
-          <Title style={styles.title}>{title}</Title>
-        </View>
+        <View style={styles.content}>
+          <View style={styles.header}>
+            <Title style={styles.title}>{title}</Title>
+          </View>
 
-        {children}
+          {children}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -39,13 +41,15 @@ const createStyles = (theme: MD3Theme, insets: any) =>
     },
 
     scrollContent: {
+      alignItems: 'center',
       paddingHorizontal: spacing.xxl,
-
-      // nuevo: evita que el título quede pegado al status bar
       paddingTop: insets.top + spacing.xl,
-
-      // nuevo: evita que el contenido quede debajo de la barra de gestos / home indicator
       paddingBottom: insets.bottom + spacing.xl,
+    },
+
+    content: {
+      width: '100%',
+      maxWidth: 560,
     },
 
     header: {
