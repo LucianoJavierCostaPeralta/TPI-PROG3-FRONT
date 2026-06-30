@@ -15,27 +15,61 @@ import {
 import { HomeTemplate } from '../components/templates';
 import { type BottomTabMenuItem } from '../components/molecules';
 import { CTAButton, TextInputField } from '../components/atoms';
-import { signOut } from '../lib/auth';
-import {
-  assignOrderDriver,
-  createDelivery,
-  createDriver,
-  getAppWorkspace,
-  updateOrderStatus,
-  type AppWorkspace,
-  type DeliveryOrder,
-  type Driver,
-  type UserProfile,
-} from '../lib/company';
 
-function getErrorMessage(error: unknown, fallback: string) {
-  if (error instanceof Error) return error.message;
-  if (error && typeof error === 'object' && 'message' in error) {
-    return String((error as { message: unknown }).message);
-  }
+type UserRole = 'administrador' | 'asesor' | 'chofer';
 
-  return fallback;
-}
+type Company = {
+  id: string;
+  nombre: string;
+  cuit: string | null;
+  email: string | null;
+  telefono: string | null;
+};
+
+type UserProfile = {
+  id: string;
+  empresa_id: string | null;
+  nombre: string;
+  email: string;
+  rol: UserRole;
+  telefono: string | null;
+  activo: boolean;
+  created_at?: string;
+};
+
+type Driver = {
+  id: string;
+  empresa_id: string;
+  usuario_id: string | null;
+  nombre: string;
+  email: string | null;
+  telefono: string | null;
+  documento: string | null;
+  vehiculo?: unknown;
+  vehicle?: unknown;
+  patente?: unknown;
+  zona?: unknown;
+  zone?: unknown;
+  activo: boolean;
+  created_at: string;
+};
+
+type DeliveryOrder = {
+  id: string;
+  empresa_id?: string | null;
+  chofer_id?: string | null;
+  estado?: string | null;
+  created_at?: string | null;
+  [key: string]: unknown;
+};
+
+type AppWorkspace = {
+  profile: UserProfile;
+  company: Company | null;
+  drivers: Driver[];
+  orders: DeliveryOrder[];
+  admins: UserProfile[];
+};
 
 type HomeScreenProps = {
   navigation?: {
@@ -82,15 +116,21 @@ const initialDeliveryForm: DeliveryForm = {
 
 const emptyWorkspace: AppWorkspace = {
   profile: {
-    id: '',
-    empresa_id: null,
-    nombre: '',
-    email: '',
+    id: 'local-admin-user',
+    empresa_id: 'local-company',
+    nombre: 'Administrador local',
+    email: 'admin@empresa.local',
     rol: 'administrador',
     telefono: null,
     activo: true,
   },
-  company: null,
+  company: {
+    id: 'local-company',
+    nombre: 'Empresa local',
+    cuit: null,
+    email: 'admin@empresa.local',
+    telefono: null,
+  },
   drivers: [],
   orders: [],
   admins: [],
@@ -125,38 +165,20 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
       setLoading(true);
     }
     setError('');
-
-    try {
-      const data = await getAppWorkspace();
-      setWorkspace(data);
-      const validTabs = getTabs(data.profile.rol).map((tab) => tab.key);
-      if (!validTabs.includes(activeTab)) {
-        setActiveTab('home');
-      }
-    } catch (loadError) {
-      const message = getErrorMessage(loadError, 'No se pudo cargar la información.');
-      setError(message);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [activeTab]);
+    setWorkspace(emptyWorkspace);
+    setLoading(false);
+    setRefreshing(false);
+  }, []);
 
   useEffect(() => {
     void loadWorkspace();
   }, [loadWorkspace]);
 
   const handleSignOut = async () => {
-    try {
-      await signOut();
-      navigation?.reset({
-        index: 0,
-        routes: [{ name: 'LoginScreen' }],
-      });
-    } catch (signOutError) {
-      const message = getErrorMessage(signOutError, 'No se pudo cerrar sesión.');
-      Alert.alert('Error', message);
-    }
+    navigation?.reset({
+      index: 0,
+      routes: [{ name: 'LoginScreen' }],
+    });
   };
 
   const updateDriverField = (field: keyof DriverForm, value: string) => {
@@ -176,18 +198,8 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
     setSavingDriver(true);
     setError('');
 
-    try {
-      await createDriver(driverForm);
-      setDriverForm(initialDriverForm);
-      setShowDriverForm(false);
-      await loadWorkspace();
-      setActiveTab('drivers');
-    } catch (createError) {
-      const message = getErrorMessage(createError, 'No se pudo crear el chofer.');
-      setError(message);
-    } finally {
-      setSavingDriver(false);
-    }
+    setError('La creación de choferes se conectará con la API REST de Laravel.');
+    setSavingDriver(false)
   };
 
   const handleCreateDelivery = async () => {
@@ -204,48 +216,24 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
     setSavingDelivery(true);
     setError('');
 
-    try {
-      await createDelivery(deliveryForm);
-      setDeliveryForm(initialDeliveryForm);
-      setShowDeliveryForm(false);
-      await loadWorkspace();
-      setActiveTab('deliveries');
-    } catch (createError) {
-      const message = getErrorMessage(createError, 'No se pudo crear la entrega.');
-      setError(message);
-    } finally {
-      setSavingDelivery(false);
-    }
+    setError('La creación de entregas se conectará con la API REST de Laravel.');
+    setSavingDelivery(false)
   };
 
   const handleAssignDriver = async (orderId: string, driverId: string | null) => {
     setAssigningOrderId(orderId);
     setError('');
 
-    try {
-      await assignOrderDriver(orderId, driverId);
-      await loadWorkspace();
-    } catch (assignError) {
-      const message = getErrorMessage(assignError, 'No se pudo asignar el pedido.');
-      setError(message);
-    } finally {
-      setAssigningOrderId(null);
-    }
+    setError('La asignación de choferes se conectará con la API REST de Laravel.');
+    setAssigningOrderId(null)
   };
 
   const handleUpdateOrderStatus = async (orderId: string, estado: string) => {
     setUpdatingOrderId(orderId);
     setError('');
 
-    try {
-      await updateOrderStatus(orderId, estado);
-      await loadWorkspace();
-    } catch (statusError) {
-      const message = getErrorMessage(statusError, 'No se pudo actualizar el estado.');
-      setError(message);
-    } finally {
-      setUpdatingOrderId(null);
-    }
+    setError('La actualización de estados se conectará con la API REST de Laravel.');
+    setUpdatingOrderId(null)
   };
 
   const subtitle = useMemo(() => {
@@ -459,11 +447,11 @@ function DriversPanel({
 
   return (
     <View style={styles.panel}>
-      <View style={styles.filterRow}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
         <FilterChip label="Activos" active={filter === 'activos'} onPress={() => onFilterChange('activos')} />
         <FilterChip label="Inactivos" active={filter === 'inactivos'} onPress={() => onFilterChange('inactivos')} />
         <FilterChip label="Todos" active={filter === 'todos'} onPress={() => onFilterChange('todos')} />
-      </View>
+      </ScrollView>
 
       {canCreate && showForm ? (
         <Surface style={styles.formCard} elevation={1}>
@@ -606,12 +594,12 @@ function DeliveriesPanel({
 
   return (
     <View style={styles.panel}>
-      <View style={styles.filterRow}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
         <FilterChip label="Todos" active={filter === 'todos'} onPress={() => onFilterChange('todos')} />
         <FilterChip label="Pendientes" active={filter === 'pendiente'} onPress={() => onFilterChange('pendiente')} />
         <FilterChip label="En camino" active={filter === 'en camino'} onPress={() => onFilterChange('en camino')} />
         <FilterChip label="Realizados" active={filter === 'realizado'} onPress={() => onFilterChange('realizado')} />
-      </View>
+      </ScrollView>
 
       {role === 'administrador' && showForm ? (
         <Surface style={styles.formCard} elevation={1}>
@@ -1023,8 +1011,10 @@ const createStyles = (theme: MD3Theme) =>
     filterRow: {
       flexDirection: 'row',
       gap: 8,
+      paddingRight: 16,
     },
     filterChip: {
+      minWidth: 94,
       borderRadius: 8,
     },
     filterChipLabel: {

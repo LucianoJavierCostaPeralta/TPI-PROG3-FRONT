@@ -3,7 +3,6 @@ import { Alert } from 'react-native';
 import { TextInputField } from '../components/atoms/TextInputField';
 import { CTAButton } from '../components/atoms/CTAButton';
 import { LoginTemplate } from '../components/templates/LoginTemplate';
-import { updatePassword } from '../lib/auth';
 
 type ResetPasswordScreenProps = {
   navigation?: {
@@ -31,19 +30,12 @@ export function ResetPasswordScreen({ navigation }: ResetPasswordScreenProps) {
     setLoading(true);
     setError('');
 
-    try {
-      await updatePassword(password);
-      Alert.alert('Contraseña actualizada', 'Ya podés ingresar con tu nueva contraseña.');
-      navigation?.reset({
-        index: 0,
-        routes: [{ name: 'HomeScreen' }],
-      });
-    } catch (updateError) {
-      const message = updateError instanceof Error ? updateError.message : 'No se pudo actualizar la contraseña.';
-      setError(message);
-    } finally {
-      setLoading(false);
-    }
+    Alert.alert('API pendiente', 'El cambio de contraseña se conectará con la API REST de Laravel.');
+    navigation?.reset({
+      index: 0,
+      routes: [{ name: 'LoginScreen' }],
+    });
+    setLoading(false);
   };
 
   return (

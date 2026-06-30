@@ -1,16 +1,6 @@
 import { useState } from 'react';
 import { RegisterContent, type RegisterSubmission } from '../components/organisms';
 import { RegisterTemplate } from '../components/templates';
-import { signUpCompany } from '../lib/auth';
-
-function getErrorMessage(error: unknown, fallback: string) {
-  if (error instanceof Error) return error.message;
-  if (error && typeof error === 'object' && 'message' in error) {
-    return String((error as { message: unknown }).message);
-  }
-
-  return fallback;
-}
 
 type RegisterScreenProps = {
   navigation?: {
@@ -27,18 +17,17 @@ export function RegisterScreen({ navigation }: RegisterScreenProps) {
     setLoading(true);
     setError('');
 
-    try {
-      await signUpCompany(data);
-      navigation?.reset({
-        index: 0,
-        routes: [{ name: 'HomeScreen' }],
-      });
-    } catch (registerError) {
-      const message = getErrorMessage(registerError, 'No se pudo crear la cuenta.');
-      setError(message);
-    } finally {
+    if (!data.companyName.trim() || !data.email.trim() || !data.password) {
+      setError('Completá los datos requeridos.');
       setLoading(false);
+      return;
     }
+
+    navigation?.reset({
+      index: 0,
+      routes: [{ name: 'HomeScreen' }],
+    });
+    setLoading(false);
   };
 
   return (
