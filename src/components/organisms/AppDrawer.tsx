@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import {
   Drawer,
@@ -18,6 +19,12 @@ type AppDrawerProps = {
 export function AppDrawer({ visible, onClose, onSignOut }: AppDrawerProps) {
   const theme = useTheme<MD3Theme>();
   const styles = createStyles(theme);
+  const router = useRouter();
+
+  const handleOpenSettings = () => {
+    onClose();
+    router.push('/configuracion');
+  };
 
   return (
     <Portal>
@@ -35,7 +42,7 @@ export function AppDrawer({ visible, onClose, onSignOut }: AppDrawerProps) {
 
         <Drawer.Section showDivider={false} style={styles.section}>
           <Drawer.Item icon="account-outline" label="Mi Perfil" onPress={onClose} />
-          <Drawer.Item icon="cog-outline" label="Configuracion" onPress={onClose} />
+          <Drawer.Item icon="cog-outline" label="Configuración" onPress={handleOpenSettings} />
         </Drawer.Section>
 
         <View style={styles.divider} />
