@@ -15,6 +15,22 @@ import {
 import { HomeTemplate } from '../components/templates';
 import { type BottomTabMenuItem } from '../components/molecules';
 import { CTAButton, TextInputField } from '../components/atoms';
+import {
+  acceptDelivery,
+  assignDriver,
+  createDelivery,
+  createDriver,
+  getApiErrorMessage,
+  getProfile,
+  listAdminDeliveries,
+  listDriverDeliveries,
+  listDrivers,
+  logout,
+  updateDeliveryState,
+  type AuthUser,
+  type Delivery,
+  type Driver as ApiDriver,
+} from '../services/api';
 
 type UserRole = 'administrador' | 'asesor' | 'chofer';
 
@@ -59,6 +75,7 @@ type DeliveryOrder = {
   empresa_id?: string | null;
   chofer_id?: string | null;
   estado?: string | null;
+  estado_id?: number;
   created_at?: string | null;
   [key: string]: unknown;
 };
@@ -87,10 +104,12 @@ type DriverForm = {
   email: string;
   telefono: string;
   documento: string;
+  fechaNacimiento: string;
 };
 
 type DeliveryForm = {
   cliente: string;
+  clienteDni: string;
   destino: string;
   referencia: string;
   observaciones: string;
@@ -103,10 +122,12 @@ const initialDriverForm: DriverForm = {
   email: '',
   telefono: '',
   documento: '',
+  fechaNacimiento: '',
 };
 
 const initialDeliveryForm: DeliveryForm = {
   cliente: '',
+  clienteDni: '',
   destino: '',
   referencia: '',
   observaciones: '',
@@ -135,6 +156,46 @@ const emptyWorkspace: AppWorkspace = {
   orders: [],
   admins: [],
 };
+
+function normalizeRole(role?: string): UserRole {
+  const normalized = role?.toLowerCase();
+  if (normalized === 'chofer' || normalized === 'asesor') return normalized;
+  return 'administrador';
+}
+
+function mapDriver(driver: ApiDriver): Driver {
+  return {
+    id: driver.id,
+    empresa_id: driver.empresa_id,
+    usuario_id: driver.id,
+    nombre: driver.nombre_completo,
+    email: driver.email,
+    telefono: driver.telefono,
+    documento: driver.dni,
+    activo: driver.activo,
+    created_at: driver.created_at,
+  };
+}
+
+function mapDelivery(delivery: Delivery): DeliveryOrder {
+  return {
+    ...delivery,
+    estado: delivery.estado?.nombre_estado ?? String(delivery.estado_id),
+    destino: delivery.direccion_destino,
+    productos: delivery.producto,
+  };
+}
+
+async function loadRoleData(_user: AuthUser, role: UserRole) {
+  if (role === 'chofer') {
+    return { drivers: [], orders: (await listDriverDeliveries()).map(mapDelivery) };
+  }
+  if (role === 'administrador') {
+    const [drivers, orders] = await Promise.all([listDrivers(), listAdminDeliveries()]);
+    return { drivers: drivers.map(mapDriver), orders: orders.map(mapDelivery) };
+  }
+  return { drivers: [], orders: [] };
+}
 
 export function HomeScreen({ navigation }: HomeScreenProps) {
   const theme = useTheme<MD3Theme>();
@@ -165,9 +226,36 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
       setLoading(true);
     }
     setError('');
-    setWorkspace(emptyWorkspace);
-    setLoading(false);
-    setRefreshing(false);
+    try {
+      const user = await getProfile();
+      const role = normalizeRole(user.rol?.nombre_rol);
+      const roleData = await loadRoleData(user, role);
+      setWorkspace({
+        ...emptyWorkspace,
+        ...roleData,
+        profile: {
+          id: String(user.id),
+          empresa_id: user.empresa_id ? String(user.empresa_id) : null,
+          nombre: user.nombre_completo,
+          email: user.email,
+          rol: role,
+          telefono: user.telefono,
+          activo: user.activo,
+        },
+        company: user.empresa ? {
+          id: String(user.empresa.id),
+          nombre: user.empresa.razon_social,
+          cuit: null,
+          email: null,
+          telefono: null,
+        } : null,
+      });
+    } catch (requestError) {
+      setError(getApiErrorMessage(requestError, 'No se pudo cargar el perfil.'));
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -175,10 +263,14 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
   }, [loadWorkspace]);
 
   const handleSignOut = async () => {
-    navigation?.reset({
-      index: 0,
-      routes: [{ name: 'LoginScreen' }],
-    });
+    try {
+      await logout();
+    } finally {
+      navigation?.reset({
+        index: 0,
+        routes: [{ name: 'LoginScreen' }],
+      });
+    }
   };
 
   const updateDriverField = (field: keyof DriverForm, value: string) => {
@@ -195,11 +287,34 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
       return;
     }
 
+    if (!/^\d{8}$/.test(driverForm.documento)) {
+      setError('El DNI debe tener exactamente 8 números.');
+      return;
+    }
+    if (!driverForm.fechaNacimiento) {
+      setError('Ingresá la fecha de nacimiento.');
+      return;
+    }
+
     setSavingDriver(true);
     setError('');
-
-    setError('La creación de choferes se conectará con la API REST de Laravel.');
-    setSavingDriver(false)
+    try {
+      await createDriver({
+        nombre_completo: driverForm.nombre.trim(),
+        dni: driverForm.documento,
+        fecha_nacimiento: driverForm.fechaNacimiento,
+        email: driverForm.email.trim().toLowerCase(),
+        telefono: driverForm.telefono || undefined,
+        password: '123456',
+      });
+      setDriverForm(initialDriverForm);
+      setShowDriverForm(false);
+      await loadWorkspace(true);
+    } catch (requestError) {
+      setError(getApiErrorMessage(requestError, 'No se pudo crear el chofer.'));
+    } finally {
+      setSavingDriver(false);
+    }
   };
 
   const handleCreateDelivery = async () => {
@@ -212,28 +327,64 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
       setError('Ingresá el destino.');
       return;
     }
+    if (!/^\d{8}$/.test(deliveryForm.clienteDni)) {
+      setError('El DNI del cliente debe tener exactamente 8 números.');
+      return;
+    }
+    if (!deliveryForm.productos.trim()) {
+      setError('Ingresá el producto.');
+      return;
+    }
 
     setSavingDelivery(true);
     setError('');
 
-    setError('La creación de entregas se conectará con la API REST de Laravel.');
-    setSavingDelivery(false)
+    try {
+      await createDelivery({
+        cliente: deliveryForm.cliente.trim(),
+        cliente_dni: deliveryForm.clienteDni,
+        producto: deliveryForm.productos.trim(),
+        direccion_destino: deliveryForm.destino.trim(),
+        referencia: deliveryForm.referencia.trim() || deliveryForm.observaciones.trim() || undefined,
+      });
+      setDeliveryForm(initialDeliveryForm);
+      setShowDeliveryForm(false);
+      await loadWorkspace(true);
+    } catch (requestError) {
+      setError(getApiErrorMessage(requestError, 'No se pudo crear la entrega.'));
+    } finally {
+      setSavingDelivery(false);
+    }
   };
 
   const handleAssignDriver = async (orderId: string, driverId: string | null) => {
     setAssigningOrderId(orderId);
     setError('');
 
-    setError('La asignación de choferes se conectará con la API REST de Laravel.');
-    setAssigningOrderId(null)
+    try {
+      await assignDriver(orderId, driverId);
+      await loadWorkspace(true);
+    } catch (requestError) {
+      setError(getApiErrorMessage(requestError, 'No se pudo asignar el chofer.'));
+    } finally {
+      setAssigningOrderId(null);
+    }
   };
 
-  const handleUpdateOrderStatus = async (orderId: string, estado: string) => {
+  const handleUpdateOrderStatus = async (orderId: string, action: string, clienteDni?: string) => {
     setUpdatingOrderId(orderId);
     setError('');
 
-    setError('La actualización de estados se conectará con la API REST de Laravel.');
-    setUpdatingOrderId(null)
+    try {
+      if (action === 'accept') await acceptDelivery(orderId);
+      if (action === 'on_the_way') await updateDeliveryState(orderId, 4);
+      if (action === 'delivered') await updateDeliveryState(orderId, 5, clienteDni);
+      await loadWorkspace(true);
+    } catch (requestError) {
+      setError(getApiErrorMessage(requestError, 'No se pudo actualizar el estado.'));
+    } finally {
+      setUpdatingOrderId(null);
+    }
   };
 
   const subtitle = useMemo(() => {
@@ -439,6 +590,18 @@ function DriversPanel({
 }) {
   const theme = useTheme<MD3Theme>();
   const styles = createStyles(theme);
+  const [birthDatePickerVisible, setBirthDatePickerVisible] = useState(false);
+  const selectedBirthDate = form.fechaNacimiento
+    ? parseDeliveryFormDate(form.fechaNacimiento)
+    : new Date(1990, 0, 1);
+  const handleBirthDateChange = (_event: DateTimePickerEvent, date?: Date) => {
+    if (Platform.OS === 'android') {
+      setBirthDatePickerVisible(false);
+    }
+    if (date) {
+      onChange('fechaNacimiento', formatDateForInput(date));
+    }
+  };
   const filteredDrivers = drivers.filter((driver) => {
     if (filter === 'activos') return driver.activo;
     if (filter === 'inactivos') return !driver.activo;
@@ -486,6 +649,44 @@ function DriversPanel({
             disabled={saving}
             icon="email-outline"
           />
+          <TextInputField
+            label="Fecha de nacimiento"
+            placeholder="Seleccionar fecha"
+            value={formatDateForDisplay(form.fechaNacimiento)}
+            onPressIn={() => {
+              if (!saving) setBirthDatePickerVisible(true);
+            }}
+            editable={false}
+            showSoftInputOnFocus={false}
+            disabled={saving}
+            icon="calendar-outline"
+            right={
+              <PaperTextInput.Icon
+                icon="calendar-month-outline"
+                onPress={() => setBirthDatePickerVisible(true)}
+                disabled={saving}
+              />
+            }
+          />
+          {birthDatePickerVisible ? (
+            <DateTimePicker
+              value={selectedBirthDate}
+              mode="date"
+              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              maximumDate={new Date()}
+              onChange={handleBirthDateChange}
+            />
+          ) : null}
+          {Platform.OS === 'ios' && birthDatePickerVisible ? (
+            <CTAButton
+              compact
+              variant="secondary"
+              onPress={() => setBirthDatePickerVisible(false)}
+              style={styles.datePickerDoneButton}
+            >
+              Listo
+            </CTAButton>
+          ) : null}
           <TextInputField
             label="Teléfono"
             placeholder="Ej: 5491112345678"
@@ -566,12 +767,12 @@ function DeliveriesPanel({
   onSubmit: () => void;
   onCancel: () => void;
   onAssign: (orderId: string, driverId: string | null) => void;
-  onUpdateStatus: (orderId: string, estado: string) => void;
+  onUpdateStatus: (orderId: string, action: string, clienteDni?: string) => void;
 }) {
   const theme = useTheme<MD3Theme>();
   const styles = createStyles(theme);
-  const statusOptions: DeliveryFilter[] = ['pendiente', 'en camino', 'realizado'];
   const [datePickerVisible, setDatePickerVisible] = useState(false);
+  const [deliveryDnis, setDeliveryDnis] = useState<Record<string, string>>({});
   const selectedDate = parseDeliveryFormDate(form.fecha);
 
   const handleDateChange = (_event: DateTimePickerEvent, date?: Date) => {
@@ -614,6 +815,15 @@ function DeliveriesPanel({
             onChangeText={(value) => onChange('cliente', value)}
             disabled={saving}
             icon="account-search-outline"
+          />
+          <TextInputField
+            label="DNI del cliente"
+            placeholder="12345678"
+            value={form.clienteDni}
+            onChangeText={(value) => onChange('clienteDni', value.replace(/\D/g, '').slice(0, 8))}
+            keyboardType="number-pad"
+            disabled={saving}
+            icon="card-account-details-outline"
           />
           <TextInputField
             label="Destino"
@@ -698,10 +908,10 @@ function DeliveriesPanel({
 
       {filteredOrders.map((order) => {
         const assignedDriver = drivers.find((driver) => driver.usuario_id === order.chofer_id || driver.id === order.chofer_id);
-        const currentStatus = normalizeOrderStatus(order.estado);
+        const currentStatus = normalizeOrderStatus(order.estado_id ?? order.estado);
         const isAssigning = assigningOrderId === order.id;
         const isUpdating = updatingOrderId === order.id;
-        const canEditStatus = role === 'administrador' || role === 'chofer';
+        const canEditStatus = role === 'chofer';
 
         return (
           <Surface key={order.id} style={styles.orderCard} elevation={1}>
@@ -711,7 +921,7 @@ function DeliveriesPanel({
                 <Text variant="bodySmall" style={styles.mutedText}>{getOrderDestination(order)}</Text>
               </View>
               <View style={[styles.orderStatusBadge, getOrderStatusStyle(currentStatus, styles)]}>
-                <Text variant="labelSmall" style={styles.orderStatusText}>{getOrderStatusLabel(currentStatus)}</Text>
+                <Text variant="labelSmall" style={styles.orderStatusText}>{getBackendStatusLabel(order)}</Text>
               </View>
               {isAssigning || isUpdating ? <ActivityIndicator size="small" /> : null}
             </View>
@@ -720,7 +930,10 @@ function DeliveriesPanel({
               <OrderMeta label="Cliente" value={getOrderField(order, ['cliente', 'cliente_nombre', 'nombre_cliente'])} />
               <OrderMeta label="Referencia" value={getOrderField(order, ['referencia', 'codigo_cliente', 'numero', 'codigo'])} />
               <OrderMeta label="Fecha" value={formatOrderDate(order)} />
-              <OrderMeta label="Chofer" value={assignedDriver?.nombre ?? 'Sin asignar'} />
+              <OrderMeta
+                label="Chofer"
+                value={assignedDriver?.nombre ?? getAssignedDriverName(order) ?? (role === 'chofer' ? 'Vos' : 'Sin asignar')}
+              />
             </View>
 
             {getOrderProducts(order) ? (
@@ -761,24 +974,56 @@ function DeliveriesPanel({
               </View>
             ) : null}
 
-            {canEditStatus ? (
+            {canEditStatus && order.estado_id === 2 ? (
               <View style={styles.sectionBlock}>
                 <Text variant="labelLarge" style={styles.inputLabel}>Estado</Text>
-                <View style={styles.driverActions}>
-                  {statusOptions.map((status) => (
-                    <CTAButton
-                      key={status}
-                      variant={currentStatus === status ? 'primary' : 'secondary'}
-                      compact
-                      disabled={isUpdating}
-                      style={styles.smallButton}
-                      labelStyle={styles.smallButtonLabel}
-                      onPress={() => onUpdateStatus(order.id, status)}
-                    >
-                      {getOrderStatusLabel(status)}
-                    </CTAButton>
-                  ))}
-                </View>
+                <CTAButton
+                  compact
+                  disabled={isUpdating}
+                  loading={isUpdating}
+                  onPress={() => onUpdateStatus(order.id, 'accept')}
+                >
+                  Aceptar entrega
+                </CTAButton>
+              </View>
+            ) : null}
+
+            {canEditStatus && order.estado_id === 3 ? (
+              <View style={styles.sectionBlock}>
+                <Text variant="labelLarge" style={styles.inputLabel}>Entrega aceptada</Text>
+                <CTAButton
+                  compact
+                  disabled={isUpdating}
+                  loading={isUpdating}
+                  onPress={() => onUpdateStatus(order.id, 'on_the_way')}
+                >
+                  Iniciar recorrido
+                </CTAButton>
+              </View>
+            ) : null}
+
+            {canEditStatus && order.estado_id === 4 ? (
+              <View style={styles.sectionBlock}>
+                <TextInputField
+                  label="DNI del cliente"
+                  placeholder="Ingresalo para confirmar la entrega"
+                  value={deliveryDnis[order.id] ?? ''}
+                  onChangeText={(value) => setDeliveryDnis((current) => ({
+                    ...current,
+                    [order.id]: value.replace(/\D/g, '').slice(0, 8),
+                  }))}
+                  keyboardType="number-pad"
+                  disabled={isUpdating}
+                  icon="card-account-details-outline"
+                />
+                <CTAButton
+                  compact
+                  disabled={isUpdating || (deliveryDnis[order.id]?.length ?? 0) !== 8}
+                  loading={isUpdating}
+                  onPress={() => onUpdateStatus(order.id, 'delivered', deliveryDnis[order.id])}
+                >
+                  Confirmar entrega
+                </CTAButton>
               </View>
             ) : null}
           </Surface>
@@ -872,11 +1117,11 @@ function getOrderField(order: DeliveryOrder, fields: string[]) {
 }
 
 function getOrderDestination(order: DeliveryOrder) {
-  return getOrderField(order, ['destino', 'direccion', 'direccion_entrega', 'domicilio']) ?? 'Destino sin cargar';
+  return getOrderField(order, ['direccion_destino', 'destino', 'direccion', 'direccion_entrega', 'domicilio']) ?? 'Destino sin cargar';
 }
 
 function getOrderProducts(order: DeliveryOrder) {
-  const productos = order.productos ?? order.items ?? order.detalle;
+  const productos = order.producto ?? order.productos ?? order.items ?? order.detalle;
 
   if (Array.isArray(productos)) {
     return `${productos.length} producto${productos.length === 1 ? '' : 's'}`;
@@ -886,6 +1131,14 @@ function getOrderProducts(order: DeliveryOrder) {
     return productos;
   }
 
+  return null;
+}
+
+function getAssignedDriverName(order: DeliveryOrder) {
+  const chofer = order.chofer;
+  if (chofer && typeof chofer === 'object' && 'nombre_completo' in chofer) {
+    return String(chofer.nombre_completo);
+  }
   return null;
 }
 
@@ -924,8 +1177,8 @@ function formatOrderDate(order: DeliveryOrder) {
 function normalizeOrderStatus(status: unknown): DeliveryFilter {
   const normalized = String(status ?? 'pendiente').toLowerCase().trim();
 
-  if (normalized === 'realizado' || normalized === 'entregado' || normalized === 'finalizado') return 'realizado';
-  if (normalized === 'en camino' || normalized === 'en_camino' || normalized === 'encamino') return 'en camino';
+  if (['5', '6', 'realizado', 'entregado', 'entregada', 'delivered', 'finalizado'].includes(normalized)) return 'realizado';
+  if (['4', 'en camino', 'en_camino', 'encamino', 'on the way', 'on_the_way'].includes(normalized)) return 'en camino';
 
   return 'pendiente';
 }
@@ -934,6 +1187,17 @@ function getOrderStatusLabel(status: DeliveryFilter) {
   if (status === 'en camino') return 'En camino';
   if (status === 'realizado') return 'Realizado';
   return 'Pendiente';
+}
+
+function getBackendStatusLabel(order: DeliveryOrder) {
+  if (order.estado_id === 5 || order.estado_id === 6) {
+    return 'Finalizado';
+  }
+  const status = String(order.estado ?? '').trim();
+  if (status && !/^\d+$/.test(status)) {
+    return status.charAt(0).toUpperCase() + status.slice(1);
+  }
+  return getOrderStatusLabel(normalizeOrderStatus(status));
 }
 
 function getOrderStatusStyle(status: DeliveryFilter, styles: ReturnType<typeof createStyles>) {
