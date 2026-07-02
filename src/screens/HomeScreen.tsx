@@ -31,6 +31,13 @@ import {
   type Delivery,
   type Driver as ApiDriver,
 } from '../services/api';
+import {
+  DNI_PATTERN,
+  EMAIL_PATTERN,
+  PHONE_PATTERN,
+  isPastDate,
+  onlyDigits,
+} from '../utils/validation';
 
 type UserRole = 'administrador' | 'asesor' | 'chofer';
 
@@ -287,12 +294,24 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
       return;
     }
 
-    if (!/^\d{8}$/.test(driverForm.documento)) {
+    if (!/^[\p{L}\s]+$/u.test(driverForm.nombre.trim()) || driverForm.nombre.trim().length < 3) {
+      setError('El nombre debe tener al menos 3 letras y no puede contener números.');
+      return;
+    }
+    if (!DNI_PATTERN.test(driverForm.documento)) {
       setError('El DNI debe tener exactamente 8 números.');
       return;
     }
-    if (!driverForm.fechaNacimiento) {
-      setError('Ingresá la fecha de nacimiento.');
+    if (!isPastDate(driverForm.fechaNacimiento)) {
+      setError('Seleccioná una fecha de nacimiento anterior a hoy.');
+      return;
+    }
+    if (!EMAIL_PATTERN.test(driverForm.email.trim())) {
+      setError('Ingresá un correo válido, por ejemplo example@example.com.');
+      return;
+    }
+    if (driverForm.telefono && !PHONE_PATTERN.test(driverForm.telefono)) {
+      setError('El teléfono debe contener entre 8 y 15 números.');
       return;
     }
 
@@ -327,12 +346,20 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
       setError('Ingresá el destino.');
       return;
     }
-    if (!/^\d{8}$/.test(deliveryForm.clienteDni)) {
+    if (deliveryForm.cliente.trim().length < 2) {
+      setError('El nombre del cliente debe tener al menos 2 caracteres.');
+      return;
+    }
+    if (!DNI_PATTERN.test(deliveryForm.clienteDni)) {
       setError('El DNI del cliente debe tener exactamente 8 números.');
       return;
     }
-    if (!deliveryForm.productos.trim()) {
-      setError('Ingresá el producto.');
+    if (deliveryForm.destino.trim().length < 3) {
+      setError('El destino debe tener al menos 3 caracteres.');
+      return;
+    }
+    if (deliveryForm.productos.trim().length < 2) {
+      setError('El producto debe tener al menos 2 caracteres.');
       return;
     }
 
@@ -634,7 +661,7 @@ function DriversPanel({
             label="DNI"
             placeholder="Ej: 12345678"
             value={form.documento}
-            onChangeText={(value) => onChange('documento', value.replace(/\D/g, ''))}
+            onChangeText={(value) => onChange('documento', onlyDigits(value, 8))}
             keyboardType="number-pad"
             disabled={saving}
             icon="card-account-details-outline"
@@ -673,7 +700,7 @@ function DriversPanel({
               value={selectedBirthDate}
               mode="date"
               display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-              maximumDate={new Date()}
+              maximumDate={new Date(Date.now() - 86_400_000)}
               onChange={handleBirthDateChange}
             />
           ) : null}
@@ -691,7 +718,7 @@ function DriversPanel({
             label="Teléfono"
             placeholder="Ej: 5491112345678"
             value={form.telefono}
-            onChangeText={(value) => onChange('telefono', value.replace(/\D/g, ''))}
+            onChangeText={(value) => onChange('telefono', onlyDigits(value, 15))}
             keyboardType="phone-pad"
             disabled={saving}
             icon="phone-outline"
@@ -820,7 +847,7 @@ function DeliveriesPanel({
             label="DNI del cliente"
             placeholder="12345678"
             value={form.clienteDni}
-            onChangeText={(value) => onChange('clienteDni', value.replace(/\D/g, '').slice(0, 8))}
+            onChangeText={(value) => onChange('clienteDni', onlyDigits(value, 8))}
             keyboardType="number-pad"
             disabled={saving}
             icon="card-account-details-outline"
@@ -1010,7 +1037,7 @@ function DeliveriesPanel({
                   value={deliveryDnis[order.id] ?? ''}
                   onChangeText={(value) => setDeliveryDnis((current) => ({
                     ...current,
-                    [order.id]: value.replace(/\D/g, '').slice(0, 8),
+                    [order.id]: onlyDigits(value, 8),
                   }))}
                   keyboardType="number-pad"
                   disabled={isUpdating}

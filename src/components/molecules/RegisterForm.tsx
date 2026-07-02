@@ -1,5 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 import { TextInputField } from '../atoms/TextInputField';
+import { onlyDigits } from '../../utils/validation';
 
 export type RegisterData = {
   companyName: string;
@@ -17,10 +18,6 @@ type RegisterFormProps = {
   onChange: (data: RegisterData) => void;
   disabled?: boolean;
 };
-
-function onlyDigits(value: string) {
-  return value.replace(/\D/g, '');
-}
 
 export function RegisterForm({ value, errors = {}, onChange, disabled = false }: RegisterFormProps) {
   const updateField = (field: keyof RegisterData, fieldValue: string) => {
@@ -44,7 +41,7 @@ export function RegisterForm({ value, errors = {}, onChange, disabled = false }:
         placeholder="20123456789"
         keyboardType="number-pad"
         value={value.cuit}
-        onChangeText={(v) => updateField('cuit', onlyDigits(v).slice(0, 11))}
+        onChangeText={(v) => updateField('cuit', onlyDigits(v, 11))}
         disabled={disabled}
         error={errors.cuit}
         icon="card-account-details-outline"
@@ -79,7 +76,7 @@ export function RegisterForm({ value, errors = {}, onChange, disabled = false }:
         placeholder="1134567890"
         keyboardType="phone-pad"
         value={value.phone}
-        onChangeText={(v) => updateField('phone', onlyDigits(v).slice(0, 15))}
+        onChangeText={(v) => updateField('phone', onlyDigits(v, 15))}
         disabled={disabled}
         error={errors.phone}
         icon="phone-outline"

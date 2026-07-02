@@ -7,6 +7,7 @@ import { LoginHeader } from '../components/organisms/LoginHeader';
 import { LoginForm } from '../components/molecules/LoginForm';
 import { RegisterFooter } from '../components/molecules/RegisterFooter';
 import { getApiErrorMessage, login, recoverPassword } from '../services/api';
+import { isValidEmail } from '../utils/validation';
 
 type LoginScreenProps = {
   navigation?: {
@@ -52,6 +53,10 @@ export function LoginScreen({ navigation }: LoginScreenProps) {
   const handleSendPasswordReset = async () => {
     if (!resetEmail.trim()) {
       setError('Ingresá tu correo para recuperar la contraseña.');
+      return;
+    }
+    if (!isValidEmail(resetEmail)) {
+      setError('Ingresá un correo válido, por ejemplo example@example.com.');
       return;
     }
 

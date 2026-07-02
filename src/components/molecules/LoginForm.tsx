@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { HelperText } from 'react-native-paper';
 import { CTAButton } from '../atoms/CTAButton';
 import { TextInputField } from '../atoms/TextInputField';
+import { isValidEmail } from '../../utils/validation';
 
 type LoginFormProps = {
   onSubmit: (email: string, password: string) => void;
@@ -19,11 +20,18 @@ export function LoginForm({ onSubmit, loading = false, error }: LoginFormProps) 
   const handleSubmit = () => {
     const missingEmail = !email.trim();
     const missingPassword = !password;
+    const invalidEmail = !missingEmail && !isValidEmail(email);
 
-    setEmailError(missingEmail ? 'El correo es requerido' : '');
+    setEmailError(
+      missingEmail
+        ? 'El correo es requerido'
+        : invalidEmail
+          ? 'Ingresá un correo válido, por ejemplo example@example.com'
+          : '',
+    );
     setPasswordError(missingPassword ? 'La contraseña es requerida' : '');
 
-    if (missingEmail || missingPassword) {
+    if (missingEmail || invalidEmail || missingPassword) {
       return;
     }
 

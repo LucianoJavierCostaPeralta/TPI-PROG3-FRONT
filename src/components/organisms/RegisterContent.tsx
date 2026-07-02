@@ -12,6 +12,7 @@ import {
   type FleetSize,
 } from '../molecules';
 import { BenefitsList } from './BenefitsList';
+import { CUIT_PATTERN, EMAIL_PATTERN, PHONE_PATTERN } from '../../utils/validation';
 
 const fleetSizes = ['1-10', '11-30', '31-100', 'Más de 100'] as const;
 
@@ -19,19 +20,16 @@ const registerSchema = z.object({
   companyName: z.string().trim().min(1, 'Ingresá el nombre de la empresa.'),
   cuit: z
     .string()
-    .regex(/^\d+$/, 'El CUIT solo puede tener números.')
-    .length(11, 'El CUIT debe tener exactamente 11 números.'),
+    .regex(CUIT_PATTERN, 'El CUIT debe tener exactamente 11 números.'),
   email: z
     .string()
     .trim()
-    .email('Ingresá un correo válido, por ejemplo nombre@empresa.com.')
-    .regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'El correo debe incluir dominio, por ejemplo nombre@empresa.com.'),
+    .email('Ingresá un correo válido, por ejemplo example@example.com.')
+    .regex(EMAIL_PATTERN, 'El correo debe incluir dominio, por ejemplo example@example.com.'),
   password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres.'),
   phone: z
     .string()
-    .regex(/^\d+$/, 'El teléfono solo puede tener números.')
-    .min(8, 'El teléfono debe tener al menos 8 números.')
-    .max(15, 'El teléfono no puede superar 15 números.'),
+    .regex(PHONE_PATTERN, 'El teléfono debe contener entre 8 y 15 números.'),
   fleetSize: z.enum(fleetSizes),
   termsAccepted: z.boolean().refine((accepted) => accepted, 'Debés aceptar los términos y condiciones.'),
 });
