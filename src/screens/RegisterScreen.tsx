@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { RegisterContent, type RegisterSubmission } from '../components/organisms';
 import { RegisterTemplate } from '../components/templates';
+import { getApiErrorMessage, register } from '../services/api';
 
 type RegisterScreenProps = {
   navigation?: {
@@ -23,11 +24,25 @@ export function RegisterScreen({ navigation }: RegisterScreenProps) {
       return;
     }
 
-    navigation?.reset({
-      index: 0,
-      routes: [{ name: 'HomeScreen' }],
-    });
-    setLoading(false);
+    try {
+      await register({
+        razon_social: data.companyName.trim(),
+        cuit: data.cuit,
+        email: data.email.trim().toLowerCase(),
+        password: data.password,
+        telefono: data.phone,
+        tamano_flota: data.fleetSize,
+        terminos_aceptados: data.termsAccepted,
+      });
+      navigation?.reset({
+        index: 0,
+        routes: [{ name: 'HomeScreen' }],
+      });
+    } catch (requestError) {
+      setError(getApiErrorMessage(requestError, 'No se pudo crear la cuenta.'));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

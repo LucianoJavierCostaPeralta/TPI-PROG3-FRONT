@@ -6,6 +6,7 @@ import { LoginTemplate } from '../components/templates/LoginTemplate';
 import { LoginHeader } from '../components/organisms/LoginHeader';
 import { LoginForm } from '../components/molecules/LoginForm';
 import { RegisterFooter } from '../components/molecules/RegisterFooter';
+import { getApiErrorMessage, login, recoverPassword } from '../services/api';
 
 type LoginScreenProps = {
   navigation?: {
@@ -31,11 +32,17 @@ export function LoginScreen({ navigation }: LoginScreenProps) {
       return;
     }
 
-    navigation?.reset({
-      index: 0,
-      routes: [{ name: 'HomeScreen' }],
-    });
-    setLoading(false);
+    try {
+      await login(email.trim().toLowerCase(), password);
+      navigation?.reset({
+        index: 0,
+        routes: [{ name: 'HomeScreen' }],
+      });
+    } catch (requestError) {
+      setError(getApiErrorMessage(requestError, 'No se pudo iniciar sesión.'));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleForgotPassword = () => {
@@ -51,10 +58,16 @@ export function LoginScreen({ navigation }: LoginScreenProps) {
     setResetLoading(true);
     setError('');
 
-    setShowResetForm(false);
-    setResetEmail('');
-    Alert.alert('API pendiente', 'La recuperación se conectará con la API REST de Laravel.');
-    setResetLoading(false);
+    try {
+      const message = await recoverPassword(resetEmail.trim().toLowerCase());
+      setShowResetForm(false);
+      setResetEmail('');
+      Alert.alert('Recuperación de contraseña', message);
+    } catch (requestError) {
+      setError(getApiErrorMessage(requestError, 'No se pudo recuperar la contraseña.'));
+    } finally {
+      setResetLoading(false);
+    }
   };
 
   const handleConsultWithAdvisor = () => {
