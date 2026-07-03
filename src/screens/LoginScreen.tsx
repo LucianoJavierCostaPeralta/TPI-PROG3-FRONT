@@ -84,7 +84,7 @@ export function LoginScreen({ navigation }: LoginScreenProps) {
       title="Iniciar Sesión"
       subtitle="Ingrese sus credenciales para acceder a la plataforma"
     >
-      <LoginHeader onForgotPassword={handleForgotPassword} />
+      <LoginHeader />
       {showResetForm ? (
         <>
           <TextInputField
@@ -107,7 +107,7 @@ export function LoginScreen({ navigation }: LoginScreenProps) {
           </CTAButton>
         </>
       ) : null}
-      <LoginForm onSubmit={handleLogin} loading={loading} error={error} />
+      <LoginForm onSubmit={handleLogin} loading={loading} error={error} onForgotPassword={handleForgotPassword} />
       <RegisterFooter onConsultWithAdvisor={handleConsultWithAdvisor} />
     </LoginTemplate>
   );

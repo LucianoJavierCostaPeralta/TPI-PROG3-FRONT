@@ -3,10 +3,10 @@ import { useTheme, type MD3Theme } from 'react-native-paper';
 import { spacing, typography } from '../../styles/theme';
 
 type LoginHeaderProps = {
-  onForgotPassword: () => void;
+  onForgotPassword?: () => void;
 };
 
-export function LoginHeader({ onForgotPassword }: LoginHeaderProps) {
+export function LoginHeader(_: LoginHeaderProps) {
   const theme = useTheme<MD3Theme>();
   const styles = createStyles(theme);
 
@@ -18,9 +18,7 @@ export function LoginHeader({ onForgotPassword }: LoginHeaderProps) {
         </Text>
       </View>
 
-      <Pressable onPress={onForgotPassword} style={styles.forgotButton}>
-        <Text style={styles.forgotText}>Olvidé mi contraseña</Text>
-      </Pressable>
+      {/* El enlace de 'Olvidé mi contraseña' se muestra ahora dentro del formulario de login */}
     </View>
   );
 }
@@ -45,13 +43,5 @@ const createStyles = (theme: MD3Theme) =>
       letterSpacing: 0.1,
       fontWeight: '500',
     },
-    forgotButton: {
-      alignSelf: 'flex-end',
-      paddingVertical: spacing.sm,
-    },
-    forgotText: {
-      color: theme.colors.primary,
-      fontSize: 14,
-      fontWeight: '700',
-    },
+    // Nota: estilos de 'forgot' movidos al formulario
   });

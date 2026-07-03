@@ -14,14 +14,14 @@ export function RegisterFooter({ onConsultWithAdvisor }: RegisterFooterProps) {
 
   return (
     <View style={styles.container}>
-      <Body style={styles.question}>¿No tienes una cuenta?</Body>
+      <Body style={styles.question}>¿Listo para empezar a gestionar tu logística?</Body>
       <Caption style={styles.description}>
-        Si su empresa no está registrada, un asesor puede ayudarle a crear y
-        configurar su cuenta.
+        Crea tu cuenta para comenzar a administrar viajes, flotas y operaciones
+        desde la plataforma.
       </Caption>
 
       <CTAButton variant="secondary" onPress={onConsultWithAdvisor}>
-        Consultar con un asesor
+        Crear mi cuenta
       </CTAButton>
     </View>
   );
