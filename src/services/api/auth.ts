@@ -2,12 +2,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api, AUTH_TOKEN_KEY } from './client';
 
 export type AuthUser = {
-  id: number;
-  empresa_id: number | null;
+  id: number | string;
+  empresa_id: number | string | null;
   nombre_completo: string;
   email: string;
   telefono: string | null;
   activo: boolean;
+  dni?: string | null;
+  fecha_nacimiento?: string | null;
   rol?: { id: number; nombre_rol: string };
   empresa?: { id: number; razon_social: string } | null;
 };
@@ -46,6 +48,31 @@ export async function recoverPassword(email: string) {
 export async function getProfile() {
   const { data } = await api.get<{ user: AuthUser }>('/profile');
   return data.user;
+}
+
+export async function updateProfile(
+  userId: string | number,
+  role: string,
+  payload: {
+    nombre_completo: string;
+    email: string;
+    telefono: string | null;
+    fecha_nacimiento: string | null;
+  }
+) {
+  const isChofer = role.toLowerCase() === 'chofer';
+  const endpoint = isChofer
+    ? `/admin/choferes/${userId}`
+    : `/users/${userId}`;
+
+  const { data } = await api.put<{ data: AuthUser }>(endpoint, {
+    nombre_completo: payload.nombre_completo,
+    email: payload.email,
+    telefono: payload.telefono,
+    ...(isChofer ? { fecha_nacimiento: payload.fecha_nacimiento } : {}),
+  });
+
+  return data.data;
 }
 
 export async function hasStoredSession() {
