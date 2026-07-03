@@ -32,7 +32,7 @@ Aplicación de gestión logística desarrollada con React Native y Expo. Permite
 - Node.js 20 o superior.
 - npm.
 - Expo Go o un emulador Android/iOS.
-- Backend Laravel de ZoneScore instalado y en ejecución.
+- Acceso al backend Laravel publicado o una instalación local en ejecución.
 
 ## Instalación
 
@@ -50,7 +50,17 @@ Crear el archivo de configuración local:
 cp .env.example .env
 ```
 
-### Preparar el backend
+### Backend publicado
+
+La API utilizada para la presentación está desplegada en Render:
+
+- API: [https://zonascore-api.onrender.com/api/v1](https://zonascore-api.onrender.com/api/v1)
+- Health check: [https://zonascore-api.onrender.com/api/health](https://zonascore-api.onrender.com/api/health)
+- Swagger UI: [https://zonascore-api.onrender.com/docs/api](https://zonascore-api.onrender.com/docs/api)
+
+No es necesario ejecutar Laravel localmente para utilizar este entorno.
+
+### Preparar el backend local (opcional)
 
 En otra terminal, clonar y configurar la API:
 
@@ -71,13 +81,14 @@ Antes de ejecutar las migraciones se debe configurar la conexión de base de dat
 La aplicación utiliza la variable `EXPO_PUBLIC_API_URL` para conectarse con la API:
 
 ```env
-EXPO_PUBLIC_API_URL=http://10.0.2.2:8000/api/v1
+EXPO_PUBLIC_API_URL=https://zonascore-api.onrender.com/api/v1
 ```
 
 La dirección depende de dónde se ejecute la aplicación:
 
 | Entorno | URL |
 | --- | --- |
+| Render / cualquier dispositivo | `https://zonascore-api.onrender.com/api/v1` |
 | Emulador Android | `http://10.0.2.2:8000/api/v1` |
 | Simulador iOS | `http://127.0.0.1:8000/api/v1` |
 | Navegador web | `http://127.0.0.1:8000/api/v1` |
@@ -198,7 +209,7 @@ npx tsc --noEmit
 Comprobar que Laravel está accesible:
 
 ```bash
-curl http://127.0.0.1:8000/api/health
+curl https://zonascore-api.onrender.com/api/health
 ```
 
 La respuesta esperada incluye `"status": "ok"`.
@@ -207,7 +218,8 @@ La respuesta esperada incluye `"status": "ok"`.
 
 ### No se puede conectar con el servidor
 
-- Verificar que Laravel esté ejecutándose.
+- Verificar el health check público de Render.
+- Considerar que el plan gratuito puede tardar en responder después de un período sin actividad.
 - No utilizar `127.0.0.1` desde un teléfono físico.
 - Utilizar `10.0.2.2` solamente en el emulador Android.
 - En un teléfono físico, utilizar la IP local de la computadora.
