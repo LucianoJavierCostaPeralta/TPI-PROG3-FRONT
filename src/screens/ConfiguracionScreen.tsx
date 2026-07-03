@@ -1,18 +1,17 @@
-import { ScrollView, StyleSheet, View, useColorScheme } from 'react-native';
+import { StyleSheet, useColorScheme } from 'react-native';
 import {
-  IconButton,
   RadioButton,
   Surface,
   Text,
   useTheme,
   type MD3Theme,
 } from 'react-native-paper';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAppDispatch, useAppSelector } from '../store';
 import { resolverTema, setModoTema, type ModoTema } from '../store/slices/temaSlice';
 import { TEMA_STORAGE_KEY } from '../store/AppProviders';
 import { spacing } from '../styles/theme';
+import { ScreenLayout } from '../components/templates';
 
 type ConfiguracionScreenProps = {
   onBack: () => void;
@@ -32,67 +31,36 @@ export function ConfiguracionScreen({ onBack }: ConfiguracionScreenProps) {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-      <View style={styles.header}>
-        <IconButton icon="arrow-left" size={24} onPress={onBack} />
-        <View style={styles.headerText}>
-          <Text variant="titleLarge" style={styles.title}>Configuración</Text>
-          <Text variant="bodySmall" style={styles.subtitle}>Preferencias de la aplicación</Text>
-        </View>
-      </View>
+    <ScreenLayout
+      title="Configuración"
+      subtitle="Preferencias de la aplicación"
+      onBack={onBack}
+    >
+      <Surface style={styles.section} elevation={1}>
+        <Text variant="titleMedium" style={styles.sectionTitle}>Tema</Text>
+        <Text variant="bodySmall" style={styles.description}>
+          Elegí cómo querés ver la app. En sistema se usa el modo del dispositivo.
+        </Text>
 
-      <ScrollView contentContainerStyle={styles.content}>
-        <Surface style={styles.section} elevation={1}>
-          <Text variant="titleMedium" style={styles.sectionTitle}>Tema</Text>
-          <Text variant="bodySmall" style={styles.description}>
-            Elegí cómo querés ver la app. En sistema se usa el modo del dispositivo.
-          </Text>
+        <RadioButton.Group
+          value={modoTema}
+          onValueChange={(value) => handleTemaChange(value as ModoTema)}
+        >
+          <RadioButton.Item label="Sistema" value="sistema" />
+          <RadioButton.Item label="Claro" value="claro" />
+          <RadioButton.Item label="Oscuro" value="oscuro" />
+        </RadioButton.Group>
 
-          <RadioButton.Group
-            value={modoTema}
-            onValueChange={(value) => handleTemaChange(value as ModoTema)}
-          >
-            <RadioButton.Item label="Sistema" value="sistema" />
-            <RadioButton.Item label="Claro" value="claro" />
-            <RadioButton.Item label="Oscuro" value="oscuro" />
-          </RadioButton.Group>
-
-          <Text variant="bodySmall" style={styles.currentMode}>
-            Tema activo: {temaResuelto === 'oscuro' ? 'Oscuro' : 'Claro'}
-          </Text>
-        </Surface>
-      </ScrollView>
-    </SafeAreaView>
+        <Text variant="bodySmall" style={styles.currentMode}>
+          Tema activo: {temaResuelto === 'oscuro' ? 'Oscuro' : 'Claro'}
+        </Text>
+      </Surface>
+    </ScreenLayout>
   );
 }
 
 const createStyles = (theme: MD3Theme) =>
   StyleSheet.create({
-    safeArea: {
-      flex: 1,
-      backgroundColor: theme.colors.background,
-    },
-    header: {
-      minHeight: 64,
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingRight: spacing.lg,
-      backgroundColor: theme.colors.background,
-    },
-    headerText: {
-      flex: 1,
-    },
-    title: {
-      color: theme.colors.onSurface,
-      fontWeight: '800',
-    },
-    subtitle: {
-      color: theme.colors.onSurfaceVariant,
-    },
-    content: {
-      padding: spacing.lg,
-      paddingBottom: spacing.xxxl,
-    },
     section: {
       borderRadius: 8,
       padding: spacing.lg,
