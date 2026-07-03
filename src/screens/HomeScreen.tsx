@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Platform, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { useFocusEffect } from 'expo-router';
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import {
   ActivityIndicator,
@@ -14,7 +15,8 @@ import {
 } from 'react-native-paper';
 import { HomeTemplate } from '../components/templates';
 import { type BottomTabMenuItem } from '../components/molecules';
-import { CTAButton, TextInputField } from '../components/atoms';
+import { CTAButton, TextInputField, UserAvatar } from '../components/atoms';
+import { spacing } from '../styles/theme';
 import {
   acceptDelivery,
   assignDriver,
@@ -265,9 +267,11 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
     }
   }, []);
 
-  useEffect(() => {
-    void loadWorkspace();
-  }, [loadWorkspace]);
+  useFocusEffect(
+    useCallback(() => {
+      void loadWorkspace();
+    }, [loadWorkspace])
+  );
 
   const handleSignOut = async () => {
     try {
@@ -579,9 +583,7 @@ function AdminsPanel({ admins }: { admins: UserProfile[] }) {
     <View style={styles.panel}>
       {admins.map((admin) => (
         <Surface key={admin.id} style={styles.listRow} elevation={1}>
-          <View style={styles.avatar}>
-            <Text variant="labelLarge" style={styles.avatarText}>{admin.nombre.slice(0, 1).toUpperCase()}</Text>
-          </View>
+          <UserAvatar name={admin.nombre} style={{ marginRight: spacing.md }} />
           <View style={styles.flexContent}>
             <Text variant="titleSmall" style={styles.primaryText}>{admin.nombre}</Text>
             <Text variant="bodySmall" style={styles.mutedText}>{admin.email}</Text>
@@ -1084,9 +1086,7 @@ function DriverRow({ driver }: { driver: Driver }) {
 
   return (
     <Surface style={styles.driverCard} elevation={1}>
-      <View style={styles.driverAvatar}>
-        <Text variant="labelLarge" style={styles.driverAvatarText}>{driver.nombre.slice(0, 1).toUpperCase()}</Text>
-      </View>
+      <UserAvatar name={driver.nombre} style={{ marginRight: spacing.md }} />
       <View style={styles.flexContent}>
         <Text variant="titleSmall" style={styles.primaryText}>{driver.nombre}</Text>
         <Text variant="bodySmall" style={styles.mutedText}>Vehiculo: {String(vehicle)}</Text>
