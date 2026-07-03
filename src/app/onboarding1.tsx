@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { Onboarding1 } from '../screens/Onboarding1';
-import { screenToPath } from './routes';
+import { screenToPath } from '../utils/routes';
 
 export default function Onboarding1Route() {
   const router = useRouter();

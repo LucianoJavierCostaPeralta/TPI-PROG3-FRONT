@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { HomeScreen } from '../screens/HomeScreen';
-import { screenToPath } from './routes';
+import { screenToPath } from '../utils/routes';
 
 export default function HomeRoute() {
   const router = useRouter();

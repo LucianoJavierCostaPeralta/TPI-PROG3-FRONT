@@ -14,6 +14,10 @@ export function screenToPath(screen: string) {
       return '/reset-password';
     case 'HomeScreen':
       return '/home';
+    case 'PerfilScreen':
+      return '/perfil';
+    case 'EditarPerfilScreen':
+      return '/editar-perfil';
     default:
       return '/';
   }
