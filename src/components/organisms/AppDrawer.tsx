@@ -21,6 +21,11 @@ export function AppDrawer({ visible, onClose, onSignOut }: AppDrawerProps) {
   const styles = createStyles(theme);
   const router = useRouter();
 
+  const handleOpenProfile = () => {
+    onClose();
+    router.push('/perfil');
+  };
+
   const handleOpenSettings = () => {
     onClose();
     router.push('/configuracion');
@@ -41,7 +46,7 @@ export function AppDrawer({ visible, onClose, onSignOut }: AppDrawerProps) {
         </View>
 
         <Drawer.Section showDivider={false} style={styles.section}>
-          <Drawer.Item icon="account-outline" label="Mi Perfil" onPress={onClose} />
+          <Drawer.Item icon="account-outline" label="Mi Perfil" onPress={handleOpenProfile} />
           <Drawer.Item icon="cog-outline" label="Configuración" onPress={handleOpenSettings} />
         </Drawer.Section>
 
