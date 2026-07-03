@@ -42,14 +42,11 @@ export function HomeTemplate<T extends string>({
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <View style={styles.layout}>
-        <AppTopBar onMenuPress={onOpenDrawer} onBellPress={onBellPress} />
-
-        <View style={styles.header}>
-          <Text variant="headlineMedium" style={styles.title}>{title}</Text>
-          <Text variant="bodyMedium" style={styles.subtitle}>
-            {subtitle}
-          </Text>
-        </View>
+        <AppTopBar
+          title={activeTab === 'home' ? 'ZoneScore' : title}
+          onMenuPress={onOpenDrawer}
+          onBellPress={onBellPress}
+        />
 
         <View style={styles.content}>{children}</View>
 
@@ -78,20 +75,6 @@ const createStyles = (theme: MD3Theme) =>
     layout: {
       flex: 1,
       backgroundColor: theme.colors.background,
-    },
-    header: {
-      paddingHorizontal: 20,
-      paddingTop: 12,
-      paddingBottom: 8,
-      gap: 4,
-      backgroundColor: theme.colors.background,
-    },
-    title: {
-      color: theme.colors.onSurface,
-      fontWeight: '800',
-    },
-    subtitle: {
-      color: theme.colors.onSurfaceVariant,
     },
     content: {
       flex: 1,
