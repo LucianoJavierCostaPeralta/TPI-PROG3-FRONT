@@ -247,10 +247,14 @@ const createStyles = (theme: MD3Theme) =>
       marginRight: spacing.md,
     },
     scrollContent: {
+      paddingHorizontal: 16,
+      paddingTop: 8,
       paddingBottom: 96,
       gap: 14,
     },
     formScroll: {
+      paddingHorizontal: 16,
+      paddingTop: 16,
       paddingBottom: 96,
     },
     panel: {
@@ -259,7 +263,7 @@ const createStyles = (theme: MD3Theme) =>
     filterRow: {
       flexDirection: 'row',
       gap: 8,
-      paddingRight: 16,
+      paddingHorizontal: 16,
     },
     filterChip: {
       minWidth: 94,
