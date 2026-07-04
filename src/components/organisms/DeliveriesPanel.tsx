@@ -3,7 +3,7 @@ import { StyleSheet, View, ScrollView, Platform, ActivityIndicator, FlatList } f
 import { Text, IconButton, Surface, useTheme, type MD3Theme, Divider, TextInput as PaperTextInput } from 'react-native-paper';
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { CTAButton, TextInputField, EmptyState } from '../atoms';
-import { radii, spacing } from '../../styles/theme';
+import { radii, spacing, palette } from '../../styles/theme';
 import {
   type Driver,
   type DeliveryOrder,
@@ -382,6 +382,7 @@ const createStyles = (theme: MD3Theme) =>
     filterChip: {
       minWidth: 94,
       borderRadius: radii.md,
+      marginRight: spacing.sm,
     },
     filterChipLabel: {
       fontSize: 12,
@@ -434,13 +435,13 @@ const createStyles = (theme: MD3Theme) =>
       borderRadius: 10,
     },
     orderStatusPending: {
-      backgroundColor: '#FEF3C7',
+      backgroundColor: palette.pendingLightBg,
     },
     orderStatusOnWay: {
-      backgroundColor: '#DBEAFE',
+      backgroundColor: palette.infoLightBg,
     },
     orderStatusDone: {
-      backgroundColor: '#DCFCE7',
+      backgroundColor: palette.successLightBg,
     },
     orderStatusText: {
       color: theme.colors.onSurface,

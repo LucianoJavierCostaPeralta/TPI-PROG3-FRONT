@@ -2,7 +2,7 @@ import { StyleSheet, View, TouchableOpacity } from 'react-native';
 import Svg, { Circle, G } from 'react-native-svg';
 import { Text, IconButton, Surface, useTheme, type MD3Theme } from 'react-native-paper';
 import { type AppWorkspace, type HomeTabKey, type DeliveryFilter } from '../../screens/HomeScreen';
-import { radii } from '../../styles/theme';
+import { radii, palette } from '../../styles/theme';
 
 type PieChartSegment = {
   percentage: number;
@@ -28,7 +28,7 @@ function DonutChart({ segments, total }: { segments: PieChartSegment[]; total: n
             cy="60"
             r={radius}
             fill="transparent"
-            stroke="#E7ECF2"
+            stroke={palette.neutral200}
             strokeWidth={strokeWidth}
           />
           {/* Segments */}
@@ -177,11 +177,11 @@ export function HomePanel({
   const countOthers = totalOrders - (countOnWay + countPending + countCancelled + countDelivered);
 
   const segments = [
-    { percentage: totalOrders > 0 ? countDelivered / totalOrders : 0, color: '#09C46B' }, // Entregadas (Green)
-    { percentage: totalOrders > 0 ? countOnWay / totalOrders : 0, color: '#2388F2' },    // En camino (Blue)
-    { percentage: totalOrders > 0 ? countPending / totalOrders : 0, color: '#FF9F2E' },  // Pendientes (Orange)
-    { percentage: totalOrders > 0 ? countCancelled / totalOrders : 0, color: '#FF334B' }, // Canceladas (Red)
-    { percentage: totalOrders > 0 ? countOthers / totalOrders : 0, color: '#94A3B8' },   // Otros (Gray)
+    { percentage: totalOrders > 0 ? countDelivered / totalOrders : 0, color: palette.success }, // Entregadas (Green)
+    { percentage: totalOrders > 0 ? countOnWay / totalOrders : 0, color: palette.secondary },    // En camino (Blue)
+    { percentage: totalOrders > 0 ? countPending / totalOrders : 0, color: palette.warning },  // Pendientes (Orange)
+    { percentage: totalOrders > 0 ? countCancelled / totalOrders : 0, color: palette.error }, // Canceladas (Red)
+    { percentage: totalOrders > 0 ? countOthers / totalOrders : 0, color: palette.neutral500 },   // Otros (Gray)
   ].filter(s => s.percentage > 0);
 
   // Alertas dinámicas basadas en datos reales
@@ -231,15 +231,15 @@ export function HomePanel({
         <View style={styles.kpiGrid}>
           <View style={styles.kpiRow}>
             <Surface style={styles.kpiCard} elevation={1}>
-              <View style={[styles.kpiIconContainer, { backgroundColor: '#E8F8EF' }]}>
-                <IconButton icon="check-circle-outline" iconColor="#09C46B" size={24} style={styles.kpiIcon} />
+              <View style={[styles.kpiIconContainer, { backgroundColor: palette.successLight }]}>
+                <IconButton icon="check-circle-outline" iconColor={palette.success} size={24} style={styles.kpiIcon} />
               </View>
               <Text variant="headlineMedium" style={styles.kpiValue}>{countToday}</Text>
               <Text variant="bodySmall" style={styles.kpiLabel}>Entregas hoy</Text>
             </Surface>
             <Surface style={styles.kpiCard} elevation={1}>
-              <View style={[styles.kpiIconContainer, { backgroundColor: '#EAF3FF' }]}>
-                <IconButton icon="truck-delivery-outline" iconColor="#2388F2" size={24} style={styles.kpiIcon} />
+              <View style={[styles.kpiIconContainer, { backgroundColor: palette.infoLight }]}>
+                <IconButton icon="truck-delivery-outline" iconColor={palette.secondary} size={24} style={styles.kpiIcon} />
               </View>
               <Text variant="headlineMedium" style={styles.kpiValue}>{countOnWay}</Text>
               <Text variant="bodySmall" style={styles.kpiLabel}>En camino</Text>
@@ -247,15 +247,15 @@ export function HomePanel({
           </View>
           <View style={styles.kpiRow}>
             <Surface style={styles.kpiCard} elevation={1}>
-              <View style={[styles.kpiIconContainer, { backgroundColor: '#FFF4E4' }]}>
-                <IconButton icon="clock-outline" iconColor="#FF9F2E" size={24} style={styles.kpiIcon} />
+              <View style={[styles.kpiIconContainer, { backgroundColor: palette.warningLight }]}>
+                <IconButton icon="clock-outline" iconColor={palette.warning} size={24} style={styles.kpiIcon} />
               </View>
               <Text variant="headlineMedium" style={styles.kpiValue}>{countPending}</Text>
               <Text variant="bodySmall" style={styles.kpiLabel}>Pendientes</Text>
             </Surface>
             <Surface style={styles.kpiCard} elevation={1}>
-              <View style={[styles.kpiIconContainer, { backgroundColor: '#FFE8EB' }]}>
-                <IconButton icon="close-circle-outline" iconColor="#FF334B" size={24} style={styles.kpiIcon} />
+              <View style={[styles.kpiIconContainer, { backgroundColor: palette.errorLight }]}>
+                <IconButton icon="close-circle-outline" iconColor={palette.error} size={24} style={styles.kpiIcon} />
               </View>
               <Text variant="headlineMedium" style={styles.kpiValue}>{countCancelled}</Text>
               <Text variant="bodySmall" style={styles.kpiLabel}>Canceladas</Text>
@@ -271,12 +271,12 @@ export function HomePanel({
           <DonutChart segments={segments} total={totalOrders} />
           
           <View style={styles.legendContainer}>
-            <LegendItem label="Entregadas" count={countDelivered} percentage={totalOrders > 0 ? Math.round((countDelivered / totalOrders) * 100) : 0} color="#09C46B" />
-            <LegendItem label="En camino" count={countOnWay} percentage={totalOrders > 0 ? Math.round((countOnWay / totalOrders) * 100) : 0} color="#2388F2" />
-            <LegendItem label="Pendientes" count={countPending} percentage={totalOrders > 0 ? Math.round((countPending / totalOrders) * 100) : 0} color="#FF9F2E" />
-            <LegendItem label="Canceladas" count={countCancelled} percentage={totalOrders > 0 ? Math.round((countCancelled / totalOrders) * 100) : 0} color="#FF334B" />
+            <LegendItem label="Entregadas" count={countDelivered} percentage={totalOrders > 0 ? Math.round((countDelivered / totalOrders) * 100) : 0} color={palette.success} />
+            <LegendItem label="En camino" count={countOnWay} percentage={totalOrders > 0 ? Math.round((countOnWay / totalOrders) * 100) : 0} color={palette.secondary} />
+            <LegendItem label="Pendientes" count={countPending} percentage={totalOrders > 0 ? Math.round((countPending / totalOrders) * 100) : 0} color={palette.warning} />
+            <LegendItem label="Canceladas" count={countCancelled} percentage={totalOrders > 0 ? Math.round((countCancelled / totalOrders) * 100) : 0} color={palette.error} />
             {countOthers > 0 && (
-              <LegendItem label="Otros" count={countOthers} percentage={totalOrders > 0 ? Math.round((countOthers / totalOrders) * 100) : 0} color="#94A3B8" />
+              <LegendItem label="Otros" count={countOthers} percentage={totalOrders > 0 ? Math.round((countOthers / totalOrders) * 100) : 0} color={palette.neutral500} />
             )}
           </View>
         </Surface>
@@ -295,7 +295,7 @@ export function HomePanel({
         
         {activeAlerts.length === 0 ? (
           <Surface style={styles.alertCardEmpty} elevation={1}>
-            <IconButton icon="check-circle-outline" iconColor="#09C46B" size={24} />
+            <IconButton icon="check-circle-outline" iconColor={palette.success} size={24} />
             <Text variant="bodyMedium" style={styles.alertEmptyText}>Sin alertas activas</Text>
             <Text variant="bodySmall" style={styles.mutedText}>Todos los pedidos y choferes al día.</Text>
           </Surface>
@@ -304,7 +304,7 @@ export function HomePanel({
             <Surface key={alert.id} style={styles.alertCard} elevation={1}>
               <IconButton 
                 icon={alert.type === 'error' ? 'alert-circle-outline' : alert.type === 'warning' ? 'alert-outline' : 'information-outline'} 
-                iconColor={alert.type === 'error' ? '#FF334B' : alert.type === 'warning' ? '#FF9F2E' : '#2388F2'} 
+                iconColor={alert.type === 'error' ? palette.error : alert.type === 'warning' ? palette.warning : palette.secondary} 
                 size={22} 
                 style={styles.alertIcon} 
               />
@@ -313,7 +313,7 @@ export function HomePanel({
                 <Text variant="bodySmall" style={styles.mutedText}>{alert.subtitle}</Text>
                 <Text variant="labelSmall" style={styles.alertTimeText}>{alert.time}</Text>
               </View>
-              <IconButton icon="chevron-right" size={20} iconColor="#CBD5E1" />
+              <IconButton icon="chevron-right" size={20} iconColor={palette.neutral400} />
             </Surface>
           ))
         )}
@@ -327,7 +327,7 @@ export function HomePanel({
             <QuickActionButton 
               label="Nueva entrega" 
               icon="plus-circle-outline" 
-              color="#2388F2" 
+              color={palette.secondary} 
               onPress={() => {
                 setActiveTab('deliveries');
                 setShowDeliveryForm(true);
@@ -336,7 +336,7 @@ export function HomePanel({
             <QuickActionButton 
               label="Agregar chofer" 
               icon="account-plus-outline" 
-              color="#09C46B" 
+              color={palette.success} 
               onPress={() => {
                 setActiveTab('drivers');
                 setShowDriverForm(true);
@@ -347,7 +347,7 @@ export function HomePanel({
             <QuickActionButton 
               label="Ver mapa" 
               icon="map-outline" 
-              color="#7652C6" 
+              color={palette.brandPurple} 
               onPress={() => {
                 setActiveTab('map');
               }} 
@@ -355,7 +355,7 @@ export function HomePanel({
             <QuickActionButton 
               label="Reportes" 
               icon="chart-bar" 
-              color="#FF9F2E" 
+              color={palette.warning} 
               onPress={() => {
                 setActiveTab('deliveries');
                 setDeliveryFilter('todos');
@@ -537,7 +537,7 @@ const createStyles = (theme: MD3Theme) =>
       lineHeight: 28,
     },
     chartCenterLabel: {
-      color: '#64748B',
+      color: palette.neutral600,
       textAlign: 'center',
       fontSize: 10,
     },
@@ -556,7 +556,7 @@ const createStyles = (theme: MD3Theme) =>
       fontWeight: '700',
     },
     legendItemPercentage: {
-      color: '#64748B',
+      color: palette.neutral600,
     },
     actionButtonIcon: {
       margin: 0,
@@ -567,11 +567,11 @@ const createStyles = (theme: MD3Theme) =>
       marginTop: 4,
     },
     alertLinkText: {
-      color: '#2388F2',
+      color: palette.secondary,
       fontWeight: '700',
     },
     alertEmptyText: {
-      color: '#09C46B',
+      color: palette.success,
       fontWeight: '700',
     },
     alertTitleText: {
@@ -579,7 +579,7 @@ const createStyles = (theme: MD3Theme) =>
       color: theme.colors.onSurface,
     },
     alertTimeText: {
-      color: '#94A3B8',
+      color: palette.neutral500,
       marginTop: 2,
     },
   });

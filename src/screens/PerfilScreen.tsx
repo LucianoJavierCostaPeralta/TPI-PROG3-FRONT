@@ -86,7 +86,7 @@ export function PerfilScreen({ onBack, onEdit }: PerfilScreenProps) {
       ) : user ? (
         <>
           <View style={styles.avatarContainer}>
-            <UserAvatar name={user.nombre_completo} size={88} imageUri={profileImageUri} />
+            <UserAvatar name={user.nombre_completo} size={dimensions.avatar.lg} imageUri={profileImageUri} />
             <Text variant="headlineSmall" style={styles.userName}>
               {user.nombre_completo}
             </Text>
