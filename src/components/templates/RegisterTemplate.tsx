@@ -1,5 +1,5 @@
-import { SafeAreaView, ScrollView, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme, type MD3Theme } from 'react-native-paper';
 import { Title } from '../atoms/Typography';
 import { spacing } from '../../styles/theme';
