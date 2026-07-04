@@ -2,6 +2,7 @@ import { type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Text, useTheme, type MD3Theme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 import {
   AppTopBar,
   BottomTabMenu,
@@ -41,6 +42,7 @@ export function HomeTemplate<T extends string>({
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+      <StatusBar style="light" backgroundColor={theme.colors.primary} />
       <View style={styles.layout}>
         <AppTopBar
           title={activeTab === 'home' ? 'ZoneScore' : title}
@@ -70,7 +72,7 @@ const createStyles = (theme: MD3Theme) =>
   StyleSheet.create({
     safeArea: {
       flex: 1,
-      backgroundColor: theme.colors.background,
+      backgroundColor: theme.colors.primary,
     },
     layout: {
       flex: 1,

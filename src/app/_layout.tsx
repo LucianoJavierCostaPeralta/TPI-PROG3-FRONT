@@ -6,6 +6,8 @@ import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 
+import { StatusBar } from 'expo-status-bar';
+
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -29,6 +31,7 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <AppProviders>
+        <StatusBar style="auto" />
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="index" options={{ animation: 'none' }} />
           <Stack.Screen name="onboarding1" options={{ animation: 'fade', animationDuration: 600 }} />

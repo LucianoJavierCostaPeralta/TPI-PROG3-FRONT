@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { Appbar, useTheme, type MD3Theme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 import { spacing } from '../../styles/theme';
 
 type ScreenLayoutProps = {
@@ -38,6 +39,7 @@ export function ScreenLayout({
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+      <StatusBar style="light" backgroundColor={theme.colors.primary} />
       <View style={styles.layout}>
         {/* Header estandarizado con minHeight 56 */}
         <Appbar.Header mode="center-aligned" elevated={false} style={styles.header} statusBarHeight={0}>
@@ -83,7 +85,7 @@ const createStyles = (theme: MD3Theme) =>
   StyleSheet.create({
     safeArea: {
       flex: 1,
-      backgroundColor: theme.colors.background,
+      backgroundColor: theme.colors.primary,
     },
     layout: {
       flex: 1,
