@@ -639,11 +639,13 @@ function DriversPanel({
 
   return (
     <View style={styles.panel}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
-        <FilterChip label="Activos" active={filter === 'activos'} onPress={() => onFilterChange('activos')} />
-        <FilterChip label="Inactivos" active={filter === 'inactivos'} onPress={() => onFilterChange('inactivos')} />
-        <FilterChip label="Todos" active={filter === 'todos'} onPress={() => onFilterChange('todos')} />
-      </ScrollView>
+      {!showForm && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
+          <FilterChip label="Activos" active={filter === 'activos'} onPress={() => onFilterChange('activos')} />
+          <FilterChip label="Inactivos" active={filter === 'inactivos'} onPress={() => onFilterChange('inactivos')} />
+          <FilterChip label="Todos" active={filter === 'todos'} onPress={() => onFilterChange('todos')} />
+        </ScrollView>
+      )}
 
       {canCreate && showForm ? (
         <Surface style={styles.formCard} elevation={1}>
@@ -739,9 +741,7 @@ function DriversPanel({
             </CTAButton>
           </View>
         </Surface>
-      ) : null}
-
-      {filteredDrivers.length === 0 ? (
+      ) : filteredDrivers.length === 0 ? (
         <EmptyState text="No hay choferes para este filtro." />
       ) : (
         filteredDrivers.map((driver) => <DriverRow key={driver.id} driver={driver} />)

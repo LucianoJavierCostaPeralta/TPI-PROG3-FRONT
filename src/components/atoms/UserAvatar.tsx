@@ -57,7 +57,7 @@ export function UserAvatar({ name, size = 40, style, imageUri }: UserAvatarProps
             height: size,
             borderRadius: size / 2,
           },
-          style,
+          style as any,
         ]}
       />
     );
