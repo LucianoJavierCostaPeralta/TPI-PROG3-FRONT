@@ -16,7 +16,7 @@ import {
 import { HomeTemplate } from '../components/templates';
 import { type BottomTabMenuItem } from '../components/molecules';
 import { CTAButton, TextInputField, UserAvatar } from '../components/atoms';
-import { spacing } from '../styles/theme';
+import { spacing, radii, dimensions } from '../styles/theme';
 import {
   acceptDelivery,
   assignDriver,
@@ -1294,13 +1294,13 @@ const createStyles = (theme: MD3Theme) =>
     },
     summaryCard: {
       padding: 16,
-      borderRadius: 8,
+      borderRadius: radii.md,
       backgroundColor: theme.colors.surface,
       gap: 4,
     },
     formCard: {
       padding: 16,
-      borderRadius: 8,
+      borderRadius: radii.md,
       backgroundColor: theme.colors.surface,
     },
     filterRow: {
@@ -1310,7 +1310,7 @@ const createStyles = (theme: MD3Theme) =>
     },
     filterChip: {
       minWidth: 94,
-      borderRadius: 8,
+      borderRadius: radii.md,
     },
     filterChipLabel: {
       fontSize: 12,
@@ -1321,7 +1321,7 @@ const createStyles = (theme: MD3Theme) =>
     },
     datePickerDoneButton: {
       alignSelf: 'flex-end',
-      borderRadius: 8,
+      borderRadius: radii.md,
       marginBottom: 8,
     },
     actionButton: {
@@ -1329,7 +1329,7 @@ const createStyles = (theme: MD3Theme) =>
     },
     orderCard: {
       padding: 14,
-      borderRadius: 8,
+      borderRadius: radii.md,
       backgroundColor: theme.colors.surface,
       gap: 10,
     },
@@ -1381,9 +1381,9 @@ const createStyles = (theme: MD3Theme) =>
       backgroundColor: theme.colors.surface,
     },
     driverAvatar: {
-      width: 42,
-      height: 42,
-      borderRadius: 21,
+      width: dimensions.avatar.sm,
+      height: dimensions.avatar.sm,
+      borderRadius: dimensions.avatar.sm / 2,
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: theme.colors.surfaceVariant,
@@ -1422,12 +1422,12 @@ const createStyles = (theme: MD3Theme) =>
     metricCard: {
       flex: 1,
       padding: 14,
-      borderRadius: 8,
+      borderRadius: radii.md,
       backgroundColor: theme.colors.surface,
     },
     emptyState: {
       padding: 16,
-      borderRadius: 8,
+      borderRadius: radii.md,
       backgroundColor: theme.colors.surface,
     },
     orderHeader: {
@@ -1445,9 +1445,9 @@ const createStyles = (theme: MD3Theme) =>
       gap: 8,
     },
     avatar: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+      width: dimensions.avatar.xs,
+      height: dimensions.avatar.xs,
+      borderRadius: dimensions.avatar.xs / 2,
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: theme.colors.primary,
@@ -1483,7 +1483,7 @@ const createStyles = (theme: MD3Theme) =>
       backgroundColor: theme.colors.outline,
     },
     smallButton: {
-      borderRadius: 8,
+      borderRadius: radii.md,
     },
     smallButtonLabel: {
       fontSize: 12,

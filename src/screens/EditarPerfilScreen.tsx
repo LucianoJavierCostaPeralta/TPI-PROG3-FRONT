@@ -5,7 +5,7 @@ import DateTimePicker, { type DateTimePickerEvent } from '@react-native-communit
 import { CTAButton, TextInputField, UserAvatar } from '../components/atoms';
 import { getProfile, updateProfile, type AuthUser } from '../services/api';
 import { isValidEmail, onlyDigits, isPastDate } from '../utils/validation';
-import { spacing } from '../styles/theme';
+import { spacing, radii, dimensions } from '../styles/theme';
 import { ScreenLayout } from '../components/templates';
 
 type EditarPerfilScreenProps = {
@@ -356,7 +356,7 @@ const createStyles = (theme: MD3Theme) =>
       justifyContent: 'center',
       alignItems: 'center',
       padding: spacing.lg,
-      minHeight: 250,
+      minHeight: dimensions.minHeight.lg,
     },
     errorText: {
       color: theme.colors.error,
@@ -365,7 +365,7 @@ const createStyles = (theme: MD3Theme) =>
     },
     errorBanner: {
       backgroundColor: theme.colors.errorContainer,
-      borderRadius: 8,
+      borderRadius: radii.md,
       padding: spacing.md,
       marginBottom: spacing.md,
       borderWidth: 1,
@@ -377,7 +377,7 @@ const createStyles = (theme: MD3Theme) =>
       textAlign: 'center',
     },
     section: {
-      borderRadius: 8,
+      borderRadius: radii.md,
       padding: spacing.lg,
       backgroundColor: theme.colors.surface,
       borderWidth: 1,

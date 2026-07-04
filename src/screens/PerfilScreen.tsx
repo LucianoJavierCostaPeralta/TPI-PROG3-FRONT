@@ -4,7 +4,7 @@ import { IconButton, Surface, Text, useTheme, type MD3Theme } from 'react-native
 import { InfoCard } from '../components/molecules/InfoCard';
 import { CTAButton, UserAvatar } from '../components/atoms';
 import { getProfile, type AuthUser } from '../services/api';
-import { spacing } from '../styles/theme';
+import { spacing, radii, dimensions } from '../styles/theme';
 import { ScreenLayout } from '../components/templates';
 
 type PerfilScreenProps = {
@@ -159,7 +159,7 @@ const createStyles = (theme: MD3Theme) =>
       justifyContent: 'center',
       alignItems: 'center',
       padding: spacing.lg,
-      minHeight: 250,
+      minHeight: dimensions.minHeight.lg,
     },
     errorText: {
       color: theme.colors.error,
@@ -188,7 +188,7 @@ const createStyles = (theme: MD3Theme) =>
       fontWeight: '600',
     },
     section: {
-      borderRadius: 8,
+      borderRadius: radii.md,
       padding: spacing.lg,
       backgroundColor: theme.colors.surface,
       borderWidth: 1,

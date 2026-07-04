@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context"; // nuevo: respeta safe area en splash
-import { palette, spacing } from "../../styles/theme";
+import { palette, spacing, dimensions, radii } from "../../styles/theme";
 import LogoZoneScore from "../../assets/logo-zonescore.svg";
 
 type SplashTemplateProps = {
@@ -68,7 +68,7 @@ export function SplashTemplate({ onAnimationComplete }: SplashTemplateProps) {
           ]}
         >
           <View style={styles.brandRow}>
-            <LogoZoneScore width={50} height={50} />
+            <LogoZoneScore width={dimensions.icon.sm} height={dimensions.icon.sm} />
             <Text style={styles.logoText}>ZoneScore</Text>
           </View>
 
@@ -121,17 +121,17 @@ const createStyles = () =>
     },
 
     spinnerContainer: {
-      width: 80,
-      height: 80,
+      width: dimensions.spinner.container,
+      height: dimensions.spinner.container,
       marginBottom: 40,
       alignItems: "center",
       justifyContent: "center",
     },
 
     spinner: {
-      width: 60,
-      height: 60,
-      borderRadius: 30,
+      width: dimensions.spinner.inner,
+      height: dimensions.spinner.inner,
+      borderRadius: dimensions.spinner.inner / 2,
       borderWidth: 4,
       borderColor: palette.whiteAlpha30,
       borderTopColor: palette.white,

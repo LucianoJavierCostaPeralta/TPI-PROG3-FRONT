@@ -93,7 +93,36 @@ export const radii = {
   md: 8,
   lg: 12,
   xl: 16,
+  '2xl': 20,
+  '3xl': 24,
   pill: 999,
+};
+
+export const dimensions = {
+  avatar: {
+    xs: 40,
+    sm: 42,
+    md: 48,
+    lg: 88,
+  },
+  icon: {
+    sm: 50,
+    md: 60,
+  },
+  spinner: {
+    container: 80,
+    inner: 60,
+  },
+  minHeight: {
+    sm: 52,
+    md: 56,
+    lg: 250,
+  },
+  illustration: {
+    width: 220,
+    height: 240,
+  },
+  dot: 10,
 };
 
 export const buttonStyles = {
