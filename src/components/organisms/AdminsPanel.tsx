@@ -1,7 +1,7 @@
 import { StyleSheet, View, FlatList } from 'react-native';
 import { Text, Surface, useTheme, type MD3Theme } from 'react-native-paper';
 import { UserAvatar, EmptyState } from '../atoms';
-import { type UserProfile } from '../../screens/HomeScreen';
+import { type UserProfile } from '../../types/workspace';
 import { spacing } from '../../styles/theme';
 
 export function AdminsPanel({

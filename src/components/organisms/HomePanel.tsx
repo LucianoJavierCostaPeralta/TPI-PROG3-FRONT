@@ -1,7 +1,7 @@
 import { StyleSheet, View, TouchableOpacity } from 'react-native';
 import Svg, { Circle, G } from 'react-native-svg';
 import { Text, IconButton, Surface, useTheme, type MD3Theme } from 'react-native-paper';
-import { type AppWorkspace, type HomeTabKey, type DeliveryFilter } from '../../screens/HomeScreen';
+import { type AppWorkspace, type HomeTabKey, type DeliveryFilter } from '../../types/workspace';
 import { radii, palette } from '../../styles/theme';
 
 type PieChartSegment = {
