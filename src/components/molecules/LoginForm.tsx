@@ -93,7 +93,7 @@ export function LoginForm({ onSubmit, loading = false, error, onForgotPassword }
 const createStyles = (theme: MD3Theme) =>
   StyleSheet.create({
     container: {
-      marginBottom: 28,
+      gap: spacing.sm,
     },
     forgotButton: {
       alignSelf: 'flex-end',

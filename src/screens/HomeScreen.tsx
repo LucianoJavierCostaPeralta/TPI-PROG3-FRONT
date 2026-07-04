@@ -651,6 +651,7 @@ function DriversPanel({
             <Text variant="titleMedium" style={[styles.cardTitle, styles.flexContent]}>Nuevo Chofer</Text>
             <IconButton icon="close" size={20} onPress={onCancel} disabled={saving} />
           </View>
+          <View style={styles.formContent}>
           <TextInputField
             label="Nombre y Apellido"
             placeholder="Ej: Juan Perez"
@@ -728,6 +729,7 @@ function DriversPanel({
           <Text variant="bodySmall" style={styles.mutedText}>
             El chofer podrá ingresar con su email y contraseña inicial 123456.
           </Text>
+          </View>
           <View style={styles.formActions}>
             <CTAButton variant="secondary" onPress={onCancel} disabled={saving} style={styles.actionButton}>
               Cancelar
@@ -837,6 +839,7 @@ function DeliveriesPanel({
             <Text variant="titleMedium" style={[styles.cardTitle, styles.flexContent]}>Nueva entrega</Text>
             <IconButton icon="close" size={20} onPress={onCancel} disabled={saving} />
           </View>
+          <View style={styles.formContent}>
           <TextInputField
             label="Cliente"
             placeholder="Buscar cliente"
@@ -920,6 +923,7 @@ function DeliveriesPanel({
             multiline
             numberOfLines={3}
           />
+          </View>
           <View style={styles.formActions}>
             <CTAButton variant="secondary" onPress={onCancel} disabled={saving} style={styles.actionButton}>
               Cancelar
@@ -1486,6 +1490,9 @@ const createStyles = (theme: MD3Theme) =>
     },
     adminAvatar: {
       marginRight: spacing.md,
+    },
+    formContent: {
+      gap: spacing.sm,
     },
     fab: {
       position: 'absolute',

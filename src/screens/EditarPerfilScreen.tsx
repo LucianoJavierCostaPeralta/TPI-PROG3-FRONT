@@ -210,6 +210,7 @@ export function EditarPerfilScreen({ onBack, onSaveSuccess }: EditarPerfilScreen
               style={styles.userAvatar}
             />
 
+            <View style={styles.formContent}>
             <TextInputField
               label="Nombre completo"
               placeholder="Ingresá tu nombre completo"
@@ -288,11 +289,13 @@ export function EditarPerfilScreen({ onBack, onSaveSuccess }: EditarPerfilScreen
                 ) : null}
               </>
             )}
+            </View>
           </Surface>
 
           <Surface style={[styles.section, styles.readOnlySection]} elevation={1}>
             <Text variant="titleMedium" style={styles.sectionTitle}>Datos del Sistema (Solo lectura)</Text>
 
+            <View style={styles.formContent}>
             {isChofer && (
               <TextInputField
                 label="DNI"
@@ -318,6 +321,7 @@ export function EditarPerfilScreen({ onBack, onSaveSuccess }: EditarPerfilScreen
               disabled
               icon="toggle-switch-outline"
             />
+            </View>
           </Surface>
 
           <View style={styles.actionsContainer}>
@@ -409,6 +413,9 @@ const createStyles = (theme: MD3Theme) =>
     userAvatar: {
       alignSelf: 'center',
       marginBottom: spacing.lg,
+    },
+    formContent: {
+      gap: spacing.sm,
     },
     actionButton: {
       width: '100%',

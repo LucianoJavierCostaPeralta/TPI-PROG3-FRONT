@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert } from 'react-native';
+import { Alert, View, StyleSheet } from 'react-native';
 import { TextInputField } from '../components/atoms/TextInputField';
 import { CTAButton } from '../components/atoms/CTAButton';
 import { LoginTemplate } from '../components/templates/LoginTemplate';
@@ -8,6 +8,7 @@ import { LoginForm } from '../components/molecules/LoginForm';
 import { RegisterFooter } from '../components/molecules/RegisterFooter';
 import { getApiErrorMessage, login, recoverPassword } from '../services/api';
 import { isValidEmail } from '../utils/validation';
+import { spacing } from '../styles/theme';
 
 type LoginScreenProps = {
   navigation?: {
@@ -86,7 +87,7 @@ export function LoginScreen({ navigation }: LoginScreenProps) {
     >
       <LoginHeader />
       {showResetForm ? (
-        <>
+        <View style={styles.formContent}>
           <TextInputField
             label="Correo de recuperación"
             placeholder="nombre@empresa.com"
@@ -105,10 +106,21 @@ export function LoginScreen({ navigation }: LoginScreenProps) {
           >
             {resetLoading ? 'Enviando...' : 'Enviar enlace'}
           </CTAButton>
-        </>
+        </View>
       ) : null}
       <LoginForm onSubmit={handleLogin} loading={loading} error={error} onForgotPassword={handleForgotPassword} />
-      <RegisterFooter onConsultWithAdvisor={handleConsultWithAdvisor} />
+      <View style={styles.footerSpacing}>
+        <RegisterFooter onConsultWithAdvisor={handleConsultWithAdvisor} />
+      </View>
     </LoginTemplate>
   );
 }
+
+const styles = StyleSheet.create({
+  formContent: {
+    gap: spacing.sm,
+  },
+  footerSpacing: {
+    marginTop: spacing.xl,
+  },
+});

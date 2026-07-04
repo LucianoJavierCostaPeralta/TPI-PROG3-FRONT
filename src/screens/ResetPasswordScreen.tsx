@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Alert } from 'react-native';
+import { Alert, View, StyleSheet } from 'react-native';
 import { TextInputField } from '../components/atoms/TextInputField';
 import { CTAButton } from '../components/atoms/CTAButton';
 import { LoginTemplate } from '../components/templates/LoginTemplate';
+import { spacing } from '../styles/theme';
 
 type ResetPasswordScreenProps = {
   navigation?: {
@@ -43,6 +44,7 @@ export function ResetPasswordScreen({ navigation }: ResetPasswordScreenProps) {
       title="Nueva contraseña"
       subtitle="Ingresá una contraseña nueva para recuperar el acceso"
     >
+      <View style={styles.formContent}>
       <TextInputField
         label="Contraseña nueva"
         placeholder="Mínimo 6 caracteres"
@@ -60,9 +62,16 @@ export function ResetPasswordScreen({ navigation }: ResetPasswordScreenProps) {
         onChangeText={setConfirmPassword}
         disabled={loading}
       />
+      </View>
       <CTAButton onPress={handleSubmit} disabled={loading} loading={loading}>
         {loading ? 'Guardando...' : 'Guardar contraseña'}
       </CTAButton>
     </LoginTemplate>
   );
 }
+
+const styles = StyleSheet.create({
+  formContent: {
+    gap: spacing.sm,
+  },
+});

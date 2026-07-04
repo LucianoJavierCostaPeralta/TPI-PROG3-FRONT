@@ -58,9 +58,7 @@ export function TextInputField({
 
 const createStyles = (theme: MD3Theme) =>
   StyleSheet.create({
-    container: {
-      marginBottom: spacing.sm,
-    },
+    container: {},
     input: {
       minHeight: inputStyles.height,
       backgroundColor: theme.colors.surface,
