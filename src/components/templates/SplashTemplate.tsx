@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context"; // nuevo: respeta safe area en splash
+import { StatusBar } from "expo-status-bar";
 import { palette, spacing, dimensions, radii } from "../../styles/theme";
 import LogoZoneScore from "../../assets/logo-zonescore.svg";
 
@@ -48,6 +49,7 @@ export function SplashTemplate({ onAnimationComplete }: SplashTemplateProps) {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+      <StatusBar style="light" backgroundColor={palette.primaryBlue} translucent />
       {/* nuevo: padding seguro superior e inferior para evitar recortes en notch y gesture bar */}
 
       <View style={styles.content}>

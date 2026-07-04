@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context'; // nuevo: evita botones debajo del home indicator
 import { useTheme, type MD3Theme } from 'react-native-paper';
+import { StatusBar } from 'expo-status-bar';
 import { CTAButton } from '../atoms/CTAButton';
 import { Title, Body } from '../atoms/Typography';
 import { spacing } from '../../styles/theme';
@@ -32,6 +33,7 @@ export function OnboardingStep({
 
   return (
     <View style={styles.container}>
+      <StatusBar style="auto" backgroundColor="transparent" translucent />
       {onSkip && (
         <View style={styles.header}>
           <Pressable onPress={onSkip}>
