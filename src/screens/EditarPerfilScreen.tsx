@@ -206,7 +206,7 @@ export function EditarPerfilScreen({ onBack, onSaveSuccess }: EditarPerfilScreen
 
             <UserAvatar
               name={form.nombre_completo || user.nombre_completo}
-              size={88}
+              size={dimensions.avatar.lg}
               style={styles.userAvatar}
             />
 

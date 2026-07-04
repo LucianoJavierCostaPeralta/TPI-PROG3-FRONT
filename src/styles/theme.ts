@@ -104,6 +104,7 @@ export const dimensions = {
     sm: 42,
     md: 48,
     lg: 88,
+    xl: 96,
   },
   icon: {
     sm: 50,
@@ -121,6 +122,14 @@ export const dimensions = {
   illustration: {
     width: 220,
     height: 240,
+  },
+  splash: {
+    logoTextSize: 48,
+    logoSubtitleSize: 14,
+    logoBottomMargin: 60,
+    logoOffsetY: 30,
+    spinnerBottomMargin: 40,
+    brandRowGap: 12,
   },
   dot: 10,
 };

@@ -60,7 +60,7 @@ export function SplashTemplate({ onAnimationComplete }: SplashTemplateProps) {
                 {
                   translateY: fadeAnim.interpolate({
                     inputRange: [0, 1],
-                    outputRange: [30, 0],
+                    outputRange: [dimensions.splash.logoOffsetY, 0],
                   }),
                 },
               ],
@@ -100,13 +100,13 @@ const createStyles = () =>
     },
 
     logoContainer: {
-      marginBottom: 60,
+      marginBottom: dimensions.splash.logoBottomMargin,
       alignItems: "center",
     },
 
     logoText: {
       color: palette.white,
-      fontSize: 48,
+      fontSize: dimensions.splash.logoTextSize,
       fontWeight: "900",
       letterSpacing: 2,
       textAlign: "center",
@@ -114,7 +114,7 @@ const createStyles = () =>
 
     logoSubtitle: {
       color: palette.whiteAlpha80,
-      fontSize: 14,
+      fontSize: dimensions.splash.logoSubtitleSize,
       fontWeight: "500",
       letterSpacing: 1,
       marginTop: spacing.sm,
@@ -123,7 +123,7 @@ const createStyles = () =>
     spinnerContainer: {
       width: dimensions.spinner.container,
       height: dimensions.spinner.container,
-      marginBottom: 40,
+      marginBottom: dimensions.splash.spinnerBottomMargin,
       alignItems: "center",
       justifyContent: "center",
     },
@@ -149,6 +149,6 @@ const createStyles = () =>
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      gap: 12,
+      gap: dimensions.splash.brandRowGap,
     },
   });
