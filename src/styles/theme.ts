@@ -6,9 +6,18 @@ export const palette = {
   ...neutralColors,
   primaryBlue: commonColors.primary,
   lightBlue: '#54A8FF',
+  googleBlue: '#4285F4',
+  googleRed: '#EA4335',
+  googleYellow: '#FBBC05',
+  googleGreen: '#34A853',
   darkGray: neutralColors.neutral900,
   mediumGray: neutralColors.neutral600,
   lightGray: neutralColors.neutral50,
+  avatarPurple: '#9C27B0',
+  avatarTeal: '#009688',
+  avatarOrange: '#FF5722',
+  avatarDeepPurple: '#673AB7',
+  avatarIndigo: '#3F51B5',
 };
 
 export const typography = {

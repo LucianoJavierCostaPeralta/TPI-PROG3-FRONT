@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useTheme, type MD3Theme } from 'react-native-paper';
+import { palette } from '../../styles/theme';
 
 type UserAvatarProps = {
   name: string;
@@ -21,28 +22,28 @@ export function UserAvatar({ name, size = 40, style }: UserAvatarProps) {
 
   // Paleta de colores vibrantes y sólidos inspirada en Google
   const getBackgroundColor = () => {
-    if (!name || !name.trim()) return '#4285F4'; // Azul de Google por defecto
+    if (!name || !name.trim()) return palette.googleBlue;
     let hash = 0;
     for (let i = 0; i < name.length; i++) {
       hash = name.charCodeAt(i) + ((hash << 5) - hash);
     }
     const googleColors = [
-      '#4285F4', // Google Blue
-      '#EA4335', // Google Red
-      '#FBBC05', // Google Yellow
-      '#34A853', // Google Green
-      '#9C27B0', // Purple
-      '#009688', // Teal
-      '#FF5722', // Deep Orange
-      '#673AB7', // Deep Purple
-      '#3F51B5', // Indigo
+      palette.googleBlue,
+      palette.googleRed,
+      palette.googleYellow,
+      palette.googleGreen,
+      palette.avatarPurple,
+      palette.avatarTeal,
+      palette.avatarOrange,
+      palette.avatarDeepPurple,
+      palette.avatarIndigo,
     ];
     return googleColors[Math.abs(hash) % googleColors.length];
   };
 
   const initials = getInitials(name);
   const bgColor = getBackgroundColor();
-  const textColor = '#FFFFFF'; // Texto blanco para máximo contraste con el fondo sólido
+  const textColor = palette.white;
 
   return (
     <View
