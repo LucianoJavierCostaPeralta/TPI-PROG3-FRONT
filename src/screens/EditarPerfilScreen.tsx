@@ -207,7 +207,7 @@ export function EditarPerfilScreen({ onBack, onSaveSuccess }: EditarPerfilScreen
             <UserAvatar
               name={form.nombre_completo || user.nombre_completo}
               size={88}
-              style={{ alignSelf: 'center', marginBottom: spacing.lg }}
+              style={styles.userAvatar}
             />
 
             <TextInputField
@@ -405,6 +405,10 @@ const createStyles = (theme: MD3Theme) =>
     actionsContainer: {
       marginTop: spacing.xl,
       gap: spacing.md,
+    },
+    userAvatar: {
+      alignSelf: 'center',
+      marginBottom: spacing.lg,
     },
     actionButton: {
       width: '100%',

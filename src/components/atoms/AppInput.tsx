@@ -1,6 +1,7 @@
 import { TextInput } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
+import { StyleSheet } from 'react-native';
 
 type AppInputProps = {
   label: string;
@@ -50,9 +51,13 @@ export function AppInput({
           />
         ) : undefined
       }
-      style={{
-        backgroundColor: 'transparent',
-      }}
+      style={styles.input}
     />
   );
 }
+
+const styles = StyleSheet.create({
+  input: {
+    backgroundColor: 'transparent',
+  },
+});

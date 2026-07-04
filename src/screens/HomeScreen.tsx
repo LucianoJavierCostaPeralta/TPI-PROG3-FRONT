@@ -583,7 +583,7 @@ function AdminsPanel({ admins }: { admins: UserProfile[] }) {
     <View style={styles.panel}>
       {admins.map((admin) => (
         <Surface key={admin.id} style={styles.listRow} elevation={1}>
-          <UserAvatar name={admin.nombre} style={{ marginRight: spacing.md }} />
+          <UserAvatar name={admin.nombre} style={styles.adminAvatar} />
           <View style={styles.flexContent}>
             <Text variant="titleSmall" style={styles.primaryText}>{admin.nombre}</Text>
             <Text variant="bodySmall" style={styles.mutedText}>{admin.email}</Text>
@@ -1483,6 +1483,9 @@ const createStyles = (theme: MD3Theme) =>
     },
     smallButtonLabel: {
       fontSize: 12,
+    },
+    adminAvatar: {
+      marginRight: spacing.md,
     },
     fab: {
       position: 'absolute',
