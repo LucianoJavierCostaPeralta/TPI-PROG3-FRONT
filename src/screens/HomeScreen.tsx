@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Platform, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, Platform, RefreshControl, ScrollView, StyleSheet, View, TouchableOpacity } from 'react-native';
+import Svg, { Circle, G } from 'react-native-svg';
 import { useFocusEffect } from 'expo-router';
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import {
@@ -16,6 +17,7 @@ import {
 import { HomeTemplate } from '../components/templates';
 import { type BottomTabMenuItem } from '../components/molecules';
 import { CTAButton, TextInputField, UserAvatar } from '../components/atoms';
+import { HomePanel, DriversPanel, DeliveriesPanel, AdminsPanel, MapPanel } from '../components/organisms';
 import { spacing, radii, dimensions } from '../styles/theme';
 import {
   acceptDelivery,
@@ -41,9 +43,9 @@ import {
   onlyDigits,
 } from '../utils/validation';
 
-type UserRole = 'administrador' | 'asesor' | 'chofer';
+export type UserRole = 'administrador' | 'asesor' | 'chofer';
 
-type Company = {
+export type Company = {
   id: string;
   nombre: string;
   cuit: string | null;
@@ -51,7 +53,7 @@ type Company = {
   telefono: string | null;
 };
 
-type UserProfile = {
+export type UserProfile = {
   id: string;
   empresa_id: string | null;
   nombre: string;
@@ -62,7 +64,7 @@ type UserProfile = {
   created_at?: string;
 };
 
-type Driver = {
+export type Driver = {
   id: string;
   empresa_id: string;
   usuario_id: string | null;
@@ -79,7 +81,7 @@ type Driver = {
   created_at: string;
 };
 
-type DeliveryOrder = {
+export type DeliveryOrder = {
   id: string;
   empresa_id?: string | null;
   chofer_id?: string | null;
@@ -89,7 +91,7 @@ type DeliveryOrder = {
   [key: string]: unknown;
 };
 
-type AppWorkspace = {
+export type AppWorkspace = {
   profile: UserProfile;
   company: Company | null;
   drivers: Driver[];
@@ -97,18 +99,18 @@ type AppWorkspace = {
   admins: UserProfile[];
 };
 
-type HomeScreenProps = {
+export type HomeScreenProps = {
   navigation?: {
     reset: (state: { index: number; routes: Array<{ name: string }> }) => void;
   };
 };
 
-type HomeTabKey = 'home' | 'deliveries' | 'drivers' | 'admins' | 'map';
+export type HomeTabKey = 'home' | 'deliveries' | 'drivers' | 'admins' | 'map';
 
-type DriverFilter = 'activos' | 'inactivos' | 'todos';
-type DeliveryFilter = 'todos' | 'pendiente' | 'en camino' | 'realizado';
+export type DriverFilter = 'activos' | 'inactivos' | 'todos';
+export type DeliveryFilter = 'todos' | 'pendiente' | 'en camino' | 'realizado';
 
-type DriverForm = {
+export type DriverForm = {
   nombre: string;
   email: string;
   telefono: string;
@@ -116,7 +118,7 @@ type DriverForm = {
   fechaNacimiento: string;
 };
 
-type DeliveryForm = {
+export type DeliveryForm = {
   cliente: string;
   clienteDni: string;
   destino: string;
@@ -457,7 +459,15 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
             }
           >
             {error ? <Text style={styles.errorText}>{error}</Text> : null}
-            {activeTab === 'home' ? <HomePanel workspace={workspace} /> : null}
+            {activeTab === 'home' ? (
+              <HomePanel
+                workspace={workspace}
+                setActiveTab={setActiveTab}
+                setShowDeliveryForm={setShowDeliveryForm}
+                setShowDriverForm={setShowDriverForm}
+                setDeliveryFilter={setDeliveryFilter}
+              />
+            ) : null}
             {activeTab === 'admins' ? <AdminsPanel admins={workspace.admins} /> : null}
             {activeTab === 'drivers' ? (
               <DriversPanel
@@ -515,628 +525,12 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
   );
 }
 
-function HomePanel({ workspace }: { workspace: AppWorkspace }) {
-  const theme = useTheme<MD3Theme>();
-  const styles = createStyles(theme);
-  const assignedOrders = workspace.orders.filter((order) => order.chofer_id).length;
-
-  if (workspace.profile.rol === 'asesor') {
-    return (
-      <View style={styles.panel}>
-        <Surface style={styles.summaryCard} elevation={1}>
-          <Text variant="titleMedium" style={styles.cardTitle}>Asesor</Text>
-          <Text variant="headlineSmall" style={styles.primaryText}>{workspace.profile.nombre}</Text>
-          <Text variant="bodyMedium" style={styles.mutedText}>Admins usando la app: {workspace.admins.length}</Text>
-        </Surface>
-      </View>
-    );
-  }
-
-  if (workspace.profile.rol === 'chofer') {
-    const pendingOrders = workspace.orders.filter((order) => order.estado !== 'realizado').length;
-
-    return (
-      <View style={styles.panel}>
-        <Surface style={styles.summaryCard} elevation={1}>
-          <Text variant="titleMedium" style={styles.cardTitle}>Chofer</Text>
-          <Text variant="headlineSmall" style={styles.primaryText}>{workspace.profile.nombre}</Text>
-          <Text variant="bodyMedium" style={styles.mutedText}>{workspace.company?.nombre ?? 'Empresa sin datos'}</Text>
-        </Surface>
-        <View style={styles.metricsRow}>
-          <Metric label="Pendientes" value={pendingOrders} />
-          <Metric label="Realizados" value={workspace.orders.length - pendingOrders} />
-        </View>
-      </View>
-    );
-  }
-
-  return (
-    <View style={styles.panel}>
-      <Surface style={styles.summaryCard} elevation={1}>
-        <Text variant="titleMedium" style={styles.cardTitle}>Empresa</Text>
-        <Text variant="headlineSmall" style={styles.primaryText}>
-          {workspace.company?.nombre ?? 'Sin empresa asociada'}
-        </Text>
-        <Text variant="bodyMedium" style={styles.mutedText}>
-          {workspace.company?.email ?? 'Ejecutá la migración de empresas para vincular tu cuenta.'}
-        </Text>
-      </Surface>
-
-      <View style={styles.metricsRow}>
-        <Metric label="Choferes" value={workspace.drivers.length} />
-        <Metric label="Pedidos" value={workspace.orders.length} />
-        <Metric label="Asignados" value={assignedOrders} />
-      </View>
-    </View>
-  );
-}
-
-function AdminsPanel({ admins }: { admins: UserProfile[] }) {
-  const theme = useTheme<MD3Theme>();
-  const styles = createStyles(theme);
-
-  if (admins.length === 0) {
-    return <EmptyState text="Todavía no hay administradores de empresa usando la app." />;
-  }
-
-  return (
-    <View style={styles.panel}>
-      {admins.map((admin) => (
-        <Surface key={admin.id} style={styles.listRow} elevation={1}>
-          <UserAvatar name={admin.nombre} style={styles.adminAvatar} />
-          <View style={styles.flexContent}>
-            <Text variant="titleSmall" style={styles.primaryText}>{admin.nombre}</Text>
-            <Text variant="bodySmall" style={styles.mutedText}>{admin.email}</Text>
-          </View>
-        </Surface>
-      ))}
-    </View>
-  );
-}
-
-function DriversPanel({
-  form,
-  drivers,
-  saving,
-  showForm,
-  filter,
-  canCreate,
-  onFilterChange,
-  onChange,
-  onSubmit,
-  onCancel,
-}: {
-  form: DriverForm;
-  drivers: Driver[];
-  saving: boolean;
-  showForm: boolean;
-  filter: DriverFilter;
-  canCreate: boolean;
-  onFilterChange: (filter: DriverFilter) => void;
-  onChange: (field: keyof DriverForm, value: string) => void;
-  onSubmit: () => void;
-  onCancel: () => void;
-}) {
-  const theme = useTheme<MD3Theme>();
-  const styles = createStyles(theme);
-  const [birthDatePickerVisible, setBirthDatePickerVisible] = useState(false);
-  const selectedBirthDate = form.fechaNacimiento
-    ? parseDeliveryFormDate(form.fechaNacimiento)
-    : new Date(1990, 0, 1);
-  const handleBirthDateChange = (_event: DateTimePickerEvent, date?: Date) => {
-    if (Platform.OS === 'android') {
-      setBirthDatePickerVisible(false);
-    }
-    if (date) {
-      onChange('fechaNacimiento', formatDateForInput(date));
-    }
-  };
-  const filteredDrivers = drivers.filter((driver) => {
-    if (filter === 'activos') return driver.activo;
-    if (filter === 'inactivos') return !driver.activo;
-    return true;
-  });
-
-  return (
-    <View style={styles.panel}>
-      {!showForm && (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
-          <FilterChip label="Activos" active={filter === 'activos'} onPress={() => onFilterChange('activos')} />
-          <FilterChip label="Inactivos" active={filter === 'inactivos'} onPress={() => onFilterChange('inactivos')} />
-          <FilterChip label="Todos" active={filter === 'todos'} onPress={() => onFilterChange('todos')} />
-        </ScrollView>
-      )}
-
-      {canCreate && showForm ? (
-        <Surface style={styles.formCard} elevation={1}>
-          <View style={styles.orderHeader}>
-            <Text variant="titleMedium" style={[styles.cardTitle, styles.flexContent]}>Nuevo Chofer</Text>
-            <IconButton icon="close" size={20} onPress={onCancel} disabled={saving} />
-          </View>
-          <View style={styles.formContent}>
-          <TextInputField
-            label="Nombre y Apellido"
-            placeholder="Ej: Juan Perez"
-            value={form.nombre}
-            onChangeText={(value) => onChange('nombre', value)}
-            disabled={saving}
-            icon="account-outline"
-          />
-          <TextInputField
-            label="DNI"
-            placeholder="Ej: 12345678"
-            value={form.documento}
-            onChangeText={(value) => onChange('documento', onlyDigits(value, 8))}
-            keyboardType="number-pad"
-            disabled={saving}
-            icon="card-account-details-outline"
-          />
-          <TextInputField
-            label="Email"
-            placeholder="Ej: juan@email.com"
-            value={form.email}
-            onChangeText={(value) => onChange('email', value.trim())}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            disabled={saving}
-            icon="email-outline"
-          />
-          <TextInputField
-            label="Fecha de nacimiento"
-            placeholder="Seleccionar fecha"
-            value={formatDateForDisplay(form.fechaNacimiento)}
-            onPressIn={() => {
-              if (!saving) setBirthDatePickerVisible(true);
-            }}
-            editable={false}
-            showSoftInputOnFocus={false}
-            disabled={saving}
-            icon="calendar-outline"
-            right={
-              <PaperTextInput.Icon
-                icon="calendar-month-outline"
-                onPress={() => setBirthDatePickerVisible(true)}
-                disabled={saving}
-              />
-            }
-          />
-          {birthDatePickerVisible ? (
-            <DateTimePicker
-              value={selectedBirthDate}
-              mode="date"
-              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-              maximumDate={new Date(Date.now() - 86_400_000)}
-              onChange={handleBirthDateChange}
-            />
-          ) : null}
-          {Platform.OS === 'ios' && birthDatePickerVisible ? (
-            <CTAButton
-              compact
-              variant="secondary"
-              onPress={() => setBirthDatePickerVisible(false)}
-              style={styles.datePickerDoneButton}
-            >
-              Listo
-            </CTAButton>
-          ) : null}
-          <TextInputField
-            label="Teléfono"
-            placeholder="Ej: 5491112345678"
-            value={form.telefono}
-            onChangeText={(value) => onChange('telefono', onlyDigits(value, 15))}
-            keyboardType="phone-pad"
-            disabled={saving}
-            icon="phone-outline"
-          />
-          <Text variant="bodySmall" style={styles.mutedText}>
-            El chofer podrá ingresar con su email y contraseña inicial 123456.
-          </Text>
-          </View>
-          <View style={styles.formActions}>
-            <CTAButton variant="secondary" onPress={onCancel} disabled={saving} style={styles.actionButton}>
-              Cancelar
-            </CTAButton>
-            <CTAButton onPress={onSubmit} loading={saving} disabled={saving} style={styles.actionButton}>
-              {saving ? 'Guardando...' : 'Guardar'}
-            </CTAButton>
-          </View>
-        </Surface>
-      ) : filteredDrivers.length === 0 ? (
-        <EmptyState text="No hay choferes para este filtro." />
-      ) : (
-        filteredDrivers.map((driver) => <DriverRow key={driver.id} driver={driver} />)
-      )}
-    </View>
-  );
-}
-
-function FilterChip({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
-  const theme = useTheme<MD3Theme>();
-  const styles = createStyles(theme);
-
-  return (
-    <CTAButton
-      compact
-      variant={active ? 'primary' : 'secondary'}
-      onPress={onPress}
-      style={styles.filterChip}
-      labelStyle={styles.filterChipLabel}
-    >
-      {label}
-    </CTAButton>
-  );
-}
-
-function DeliveriesPanel({
-  role,
-  form,
-  orders,
-  drivers,
-  assigningOrderId,
-  updatingOrderId,
-  filter,
-  saving,
-  showForm,
-  onFilterChange,
-  onChange,
-  onSubmit,
-  onCancel,
-  onAssign,
-  onUpdateStatus,
-}: {
-  role: AppWorkspace['profile']['rol'];
-  form: DeliveryForm;
-  orders: DeliveryOrder[];
-  drivers: Driver[];
-  assigningOrderId: string | null;
-  updatingOrderId: string | null;
-  filter: DeliveryFilter;
-  saving: boolean;
-  showForm: boolean;
-  onFilterChange: (filter: DeliveryFilter) => void;
-  onChange: (field: keyof DeliveryForm, value: string) => void;
-  onSubmit: () => void;
-  onCancel: () => void;
-  onAssign: (orderId: string, driverId: string | null) => void;
-  onUpdateStatus: (orderId: string, action: string, clienteDni?: string) => void;
-}) {
-  const theme = useTheme<MD3Theme>();
-  const styles = createStyles(theme);
-  const [datePickerVisible, setDatePickerVisible] = useState(false);
-  const [deliveryDnis, setDeliveryDnis] = useState<Record<string, string>>({});
-  const selectedDate = parseDeliveryFormDate(form.fecha);
-
-  const handleDateChange = (_event: DateTimePickerEvent, date?: Date) => {
-    if (Platform.OS === 'android') {
-      setDatePickerVisible(false);
-    }
-
-    if (date) {
-      onChange('fecha', formatDateForInput(date));
-    }
-  };
-  const filteredOrders = orders.filter((order) => {
-    if (filter === 'todos') return true;
-    return normalizeOrderStatus(order.estado) === filter;
-  });
-
-  if (orders.length === 0 && role === 'chofer') {
-    return <EmptyState text="No tenes pedidos asignados." />;
-  }
-
-  return (
-    <View style={styles.panel}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
-        <FilterChip label="Todos" active={filter === 'todos'} onPress={() => onFilterChange('todos')} />
-        <FilterChip label="Pendientes" active={filter === 'pendiente'} onPress={() => onFilterChange('pendiente')} />
-        <FilterChip label="En camino" active={filter === 'en camino'} onPress={() => onFilterChange('en camino')} />
-        <FilterChip label="Realizados" active={filter === 'realizado'} onPress={() => onFilterChange('realizado')} />
-      </ScrollView>
-
-      {role === 'administrador' && showForm ? (
-        <Surface style={styles.formCard} elevation={1}>
-          <View style={styles.orderHeader}>
-            <Text variant="titleMedium" style={[styles.cardTitle, styles.flexContent]}>Nueva entrega</Text>
-            <IconButton icon="close" size={20} onPress={onCancel} disabled={saving} />
-          </View>
-          <View style={styles.formContent}>
-          <TextInputField
-            label="Cliente"
-            placeholder="Buscar cliente"
-            value={form.cliente}
-            onChangeText={(value) => onChange('cliente', value)}
-            disabled={saving}
-            icon="account-search-outline"
-          />
-          <TextInputField
-            label="DNI del cliente"
-            placeholder="12345678"
-            value={form.clienteDni}
-            onChangeText={(value) => onChange('clienteDni', onlyDigits(value, 8))}
-            keyboardType="number-pad"
-            disabled={saving}
-            icon="card-account-details-outline"
-          />
-          <TextInputField
-            label="Destino"
-            placeholder="Direccion de entrega"
-            value={form.destino}
-            onChangeText={(value) => onChange('destino', value)}
-            disabled={saving}
-            icon="map-marker-outline"
-          />
-          <TextInputField
-            label="Referencia"
-            placeholder="Ej: Pedido del cliente"
-            value={form.referencia}
-            onChangeText={(value) => onChange('referencia', value)}
-            disabled={saving}
-            icon="barcode-scan"
-          />
-          <TextInputField
-            label="Fecha"
-            placeholder="Seleccionar fecha"
-            value={formatDateForDisplay(form.fecha)}
-            onPressIn={() => {
-              if (!saving) setDatePickerVisible(true);
-            }}
-            editable={false}
-            showSoftInputOnFocus={false}
-            disabled={saving}
-            icon="calendar-outline"
-            right={
-              <PaperTextInput.Icon
-                icon="calendar-month-outline"
-                onPress={() => setDatePickerVisible(true)}
-                disabled={saving}
-              />
-            }
-          />
-          {datePickerVisible ? (
-            <DateTimePicker
-              value={selectedDate}
-              mode="date"
-              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-              onChange={handleDateChange}
-            />
-          ) : null}
-          {Platform.OS === 'ios' && datePickerVisible ? (
-            <CTAButton compact variant="secondary" onPress={() => setDatePickerVisible(false)} style={styles.datePickerDoneButton}>
-              Listo
-            </CTAButton>
-          ) : null}
-          <TextInputField
-            label="Productos"
-            placeholder="Detalle de productos"
-            value={form.productos}
-            onChangeText={(value) => onChange('productos', value)}
-            disabled={saving}
-            icon="package-variant-closed"
-          />
-          <TextInputField
-            label="Observaciones"
-            placeholder="Observaciones adicionales"
-            value={form.observaciones}
-            onChangeText={(value) => onChange('observaciones', value)}
-            disabled={saving}
-            icon="text-box-outline"
-            multiline
-            numberOfLines={3}
-          />
-          </View>
-          <View style={styles.formActions}>
-            <CTAButton variant="secondary" onPress={onCancel} disabled={saving} style={styles.actionButton}>
-              Cancelar
-            </CTAButton>
-            <CTAButton onPress={onSubmit} loading={saving} disabled={saving} style={styles.actionButton}>
-              {saving ? 'Guardando...' : 'Guardar'}
-            </CTAButton>
-          </View>
-        </Surface>
-      ) : null}
-
-      {filteredOrders.length === 0 ? (
-        <EmptyState text={orders.length === 0 ? 'No hay pedidos asociados a esta empresa.' : 'No hay entregas para este filtro.'} />
-      ) : null}
-
-      {filteredOrders.map((order) => {
-        const assignedDriver = drivers.find((driver) => driver.usuario_id === order.chofer_id || driver.id === order.chofer_id);
-        const currentStatus = normalizeOrderStatus(order.estado_id ?? order.estado);
-        const isAssigning = assigningOrderId === order.id;
-        const isUpdating = updatingOrderId === order.id;
-        const canEditStatus = role === 'chofer';
-
-        return (
-          <Surface key={order.id} style={styles.orderCard} elevation={1}>
-            <View style={styles.orderHeader}>
-              <View style={styles.flexContent}>
-                <Text variant="titleMedium" style={styles.cardTitle}>{getOrderTitle(order)}</Text>
-                <Text variant="bodySmall" style={styles.mutedText}>{getOrderDestination(order)}</Text>
-              </View>
-              <View style={[styles.orderStatusBadge, getOrderStatusStyle(currentStatus, styles)]}>
-                <Text variant="labelSmall" style={styles.orderStatusText}>{getBackendStatusLabel(order)}</Text>
-              </View>
-              {isAssigning || isUpdating ? <ActivityIndicator size="small" /> : null}
-            </View>
-
-            <View style={styles.orderMetaGrid}>
-              <OrderMeta label="Cliente" value={getOrderField(order, ['cliente', 'cliente_nombre', 'nombre_cliente'])} />
-              <OrderMeta label="Referencia" value={getOrderField(order, ['referencia', 'codigo_cliente', 'numero', 'codigo'])} />
-              <OrderMeta label="Fecha" value={formatOrderDate(order)} />
-              <OrderMeta
-                label="Chofer"
-                value={assignedDriver?.nombre ?? getAssignedDriverName(order) ?? (role === 'chofer' ? 'Vos' : 'Sin asignar')}
-              />
-            </View>
-
-            {getOrderProducts(order) ? (
-              <Text variant="bodySmall" style={styles.mutedText}>{getOrderProducts(order)}</Text>
-            ) : null}
-
-            <Divider style={styles.divider} />
-
-            {role === 'administrador' ? (
-              <View style={styles.sectionBlock}>
-                <Text variant="labelLarge" style={styles.inputLabel}>Asignar chofer</Text>
-                <View style={styles.driverActions}>
-                  {drivers.length === 0 ? (
-                    <Text variant="bodySmall" style={styles.mutedText}>Primero crea un chofer.</Text>
-                  ) : null}
-                  {drivers.map((driver) => (
-                    <CTAButton
-                      key={driver.id}
-                      variant={driver.usuario_id === order.chofer_id || driver.id === order.chofer_id ? 'primary' : 'secondary'}
-                      compact
-                      disabled={isAssigning}
-                      style={styles.smallButton}
-                      labelStyle={styles.smallButtonLabel}
-                      onPress={() => onAssign(order.id, driver.id)}
-                    >
-                      {driver.nombre}
-                    </CTAButton>
-                  ))}
-                  {order.chofer_id ? (
-                    <IconButton
-                      icon="account-remove-outline"
-                      mode="outlined"
-                      disabled={isAssigning}
-                      onPress={() => onAssign(order.id, null)}
-                    />
-                  ) : null}
-                </View>
-              </View>
-            ) : null}
-
-            {canEditStatus && order.estado_id === 2 ? (
-              <View style={styles.sectionBlock}>
-                <Text variant="labelLarge" style={styles.inputLabel}>Estado</Text>
-                <CTAButton
-                  compact
-                  disabled={isUpdating}
-                  loading={isUpdating}
-                  onPress={() => onUpdateStatus(order.id, 'accept')}
-                >
-                  Aceptar entrega
-                </CTAButton>
-              </View>
-            ) : null}
-
-            {canEditStatus && order.estado_id === 3 ? (
-              <View style={styles.sectionBlock}>
-                <Text variant="labelLarge" style={styles.inputLabel}>Entrega aceptada</Text>
-                <CTAButton
-                  compact
-                  disabled={isUpdating}
-                  loading={isUpdating}
-                  onPress={() => onUpdateStatus(order.id, 'on_the_way')}
-                >
-                  Iniciar recorrido
-                </CTAButton>
-              </View>
-            ) : null}
-
-            {canEditStatus && order.estado_id === 4 ? (
-              <View style={styles.sectionBlock}>
-                <TextInputField
-                  label="DNI del cliente"
-                  placeholder="Ingresalo para confirmar la entrega"
-                  value={deliveryDnis[order.id] ?? ''}
-                  onChangeText={(value) => setDeliveryDnis((current) => ({
-                    ...current,
-                    [order.id]: onlyDigits(value, 8),
-                  }))}
-                  keyboardType="number-pad"
-                  disabled={isUpdating}
-                  icon="card-account-details-outline"
-                />
-                <CTAButton
-                  compact
-                  disabled={isUpdating || (deliveryDnis[order.id]?.length ?? 0) !== 8}
-                  loading={isUpdating}
-                  onPress={() => onUpdateStatus(order.id, 'delivered', deliveryDnis[order.id])}
-                >
-                  Confirmar entrega
-                </CTAButton>
-              </View>
-            ) : null}
-          </Surface>
-        );
-      })}
-    </View>
-  );
-}
-
-function OrderMeta({ label, value }: { label: string; value: string | null }) {
-  const theme = useTheme<MD3Theme>();
-  const styles = createStyles(theme);
-
-  return (
-    <View style={styles.orderMetaItem}>
-      <Text variant="labelSmall" style={styles.inputLabel}>{label}</Text>
-      <Text variant="bodySmall" style={styles.primaryText} numberOfLines={2}>{value ?? '-'}</Text>
-    </View>
-  );
-}
-
-function MapPanel() {
-  return <EmptyState text="El mapa va a usar los pedidos asignados a choferes." />;
-}
-
-function DriverRow({ driver }: { driver: Driver }) {
-  const theme = useTheme<MD3Theme>();
-  const styles = createStyles(theme);
-  const vehicle = driver.vehiculo ?? driver.vehicle ?? driver.patente ?? 'Sin vehiculo';
-  const zone = driver.zona ?? driver.zone ?? 'Sin zona';
-
-  return (
-    <Surface style={styles.driverCard} elevation={1}>
-      <UserAvatar name={driver.nombre} style={{ marginRight: spacing.md }} />
-      <View style={styles.flexContent}>
-        <Text variant="titleSmall" style={styles.primaryText}>{driver.nombre}</Text>
-        <Text variant="bodySmall" style={styles.mutedText}>Vehiculo: {String(vehicle)}</Text>
-        <Text variant="bodySmall" style={styles.mutedText}>Zona: {String(zone)}</Text>
-      </View>
-      <View style={styles.driverTrailing}>
-        <View style={[styles.statusBadge, driver.activo ? styles.statusBadgeActive : styles.statusBadgeInactive]}>
-          <Text variant="labelSmall" style={driver.activo ? styles.statusBadgeTextActive : styles.statusBadgeTextInactive}>
-            {driver.activo ? 'Activo' : 'Inactivo'}
-          </Text>
-        </View>
-        <IconButton icon="chevron-right" size={20} onPress={() => undefined} />
-      </View>
-    </Surface>
-  );
-}
-
-function Metric({ label, value }: { label: string; value: number }) {
-  const theme = useTheme<MD3Theme>();
-  const styles = createStyles(theme);
-
-  return (
-    <Surface style={styles.metricCard} elevation={1}>
-      <Text variant="headlineSmall" style={styles.primaryText}>{value}</Text>
-      <Text variant="labelMedium" style={styles.mutedText}>{label}</Text>
-    </Surface>
-  );
-}
-
-function EmptyState({ text }: { text: string }) {
-  const theme = useTheme<MD3Theme>();
-  const styles = createStyles(theme);
-
-  return (
-    <Surface style={styles.emptyState} elevation={1}>
-      <Text variant="bodyMedium" style={styles.mutedText}>{text}</Text>
-    </Surface>
-  );
-}
-
-function getOrderTitle(order: DeliveryOrder) {
+export function getOrderTitle(order: DeliveryOrder) {
   const possibleTitle = order.codigo ?? order.numero ?? order.nombre ?? order.id;
   return `Pedido ${String(possibleTitle).slice(0, 12)}`;
 }
 
-function getOrderField(order: DeliveryOrder, fields: string[]) {
+export function getOrderField(order: DeliveryOrder, fields: string[]) {
   for (const field of fields) {
     const value = order[field];
     if (value !== null && value !== undefined && String(value).trim()) {
@@ -1147,11 +541,11 @@ function getOrderField(order: DeliveryOrder, fields: string[]) {
   return null;
 }
 
-function getOrderDestination(order: DeliveryOrder) {
+export function getOrderDestination(order: DeliveryOrder) {
   return getOrderField(order, ['direccion_destino', 'destino', 'direccion', 'direccion_entrega', 'domicilio']) ?? 'Destino sin cargar';
 }
 
-function getOrderProducts(order: DeliveryOrder) {
+export function getOrderProducts(order: DeliveryOrder) {
   const productos = order.producto ?? order.productos ?? order.items ?? order.detalle;
 
   if (Array.isArray(productos)) {
@@ -1165,7 +559,7 @@ function getOrderProducts(order: DeliveryOrder) {
   return null;
 }
 
-function getAssignedDriverName(order: DeliveryOrder) {
+export function getAssignedDriverName(order: DeliveryOrder) {
   const chofer = order.chofer;
   if (chofer && typeof chofer === 'object' && 'nombre_completo' in chofer) {
     return String(chofer.nombre_completo);
@@ -1173,14 +567,14 @@ function getAssignedDriverName(order: DeliveryOrder) {
   return null;
 }
 
-function parseDeliveryFormDate(value: string) {
+export function parseDeliveryFormDate(value: string) {
   if (!value) return new Date();
 
   const date = new Date(`${value}T00:00:00`);
   return Number.isNaN(date.getTime()) ? new Date() : date;
 }
 
-function formatDateForInput(date: Date) {
+export function formatDateForInput(date: Date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
@@ -1188,14 +582,14 @@ function formatDateForInput(date: Date) {
   return `${year}-${month}-${day}`;
 }
 
-function formatDateForDisplay(value: string) {
+export function formatDateForDisplay(value: string) {
   if (!value) return '';
 
   const date = parseDeliveryFormDate(value);
   return date.toLocaleDateString();
 }
 
-function formatOrderDate(order: DeliveryOrder) {
+export function formatOrderDate(order: DeliveryOrder) {
   const value = getOrderField(order, ['fecha_programada', 'fecha', 'fecha_entrega', 'created_at']);
   if (!value) return null;
 
@@ -1205,7 +599,7 @@ function formatOrderDate(order: DeliveryOrder) {
   return date.toLocaleDateString();
 }
 
-function normalizeOrderStatus(status: unknown): DeliveryFilter {
+export function normalizeOrderStatus(status: unknown): DeliveryFilter {
   const normalized = String(status ?? 'pendiente').toLowerCase().trim();
 
   if (['5', '6', 'realizado', 'entregado', 'entregada', 'delivered', 'finalizado'].includes(normalized)) return 'realizado';
@@ -1214,13 +608,13 @@ function normalizeOrderStatus(status: unknown): DeliveryFilter {
   return 'pendiente';
 }
 
-function getOrderStatusLabel(status: DeliveryFilter) {
+export function getOrderStatusLabel(status: DeliveryFilter) {
   if (status === 'en camino') return 'En camino';
   if (status === 'realizado') return 'Realizado';
   return 'Pendiente';
 }
 
-function getBackendStatusLabel(order: DeliveryOrder) {
+export function getBackendStatusLabel(order: DeliveryOrder) {
   if (order.estado_id === 5 || order.estado_id === 6) {
     return 'Finalizado';
   }
@@ -1231,11 +625,7 @@ function getBackendStatusLabel(order: DeliveryOrder) {
   return getOrderStatusLabel(normalizeOrderStatus(status));
 }
 
-function getOrderStatusStyle(status: DeliveryFilter, styles: ReturnType<typeof createStyles>) {
-  if (status === 'realizado') return styles.orderStatusDone;
-  if (status === 'en camino') return styles.orderStatusOnWay;
-  return styles.orderStatusPending;
-}
+
 
 function getTabs(role: AppWorkspace['profile']['rol']): Array<BottomTabMenuItem<HomeTabKey>> {
   if (role === 'asesor') {
@@ -1289,210 +679,13 @@ const createStyles = (theme: MD3Theme) =>
       padding: 16,
       paddingBottom: 96,
     },
-    panel: {
-      gap: 14,
-    },
-    summaryCard: {
-      padding: 16,
-      borderRadius: radii.md,
-      backgroundColor: theme.colors.surface,
-      gap: 4,
-    },
-    formCard: {
-      padding: 16,
-      borderRadius: radii.md,
-      backgroundColor: theme.colors.surface,
-    },
-    filterRow: {
-      flexDirection: 'row',
-      gap: 8,
-      paddingRight: 16,
-    },
-    filterChip: {
-      minWidth: 94,
-      borderRadius: radii.md,
-    },
-    filterChipLabel: {
-      fontSize: 12,
-    },
-    formActions: {
-      flexDirection: 'row',
-      gap: 10,
-    },
-    datePickerDoneButton: {
-      alignSelf: 'flex-end',
-      borderRadius: radii.md,
-      marginBottom: 8,
-    },
-    actionButton: {
-      flex: 1,
-    },
-    orderCard: {
-      padding: 14,
-      borderRadius: radii.md,
-      backgroundColor: theme.colors.surface,
-      gap: 10,
-    },
-    orderMetaGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: 10,
-    },
-    orderMetaItem: {
-      width: '47%',
-      minWidth: 130,
-      gap: 2,
-    },
-    orderStatusBadge: {
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: 10,
-    },
-    orderStatusPending: {
-      backgroundColor: '#FEF3C7',
-    },
-    orderStatusOnWay: {
-      backgroundColor: '#DBEAFE',
-    },
-    orderStatusDone: {
-      backgroundColor: '#DCFCE7',
-    },
-    orderStatusText: {
-      color: theme.colors.onSurface,
-      fontWeight: '800',
-    },
-    sectionBlock: {
-      gap: 8,
-    },
-    listRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 12,
-      padding: 12,
-      borderRadius: 8,
-      backgroundColor: theme.colors.surface,
-    },
-    driverCard: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 12,
-      padding: 12,
-      borderRadius: 8,
-      backgroundColor: theme.colors.surface,
-    },
-    driverAvatar: {
-      width: dimensions.avatar.sm,
-      height: dimensions.avatar.sm,
-      borderRadius: dimensions.avatar.sm / 2,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: theme.colors.surfaceVariant,
-    },
-    driverAvatarText: {
-      color: theme.colors.onSurfaceVariant,
-      fontWeight: '800',
-    },
-    driverTrailing: {
-      alignItems: 'flex-end',
-      gap: 2,
-    },
-    statusBadge: {
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: 10,
-    },
-    statusBadgeActive: {
-      backgroundColor: '#DCFCE7',
-    },
-    statusBadgeInactive: {
-      backgroundColor: theme.colors.surfaceVariant,
-    },
-    statusBadgeTextActive: {
-      color: '#15803D',
-      fontWeight: '700',
-    },
-    statusBadgeTextInactive: {
-      color: theme.colors.onSurfaceVariant,
-      fontWeight: '700',
-    },
-    metricsRow: {
-      flexDirection: 'row',
-      gap: 10,
-    },
-    metricCard: {
-      flex: 1,
-      padding: 14,
-      borderRadius: radii.md,
-      backgroundColor: theme.colors.surface,
-    },
-    emptyState: {
-      padding: 16,
-      borderRadius: radii.md,
-      backgroundColor: theme.colors.surface,
-    },
-    orderHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 12,
-    },
-    flexContent: {
-      flex: 1,
-    },
-    driverActions: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      alignItems: 'center',
-      gap: 8,
-    },
-    avatar: {
-      width: dimensions.avatar.xs,
-      height: dimensions.avatar.xs,
-      borderRadius: dimensions.avatar.xs / 2,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: theme.colors.primary,
-    },
-    avatarText: {
-      color: theme.colors.onPrimary,
-      fontWeight: '800',
-    },
-    sectionTitle: {
-      marginTop: 4,
-      color: theme.colors.onSurface,
-      fontWeight: '700',
-    },
-    cardTitle: {
-      color: theme.colors.onSurface,
-      fontWeight: '700',
-    },
-    primaryText: {
-      color: theme.colors.onSurface,
-      fontWeight: '700',
-    },
-    mutedText: {
-      color: theme.colors.onSurfaceVariant,
-    },
     errorText: {
       color: theme.colors.error,
       fontWeight: '600',
+      marginBottom: 10,
     },
-    inputLabel: {
+    mutedText: {
       color: theme.colors.onSurfaceVariant,
-    },
-    divider: {
-      backgroundColor: theme.colors.outline,
-    },
-    smallButton: {
-      borderRadius: radii.md,
-    },
-    smallButtonLabel: {
-      fontSize: 12,
-    },
-    adminAvatar: {
-      marginRight: spacing.md,
-    },
-    formContent: {
-      gap: spacing.sm,
     },
     fab: {
       position: 'absolute',

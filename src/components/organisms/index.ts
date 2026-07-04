@@ -2,3 +2,9 @@ export { AppDrawer } from './AppDrawer';
 export { BenefitsList } from './BenefitsList';
 export { LoginHeader } from './LoginHeader';
 export { RegisterContent, type RegisterSubmission } from './RegisterContent';
+export { HomePanel } from './HomePanel';
+export { DriversPanel } from './DriversPanel';
+export { DeliveriesPanel } from './DeliveriesPanel';
+export { AdminsPanel } from './AdminsPanel';
+export { MapPanel } from './MapPanel';
+
