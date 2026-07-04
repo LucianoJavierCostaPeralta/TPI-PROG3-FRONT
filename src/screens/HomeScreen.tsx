@@ -452,14 +452,14 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
         </View>
       ) : (
         <View style={styles.screenBody}>
-          <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={() => void loadWorkspace(true)} />
-            }
-          >
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
-            {activeTab === 'home' ? (
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
+          {activeTab === 'home' ? (
+            <ScrollView
+              contentContainerStyle={styles.scrollContent}
+              refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={() => void loadWorkspace(true)} />
+              }
+            >
               <HomePanel
                 workspace={workspace}
                 setActiveTab={setActiveTab}
@@ -467,43 +467,62 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
                 setShowDriverForm={setShowDriverForm}
                 setDeliveryFilter={setDeliveryFilter}
               />
-            ) : null}
-            {activeTab === 'admins' ? <AdminsPanel admins={workspace.admins} /> : null}
-            {activeTab === 'drivers' ? (
-              <DriversPanel
-                form={driverForm}
-                drivers={workspace.drivers}
-                saving={savingDriver}
-                showForm={showDriverForm}
-                filter={driverFilter}
-                canCreate={workspace.profile.rol === 'administrador'}
-                onFilterChange={setDriverFilter}
-                onChange={updateDriverField}
-                onSubmit={handleCreateDriver}
-                onCancel={() => setShowDriverForm(false)}
-              />
-            ) : null}
-            {activeTab === 'deliveries' ? (
-              <DeliveriesPanel
-                role={workspace.profile.rol}
-                form={deliveryForm}
-                orders={workspace.orders}
-                drivers={workspace.drivers}
-                assigningOrderId={assigningOrderId}
-                updatingOrderId={updatingOrderId}
-                filter={deliveryFilter}
-                saving={savingDelivery}
-                showForm={showDeliveryForm}
-                onFilterChange={setDeliveryFilter}
-                onChange={updateDeliveryField}
-                onSubmit={handleCreateDelivery}
-                onCancel={() => setShowDeliveryForm(false)}
-                onAssign={handleAssignDriver}
-                onUpdateStatus={handleUpdateOrderStatus}
-              />
-            ) : null}
-            {activeTab === 'map' ? <MapPanel /> : null}
-          </ScrollView>
+            </ScrollView>
+          ) : null}
+          {activeTab === 'admins' ? (
+            <AdminsPanel
+              admins={workspace.admins}
+              refreshing={refreshing}
+              onRefresh={() => void loadWorkspace(true)}
+            />
+          ) : null}
+          {activeTab === 'drivers' ? (
+            <DriversPanel
+              form={driverForm}
+              drivers={workspace.drivers}
+              saving={savingDriver}
+              showForm={showDriverForm}
+              filter={driverFilter}
+              canCreate={workspace.profile.rol === 'administrador'}
+              onFilterChange={setDriverFilter}
+              onChange={updateDriverField}
+              onSubmit={handleCreateDriver}
+              onCancel={() => setShowDriverForm(false)}
+              refreshing={refreshing}
+              onRefresh={() => void loadWorkspace(true)}
+            />
+          ) : null}
+          {activeTab === 'deliveries' ? (
+            <DeliveriesPanel
+              role={workspace.profile.rol}
+              form={deliveryForm}
+              orders={workspace.orders}
+              drivers={workspace.drivers}
+              assigningOrderId={assigningOrderId}
+              updatingOrderId={updatingOrderId}
+              filter={deliveryFilter}
+              saving={savingDelivery}
+              showForm={showDeliveryForm}
+              onFilterChange={setDeliveryFilter}
+              onChange={updateDeliveryField}
+              onSubmit={handleCreateDelivery}
+              onCancel={() => setShowDeliveryForm(false)}
+              onAssign={handleAssignDriver}
+              onUpdateStatus={handleUpdateOrderStatus}
+              refreshing={refreshing}
+              onRefresh={() => void loadWorkspace(true)}
+            />
+          ) : null}
+          {activeTab === 'map' ? (
+            <ScrollView
+              contentContainerStyle={styles.scrollContent}
+              refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={() => void loadWorkspace(true)} />
+              }
+            >
+              <MapPanel />
+            </ScrollView>
+          ) : null}
 
           {workspace.profile.rol === 'administrador' && activeTab === 'drivers' ? (
             <FAB

@@ -59,10 +59,10 @@ function DonutChart({ segments, total }: { segments: PieChartSegment[]; total: n
         </G>
       </Svg>
       <View style={styles.chartCenterText}>
-        <Text variant="headlineMedium" style={{ fontWeight: '800', textAlign: 'center', lineHeight: 28 }}>
+        <Text variant="headlineMedium" style={styles.chartCenterValue}>
           {total}
         </Text>
-        <Text variant="labelSmall" style={{ color: '#64748B', textAlign: 'center', fontSize: 10 }}>
+        <Text variant="labelSmall" style={styles.chartCenterLabel}>
           Total
         </Text>
       </View>
@@ -75,13 +75,13 @@ function LegendItem({ label, count, percentage, color }: { label: string; count:
   const styles = createStyles(theme);
   return (
     <View style={styles.legendItem}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+      <View style={styles.legendItemLeft}>
         <View style={[styles.legendDot, { backgroundColor: color }]} />
         <Text variant="bodyMedium" style={styles.legendLabel}>{label}</Text>
       </View>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-        <Text variant="bodyMedium" style={{ fontWeight: '700' }}>{count}</Text>
-        <Text variant="bodySmall" style={{ color: '#64748B' }}>({percentage}%)</Text>
+      <View style={styles.legendItemRight}>
+        <Text variant="bodyMedium" style={styles.legendItemCount}>{count}</Text>
+        <Text variant="bodySmall" style={styles.legendItemPercentage}>({percentage}%)</Text>
       </View>
     </View>
   );
@@ -93,8 +93,8 @@ function QuickActionButton({ label, icon, color, onPress }: { label: string; ico
   return (
     <Surface style={styles.actionCard} elevation={1}>
       <TouchableOpacity onPress={onPress} style={styles.actionCardTouchableOpacity}>
-        <IconButton icon={icon} iconColor={color} size={28} style={{ margin: 0 }} />
-        <Text variant="labelLarge" style={{ fontWeight: '700', color: theme.colors.onSurface, marginTop: 4 }}>{label}</Text>
+        <IconButton icon={icon} iconColor={color} size={28} style={styles.actionButtonIcon} />
+        <Text variant="labelLarge" style={styles.actionButtonText}>{label}</Text>
       </TouchableOpacity>
     </Surface>
   );
@@ -288,7 +288,7 @@ export function HomePanel({
           <Text variant="titleMedium" style={styles.sectionHeader}>Alertas activas</Text>
           {activeAlerts.length > 0 && (
             <TouchableOpacity onPress={() => setActiveTab('deliveries')}>
-              <Text variant="labelLarge" style={{ color: '#2388F2', fontWeight: '700' }}>Ver todas</Text>
+              <Text variant="labelLarge" style={styles.alertLinkText}>Ver todas</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -296,7 +296,7 @@ export function HomePanel({
         {activeAlerts.length === 0 ? (
           <Surface style={styles.alertCardEmpty} elevation={1}>
             <IconButton icon="check-circle-outline" iconColor="#09C46B" size={24} />
-            <Text variant="bodyMedium" style={{ color: '#09C46B', fontWeight: '700' }}>Sin alertas activas</Text>
+            <Text variant="bodyMedium" style={styles.alertEmptyText}>Sin alertas activas</Text>
             <Text variant="bodySmall" style={styles.mutedText}>Todos los pedidos y choferes al día.</Text>
           </Surface>
         ) : (
@@ -309,9 +309,9 @@ export function HomePanel({
                 style={styles.alertIcon} 
               />
               <View style={styles.alertContent}>
-                <Text variant="bodyMedium" style={{ fontWeight: '700', color: theme.colors.onSurface }}>{alert.title}</Text>
+                <Text variant="bodyMedium" style={styles.alertTitleText}>{alert.title}</Text>
                 <Text variant="bodySmall" style={styles.mutedText}>{alert.subtitle}</Text>
-                <Text variant="labelSmall" style={{ color: '#94A3B8', marginTop: 2 }}>{alert.time}</Text>
+                <Text variant="labelSmall" style={styles.alertTimeText}>{alert.time}</Text>
               </View>
               <IconButton icon="chevron-right" size={20} iconColor="#CBD5E1" />
             </Surface>
@@ -530,5 +530,56 @@ const createStyles = (theme: MD3Theme) =>
       padding: 16,
       alignItems: 'center',
       justifyContent: 'center',
+    },
+    chartCenterValue: {
+      fontWeight: '800',
+      textAlign: 'center',
+      lineHeight: 28,
+    },
+    chartCenterLabel: {
+      color: '#64748B',
+      textAlign: 'center',
+      fontSize: 10,
+    },
+    legendItemLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      flex: 1,
+    },
+    legendItemRight: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    legendItemCount: {
+      fontWeight: '700',
+    },
+    legendItemPercentage: {
+      color: '#64748B',
+    },
+    actionButtonIcon: {
+      margin: 0,
+    },
+    actionButtonText: {
+      fontWeight: '700',
+      color: theme.colors.onSurface,
+      marginTop: 4,
+    },
+    alertLinkText: {
+      color: '#2388F2',
+      fontWeight: '700',
+    },
+    alertEmptyText: {
+      color: '#09C46B',
+      fontWeight: '700',
+    },
+    alertTitleText: {
+      fontWeight: '700',
+      color: theme.colors.onSurface,
+    },
+    alertTimeText: {
+      color: '#94A3B8',
+      marginTop: 2,
     },
   });

@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { StyleSheet, View, ScrollView, Platform } from 'react-native';
+import { StyleSheet, View, ScrollView, Platform, FlatList } from 'react-native';
 import { Text, IconButton, Surface, useTheme, type MD3Theme, TextInput as PaperTextInput } from 'react-native-paper';
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { CTAButton, TextInputField, UserAvatar, EmptyState } from '../atoms';
-import { radii, spacing, dimensions } from '../../styles/theme';
+import { radii, spacing } from '../../styles/theme';
 import {
   type Driver,
   type DriverForm,
@@ -26,7 +26,7 @@ function DriverRow({ driver }: { driver: Driver }) {
 
   return (
     <Surface style={styles.driverCard} elevation={1}>
-      <UserAvatar name={driver.nombre} style={{ marginRight: spacing.md }} />
+      <UserAvatar name={driver.nombre} style={styles.driverAvatar} />
       <View style={styles.flexContent}>
         <Text variant="titleSmall" style={styles.primaryText}>{driver.nombre}</Text>
         <Text variant="bodySmall" style={styles.mutedText}>Vehiculo: {String(vehicle)}</Text>
@@ -72,6 +72,8 @@ export function DriversPanel({
   onChange,
   onSubmit,
   onCancel,
+  refreshing,
+  onRefresh,
 }: {
   form: DriverForm;
   drivers: Driver[];
@@ -83,6 +85,8 @@ export function DriversPanel({
   onChange: (field: keyof DriverForm, value: string) => void;
   onSubmit: () => void;
   onCancel: () => void;
+  refreshing?: boolean;
+  onRefresh?: () => void;
 }) {
   const theme = useTheme<MD3Theme>();
   const styles = createStyles(theme);
@@ -108,113 +112,123 @@ export function DriversPanel({
   });
 
   return (
-    <View style={styles.panel}>
+    <View style={styles.container}>
       {!showForm && (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
-          <FilterChip label="Activos" active={filter === 'activos'} onPress={() => onFilterChange('activos')} />
-          <FilterChip label="Inactivos" active={filter === 'inactivos'} onPress={() => onFilterChange('inactivos')} />
-          <FilterChip label="Todos" active={filter === 'todos'} onPress={() => onFilterChange('todos')} />
-        </ScrollView>
+        <View style={styles.filterBar}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
+            <FilterChip label="Activos" active={filter === 'activos'} onPress={() => onFilterChange('activos')} />
+            <FilterChip label="Inactivos" active={filter === 'inactivos'} onPress={() => onFilterChange('inactivos')} />
+            <FilterChip label="Todos" active={filter === 'todos'} onPress={() => onFilterChange('todos')} />
+          </ScrollView>
+        </View>
       )}
 
       {canCreate && showForm ? (
-        <Surface style={styles.formCard} elevation={1}>
-          <View style={styles.orderHeader}>
-            <Text variant="titleMedium" style={[styles.cardTitle, styles.flexContent]}>Nuevo Chofer</Text>
-            <IconButton icon="close" size={20} onPress={onCancel} disabled={saving} />
-          </View>
-          <View style={styles.formContent}>
-            <TextInputField
-              label="Nombre y Apellido"
-              placeholder="Ej: Juan Perez"
-              value={form.nombre}
-              onChangeText={(value) => onChange('nombre', value)}
-              disabled={saving}
-              icon="account-outline"
-            />
-            <TextInputField
-              label="DNI"
-              placeholder="Ej: 12345678"
-              value={form.documento}
-              onChangeText={(value) => onChange('documento', onlyDigits(value, 8))}
-              keyboardType="number-pad"
-              disabled={saving}
-              icon="card-account-details-outline"
-            />
-            <TextInputField
-              label="Email"
-              placeholder="Ej: juan@email.com"
-              value={form.email}
-              onChangeText={(value) => onChange('email', value.trim())}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              disabled={saving}
-              icon="email-outline"
-            />
-            <TextInputField
-              label="Fecha de nacimiento"
-              placeholder="Seleccionar fecha"
-              value={formatDateForDisplay(form.fechaNacimiento)}
-              onPressIn={() => {
-                if (!saving) setBirthDatePickerVisible(true);
-              }}
-              editable={false}
-              showSoftInputOnFocus={false}
-              disabled={saving}
-              icon="calendar-outline"
-              right={
-                <PaperTextInput.Icon
-                  icon="calendar-month-outline"
-                  onPress={() => setBirthDatePickerVisible(true)}
-                  disabled={saving}
-                />
-              }
-            />
-            {birthDatePickerVisible ? (
-              <DateTimePicker
-                value={selectedBirthDate}
-                mode="date"
-                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                maximumDate={new Date(Date.now() - 86_400_000)}
-                onChange={handleBirthDateChange}
+        <ScrollView contentContainerStyle={styles.formScroll}>
+          <Surface style={styles.formCard} elevation={1}>
+            <View style={styles.orderHeader}>
+              <Text variant="titleMedium" style={[styles.cardTitle, styles.flexContent]}>Nuevo Chofer</Text>
+              <IconButton icon="close" size={20} onPress={onCancel} disabled={saving} />
+            </View>
+            <View style={styles.formContent}>
+              <TextInputField
+                label="Nombre y Apellido"
+                placeholder="Ej: Juan Perez"
+                value={form.nombre}
+                onChangeText={(value) => onChange('nombre', value)}
+                disabled={saving}
+                icon="account-outline"
               />
-            ) : null}
-            {Platform.OS === 'ios' && birthDatePickerVisible ? (
-              <CTAButton
-                compact
-                variant="secondary"
-                onPress={() => setBirthDatePickerVisible(false)}
-                style={styles.datePickerDoneButton}
-              >
-                Listo
+              <TextInputField
+                label="DNI"
+                placeholder="Ej: 12345678"
+                value={form.documento}
+                onChangeText={(value) => onChange('documento', onlyDigits(value, 8))}
+                keyboardType="number-pad"
+                disabled={saving}
+                icon="card-account-details-outline"
+              />
+              <TextInputField
+                label="Email"
+                placeholder="Ej: juan@email.com"
+                value={form.email}
+                onChangeText={(value) => onChange('email', value.trim())}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                disabled={saving}
+                icon="email-outline"
+              />
+              <TextInputField
+                label="Fecha de nacimiento"
+                placeholder="Seleccionar fecha"
+                value={formatDateForDisplay(form.fechaNacimiento)}
+                onPressIn={() => {
+                  if (!saving) setBirthDatePickerVisible(true);
+                }}
+                editable={false}
+                showSoftInputOnFocus={false}
+                disabled={saving}
+                icon="calendar-outline"
+                right={
+                  <PaperTextInput.Icon
+                    icon="calendar-month-outline"
+                    onPress={() => setBirthDatePickerVisible(true)}
+                    disabled={saving}
+                  />
+                }
+              />
+              {birthDatePickerVisible ? (
+                <DateTimePicker
+                  value={selectedBirthDate}
+                  mode="date"
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  maximumDate={new Date(Date.now() - 86_400_000)}
+                  onChange={handleBirthDateChange}
+                />
+              ) : null}
+              {Platform.OS === 'ios' && birthDatePickerVisible ? (
+                <CTAButton
+                  compact
+                  variant="secondary"
+                  onPress={() => setBirthDatePickerVisible(false)}
+                  style={styles.datePickerDoneButton}
+                >
+                  Listo
+                </CTAButton>
+              ) : null}
+              <TextInputField
+                label="Teléfono"
+                placeholder="Ej: 5491112345678"
+                value={form.telefono}
+                onChangeText={(value) => onChange('telefono', onlyDigits(value, 15))}
+                keyboardType="phone-pad"
+                disabled={saving}
+                icon="phone-outline"
+              />
+              <Text variant="bodySmall" style={styles.mutedText}>
+                El chofer podrá ingresar con su email y contraseña inicial 123456.
+              </Text>
+            </View>
+            <View style={styles.formActions}>
+              <CTAButton variant="secondary" onPress={onCancel} disabled={saving} style={styles.actionButton}>
+                Cancelar
               </CTAButton>
-            ) : null}
-            <TextInputField
-              label="Teléfono"
-              placeholder="Ej: 5491112345678"
-              value={form.telefono}
-              onChangeText={(value) => onChange('telefono', onlyDigits(value, 15))}
-              keyboardType="phone-pad"
-              disabled={saving}
-              icon="phone-outline"
-            />
-            <Text variant="bodySmall" style={styles.mutedText}>
-              El chofer podrá ingresar con su email y contraseña inicial 123456.
-            </Text>
-          </View>
-          <View style={styles.formActions}>
-            <CTAButton variant="secondary" onPress={onCancel} disabled={saving} style={styles.actionButton}>
-              Cancelar
-            </CTAButton>
-            <CTAButton onPress={onSubmit} loading={saving} disabled={saving} style={styles.actionButton}>
-              {saving ? 'Guardando...' : 'Guardar'}
-            </CTAButton>
-          </View>
-        </Surface>
-      ) : filteredDrivers.length === 0 ? (
-        <EmptyState text="No hay choferes para este filtro." />
+              <CTAButton onPress={onSubmit} loading={saving} disabled={saving} style={styles.actionButton}>
+                {saving ? 'Guardando...' : 'Guardar'}
+              </CTAButton>
+            </View>
+          </Surface>
+        </ScrollView>
       ) : (
-        filteredDrivers.map((driver) => <DriverRow key={driver.id} driver={driver} />)
+        <FlatList
+          data={filteredDrivers}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => <DriverRow driver={item} />}
+          ListEmptyComponent={<EmptyState text="No hay choferes para este filtro." />}
+          contentContainerStyle={styles.scrollContent}
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+        />
       )}
     </View>
   );
@@ -222,6 +236,23 @@ export function DriversPanel({
 
 const createStyles = (theme: MD3Theme) =>
   StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    filterBar: {
+      height: 48,
+      marginBottom: 12,
+    },
+    driverAvatar: {
+      marginRight: spacing.md,
+    },
+    scrollContent: {
+      paddingBottom: 96,
+      gap: 14,
+    },
+    formScroll: {
+      paddingBottom: 96,
+    },
     panel: {
       gap: 14,
     },
