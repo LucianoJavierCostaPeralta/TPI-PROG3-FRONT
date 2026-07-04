@@ -7,7 +7,9 @@ export default function EditarPerfilRoute() {
   return (
     <EditarPerfilScreen
       onBack={() => router.back()}
-      onSaveSuccess={() => router.back()}
+      onSaveSuccess={() => {
+        router.back();
+      }}
     />
   );
 }

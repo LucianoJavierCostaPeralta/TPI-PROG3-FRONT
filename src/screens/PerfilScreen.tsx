@@ -1,11 +1,13 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { useFocusEffect } from 'expo-router';
 import { IconButton, Surface, Text, useTheme, type MD3Theme } from 'react-native-paper';
 import { InfoCard } from '../components/molecules/InfoCard';
 import { CTAButton, UserAvatar } from '../components/atoms';
 import { getProfile, type AuthUser } from '../services/api';
 import { spacing, radii, dimensions } from '../styles/theme';
 import { ScreenLayout } from '../components/templates';
+import { getStoredProfileImageUri } from '../services/profileImage';
 
 type PerfilScreenProps = {
   onBack: () => void;
@@ -19,13 +21,16 @@ export function PerfilScreen({ onBack, onEdit }: PerfilScreenProps) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [profileImageUri, setProfileImageUri] = useState<string | null>(null);
 
   const loadProfile = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
       const profileData = await getProfile();
+      const storedImage = await getStoredProfileImageUri();
       setUser(profileData);
+      setProfileImageUri(storedImage);
     } catch (err) {
       setError('No se pudo cargar la información del perfil.');
     } finally {
@@ -33,9 +38,11 @@ export function PerfilScreen({ onBack, onEdit }: PerfilScreenProps) {
     }
   }, []);
 
-  useEffect(() => {
-    void loadProfile();
-  }, [loadProfile]);
+  useFocusEffect(
+    useCallback(() => {
+      void loadProfile();
+    }, [loadProfile])
+  );
 
   const getRoleLabel = (roleName?: string) => {
     if (!roleName) return 'Usuario';
@@ -79,7 +86,7 @@ export function PerfilScreen({ onBack, onEdit }: PerfilScreenProps) {
       ) : user ? (
         <>
           <View style={styles.avatarContainer}>
-            <UserAvatar name={user.nombre_completo} size={88} />
+            <UserAvatar name={user.nombre_completo} size={88} imageUri={profileImageUri} />
             <Text variant="headlineSmall" style={styles.userName}>
               {user.nombre_completo}
             </Text>

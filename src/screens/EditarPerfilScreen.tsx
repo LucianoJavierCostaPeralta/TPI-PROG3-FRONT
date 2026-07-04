@@ -2,11 +2,13 @@ import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
 import { IconButton, Surface, Text, useTheme, type MD3Theme } from 'react-native-paper';
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import * as ImagePicker from 'expo-image-picker';
 import { CTAButton, TextInputField, UserAvatar } from '../components/atoms';
 import { getProfile, updateProfile, type AuthUser } from '../services/api';
 import { isValidEmail, onlyDigits, isPastDate } from '../utils/validation';
 import { spacing, radii, dimensions } from '../styles/theme';
 import { ScreenLayout } from '../components/templates';
+import { saveProfileImageUri } from '../services/profileImage';
 
 type EditarPerfilScreenProps = {
   onBack: () => void;
@@ -36,6 +38,7 @@ export function EditarPerfilScreen({ onBack, onSaveSuccess }: EditarPerfilScreen
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [formErrors, setFormErrors] = useState<FormErrors>({});
+  const [selectedImageUri, setSelectedImageUri] = useState<string | null>(null);
 
   // Form states
   const [form, setForm] = useState<FormFields>({
@@ -71,6 +74,28 @@ export function EditarPerfilScreen({ onBack, onSaveSuccess }: EditarPerfilScreen
   useEffect(() => {
     void loadProfileData();
   }, [loadProfileData]);
+
+  const pickImage = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permissionResult.granted) {
+      setError('Se necesita permiso para elegir una foto de perfil.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets?.[0]?.uri) {
+      setSelectedImageUri(result.assets[0].uri);
+      await saveProfileImageUri(result.assets[0].uri);
+      setError('');
+    }
+  };
 
   const handleInputChange = (field: keyof FormFields, value: string) => {
     setForm((current) => ({ ...current, [field]: value }));
@@ -145,6 +170,10 @@ export function EditarPerfilScreen({ onBack, onSaveSuccess }: EditarPerfilScreen
     setSaving(true);
     setError('');
     try {
+      if (selectedImageUri) {
+        await saveProfileImageUri(selectedImageUri);
+      }
+
       await updateProfile(
         user.id,
         user.rol?.nombre_rol || '',
@@ -155,7 +184,9 @@ export function EditarPerfilScreen({ onBack, onSaveSuccess }: EditarPerfilScreen
           fecha_nacimiento: isChofer ? (form.fecha_nacimiento.trim() || null) : null,
         }
       );
-      onSaveSuccess();
+      if (typeof onSaveSuccess === 'function') {
+        onSaveSuccess();
+      }
     } catch (err) {
       setError('No se pudo guardar los cambios. Revisa los datos ingresados.');
     } finally {
@@ -204,11 +235,23 @@ export function EditarPerfilScreen({ onBack, onSaveSuccess }: EditarPerfilScreen
           <Surface style={styles.section} elevation={1}>
             <Text variant="titleMedium" style={styles.sectionTitle}>Campos Editables</Text>
 
-            <UserAvatar
-              name={form.nombre_completo || user.nombre_completo}
-              size={dimensions.avatar.lg}
-              style={styles.userAvatar}
-            />
+            <View style={styles.avatarWrapper}>
+              <UserAvatar
+                name={form.nombre_completo || user.nombre_completo}
+                size={dimensions.avatar.xl}
+                imageUri={selectedImageUri}
+                style={styles.avatarImage}
+              />
+              <IconButton
+                icon="camera"
+                size={20}
+                mode="contained"
+                containerColor={theme.colors.primary}
+                iconColor={theme.colors.onPrimary}
+                style={styles.avatarEditButton}
+                onPress={pickImage}
+              />
+            </View>
 
             <View style={styles.formContent}>
             <TextInputField
@@ -219,6 +262,8 @@ export function EditarPerfilScreen({ onBack, onSaveSuccess }: EditarPerfilScreen
               disabled={saving}
               error={formErrors.nombre_completo}
               icon="account-outline"
+              style={styles.inputField}
+              outlineStyle={styles.inputOutline}
             />
 
             <TextInputField
@@ -232,6 +277,8 @@ export function EditarPerfilScreen({ onBack, onSaveSuccess }: EditarPerfilScreen
               disabled={saving}
               error={formErrors.email}
               icon="email-outline"
+              style={styles.inputField}
+              outlineStyle={styles.inputOutline}
             />
 
             <TextInputField
@@ -243,6 +290,8 @@ export function EditarPerfilScreen({ onBack, onSaveSuccess }: EditarPerfilScreen
               disabled={saving}
               error={formErrors.telefono}
               icon="phone-outline"
+              style={styles.inputField}
+              outlineStyle={styles.inputOutline}
             />
 
             {isChofer && (
@@ -256,6 +305,8 @@ export function EditarPerfilScreen({ onBack, onSaveSuccess }: EditarPerfilScreen
                     pointerEvents="none"
                     error={formErrors.fecha_nacimiento}
                     icon="calendar-range"
+                    style={styles.inputField}
+                    outlineStyle={styles.inputOutline}
                     right={
                       <IconButton
                         icon="calendar"
@@ -303,6 +354,8 @@ export function EditarPerfilScreen({ onBack, onSaveSuccess }: EditarPerfilScreen
                 editable={false}
                 disabled
                 icon="card-account-details-outline"
+                style={styles.inputField}
+                outlineStyle={styles.inputOutline}
               />
             )}
 
@@ -312,6 +365,8 @@ export function EditarPerfilScreen({ onBack, onSaveSuccess }: EditarPerfilScreen
               editable={false}
               disabled
               icon="shield-account-outline"
+              style={styles.inputField}
+              outlineStyle={styles.inputOutline}
             />
 
             <TextInputField
@@ -320,6 +375,8 @@ export function EditarPerfilScreen({ onBack, onSaveSuccess }: EditarPerfilScreen
               editable={false}
               disabled
               icon="toggle-switch-outline"
+              style={styles.inputField}
+              outlineStyle={styles.inputOutline}
             />
             </View>
           </Surface>
@@ -392,6 +449,7 @@ const createStyles = (theme: MD3Theme) =>
       color: theme.colors.onSurface,
       fontWeight: '700',
       marginBottom: spacing.md,
+      fontFamily: 'Inter-SemiBold',
     },
     datePickerContainer: {
       position: 'relative',
@@ -410,12 +468,38 @@ const createStyles = (theme: MD3Theme) =>
       marginTop: spacing.xl,
       gap: spacing.md,
     },
-    userAvatar: {
+    avatarWrapper: {
       alignSelf: 'center',
-      marginBottom: spacing.lg,
+      marginTop: spacing.sm,
+      marginBottom: spacing.xl,
+      padding: spacing.sm,
+      borderRadius: radii.pill,
+      backgroundColor: theme.colors.surface,
+      borderWidth: 1,
+      borderColor: theme.colors.outline,
+      position: 'relative',
+    },
+    avatarImage: {
+      width: dimensions.avatar.xl,
+      height: dimensions.avatar.xl,
+      borderRadius: dimensions.avatar.xl / 2,
+    },
+    avatarEditButton: {
+      position: 'absolute',
+      right: -4,
+      bottom: -2,
     },
     formContent: {
       gap: spacing.sm,
+    },
+    inputField: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: radii.md,
+    },
+    inputOutline: {
+      borderRadius: radii.md,
+      borderWidth: 1.2,
+      borderColor: theme.colors.outlineVariant,
     },
     actionButton: {
       width: '100%',
