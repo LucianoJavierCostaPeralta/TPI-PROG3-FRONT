@@ -1,30 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Platform, RefreshControl, ScrollView, StyleSheet, View, TouchableOpacity } from 'react-native';
-import Svg, { Circle, G } from 'react-native-svg';
+import { useCallback, useMemo, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
-import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import {
-  ActivityIndicator,
-  Divider,
-  FAB,
-  IconButton,
-  Surface,
-  Text,
-  TextInput as PaperTextInput,
-  useTheme,
-  type MD3Theme,
-} from 'react-native-paper';
-import { HomeTemplate } from '../components/templates';
-import { type BottomTabMenuItem } from '../components/molecules';
-import { CTAButton, TextInputField, UserAvatar } from '../components/atoms';
-import { HomePanel, DriversPanel, DeliveriesPanel, AdminsPanel, MapPanel } from '../components/organisms';
-import { spacing, radii, dimensions } from '../styles/theme';
 import {
   acceptDelivery,
   assignDriver,
   createDelivery,
   createDriver,
-  deleteDriver,
   getApiErrorMessage,
   getProfile,
   listAdminDeliveries,
@@ -43,33 +23,92 @@ import {
   isPastDate,
   onlyDigits,
 } from '../utils/validation';
+import { type BottomTabMenuItem } from '../components/molecules';
 
-import {
-  type UserRole,
-  type Company,
-  type UserProfile,
-  type Driver,
-  type DeliveryOrder,
-  type AppWorkspace,
-  type HomeScreenProps,
-  type HomeTabKey,
-  type DriverFilter,
-  type DeliveryFilter,
-  type DriverForm,
-  type DeliveryForm,
-  getOrderTitle,
-  getOrderField,
-  getOrderDestination,
-  getOrderProducts,
-  getAssignedDriverName,
-  parseDeliveryFormDate,
-  formatDateForInput,
-  formatDateForDisplay,
-  formatOrderDate,
-  normalizeOrderStatus,
-  getOrderStatusLabel,
-  getBackendStatusLabel,
-} from '../types/workspace';
+type UserRole = 'administrador' | 'asesor' | 'chofer';
+
+type Company = {
+  id: string;
+  nombre: string;
+  cuit: string | null;
+  email: string | null;
+  telefono: string | null;
+};
+
+type UserProfile = {
+  id: string;
+  empresa_id: string | null;
+  nombre: string;
+  email: string;
+  rol: UserRole;
+  telefono: string | null;
+  activo: boolean;
+  created_at?: string;
+};
+
+type Driver = {
+  id: string;
+  empresa_id: string;
+  usuario_id: string | null;
+  nombre: string;
+  email: string | null;
+  telefono: string | null;
+  documento: string | null;
+  vehiculo?: unknown;
+  vehicle?: unknown;
+  patente?: unknown;
+  zona?: unknown;
+  zone?: unknown;
+  activo: boolean;
+  created_at: string;
+};
+
+type DeliveryOrder = {
+  id: string;
+  empresa_id?: string | null;
+  chofer_id?: string | null;
+  estado?: string | null;
+  estado_id?: number;
+  created_at?: string | null;
+  [key: string]: unknown;
+};
+
+type AppWorkspace = {
+  profile: UserProfile;
+  company: Company | null;
+  drivers: Driver[];
+  orders: DeliveryOrder[];
+  admins: UserProfile[];
+};
+
+type HomeScreenProps = {
+  navigation?: {
+    reset: (state: { index: number; routes: Array<{ name: string }> }) => void;
+  };
+};
+
+type HomeTabKey = 'home' | 'deliveries' | 'drivers' | 'admins' | 'map';
+
+type DriverFilter = 'activos' | 'inactivos' | 'todos';
+type DeliveryFilter = 'todos' | 'pendiente' | 'en camino' | 'realizado';
+
+type DriverForm = {
+  nombre: string;
+  email: string;
+  telefono: string;
+  documento: string;
+  fechaNacimiento: string;
+};
+
+type DeliveryForm = {
+  cliente: string;
+  clienteDni: string;
+  destino: string;
+  referencia: string;
+  observaciones: string;
+  fecha: string;
+  productos: string;
+};
 
 const initialDriverForm: DriverForm = {
   nombre: '',
@@ -151,9 +190,31 @@ async function loadRoleData(_user: AuthUser, role: UserRole) {
   return { drivers: [], orders: [] };
 }
 
-export function HomeScreen({ navigation }: HomeScreenProps) {
-  const theme = useTheme<MD3Theme>();
-  const styles = createStyles(theme);
+function getTabs(role: AppWorkspace['profile']['rol']): Array<BottomTabMenuItem<HomeTabKey>> {
+  if (role === 'asesor') {
+    return [
+      { key: 'home', label: 'Home', icon: 'home-outline', activeIcon: 'home' },
+      { key: 'admins', label: 'Admins', icon: 'account-tie-outline', activeIcon: 'account-tie' },
+    ];
+  }
+
+  if (role === 'chofer') {
+    return [
+      { key: 'home', label: 'Home', icon: 'home-outline', activeIcon: 'home' },
+      { key: 'deliveries', label: 'Pedidos', icon: 'truck-outline', activeIcon: 'truck' },
+      { key: 'map', label: 'Mapa', icon: 'map-outline', activeIcon: 'map' },
+    ];
+  }
+
+  return [
+    { key: 'home', label: 'Home', icon: 'home-outline', activeIcon: 'home' },
+    { key: 'deliveries', label: 'Entregas', icon: 'truck-outline', activeIcon: 'truck' },
+    { key: 'drivers', label: 'Choferes', icon: 'account-group-outline', activeIcon: 'account-group' },
+    { key: 'map', label: 'Mapa', icon: 'map-outline', activeIcon: 'map' },
+  ];
+}
+
+export function useHomeDashboard({ navigation }: HomeScreenProps) {
   const [activeTab, setActiveTab] = useState<HomeTabKey>('home');
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [workspace, setWorkspace] = useState<AppWorkspace>(emptyWorkspace);
@@ -218,7 +279,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
     }, [loadWorkspace])
   );
 
-  const handleSignOut = async () => {
+  const handleSignOut = useCallback(async () => {
     try {
       await logout();
     } finally {
@@ -227,17 +288,17 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
         routes: [{ name: 'LoginScreen' }],
       });
     }
-  };
+  }, [navigation]);
 
-  const updateDriverField = (field: keyof DriverForm, value: string) => {
+  const updateDriverField = useCallback((field: keyof DriverForm, value: string) => {
     setDriverForm((current) => ({ ...current, [field]: value }));
-  };
+  }, []);
 
-  const updateDeliveryField = (field: keyof DeliveryForm, value: string) => {
+  const updateDeliveryField = useCallback((field: keyof DeliveryForm, value: string) => {
     setDeliveryForm((current) => ({ ...current, [field]: value }));
-  };
+  }, []);
 
-  const handleCreateDriver = async () => {
+  const handleCreateDriver = useCallback(async () => {
     if (!driverForm.nombre.trim()) {
       setError('Ingresá el nombre del chofer.');
       return;
@@ -283,24 +344,9 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
     } finally {
       setSavingDriver(false);
     }
-  };
+  }, [driverForm, loadWorkspace]);
 
-  const handleDeleteDriver = async (driverId: string) => {
-    setError('');
-    try {
-      await deleteDriver(driverId);
-      setWorkspace((current) => ({
-        ...current,
-        drivers: current.drivers.filter((d) => d.id !== driverId),
-      }));
-      Alert.alert('Éxito', 'El chofer ha sido eliminado correctamente.');
-    } catch (requestError) {
-      const msg = getApiErrorMessage(requestError, 'No se pudo eliminar el chofer.');
-      Alert.alert('Error', msg);
-    }
-  };
-
-  const handleCreateDelivery = async () => {
+  const handleCreateDelivery = useCallback(async () => {
     if (!deliveryForm.cliente.trim()) {
       setError('Ingresá el cliente.');
       return;
@@ -346,9 +392,9 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
     } finally {
       setSavingDelivery(false);
     }
-  };
+  }, [deliveryForm, loadWorkspace]);
 
-  const handleAssignDriver = async (orderId: string, driverId: string | null) => {
+  const handleAssignDriver = useCallback(async (orderId: string, driverId: string | null) => {
     setAssigningOrderId(orderId);
     setError('');
 
@@ -360,9 +406,9 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
     } finally {
       setAssigningOrderId(null);
     }
-  };
+  }, [loadWorkspace]);
 
-  const handleUpdateOrderStatus = async (orderId: string, action: string, clienteDni?: string) => {
+  const handleUpdateOrderStatus = useCallback(async (orderId: string, action: string, clienteDni?: string) => {
     setUpdatingOrderId(orderId);
     setError('');
 
@@ -376,7 +422,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
     } finally {
       setUpdatingOrderId(null);
     }
-  };
+  }, [loadWorkspace]);
 
   const subtitle = useMemo(() => {
     if (workspace.profile.rol === 'asesor') {
@@ -390,187 +436,67 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
     return workspace.company?.nombre ?? 'Gestioná tu empresa, choferes y pedidos.';
   }, [workspace.company?.nombre, workspace.profile.rol]);
 
-  return (
-    <HomeTemplate
-      title={getTitle(activeTab, workspace.profile.rol)}
-      subtitle={subtitle}
-      tabs={tabs}
-      activeTab={activeTab}
-      drawerVisible={drawerVisible}
-      onTabChange={setActiveTab}
-      onOpenDrawer={() => setDrawerVisible(true)}
-      onCloseDrawer={() => setDrawerVisible(false)}
-      onSignOut={handleSignOut}
-      onBellPress={() => undefined}
-    >
-      {loading ? (
-        <View style={styles.loadingState}>
-          <ActivityIndicator />
-          <Text variant="bodyMedium" style={styles.mutedText}>Cargando datos...</Text>
-        </View>
-      ) : (
-        <View style={styles.screenBody}>
-          {error ? <Text style={styles.errorText}>{error}</Text> : null}
-          {activeTab === 'home' ? (
-            <ScrollView
-              contentContainerStyle={styles.scrollContent}
-              refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={() => void loadWorkspace(true)} />
-              }
-            >
-              <HomePanel
-                workspace={workspace}
-                setActiveTab={setActiveTab}
-                setShowDeliveryForm={setShowDeliveryForm}
-                setShowDriverForm={setShowDriverForm}
-                setDeliveryFilter={setDeliveryFilter}
-              />
-            </ScrollView>
-          ) : null}
-          {activeTab === 'admins' ? (
-            <AdminsPanel
-              admins={workspace.admins}
-              refreshing={refreshing}
-              onRefresh={() => void loadWorkspace(true)}
-            />
-          ) : null}
-          {activeTab === 'drivers' ? (
-            <DriversPanel
-              form={driverForm}
-              drivers={workspace.drivers}
-              saving={savingDriver}
-              showForm={showDriverForm}
-              filter={driverFilter}
-              canCreate={workspace.profile.rol === 'administrador'}
-              onFilterChange={setDriverFilter}
-              onChange={updateDriverField}
-              onSubmit={handleCreateDriver}
-              onCancel={() => setShowDriverForm(false)}
-              onDelete={handleDeleteDriver}
-              refreshing={refreshing}
-              onRefresh={() => void loadWorkspace(true)}
-            />
-          ) : null}
-          {activeTab === 'deliveries' ? (
-            <DeliveriesPanel
-              role={workspace.profile.rol}
-              form={deliveryForm}
-              orders={workspace.orders}
-              drivers={workspace.drivers}
-              assigningOrderId={assigningOrderId}
-              updatingOrderId={updatingOrderId}
-              filter={deliveryFilter}
-              saving={savingDelivery}
-              showForm={showDeliveryForm}
-              onFilterChange={setDeliveryFilter}
-              onChange={updateDeliveryField}
-              onSubmit={handleCreateDelivery}
-              onCancel={() => setShowDeliveryForm(false)}
-              onAssign={handleAssignDriver}
-              onUpdateStatus={handleUpdateOrderStatus}
-              refreshing={refreshing}
-              onRefresh={() => void loadWorkspace(true)}
-            />
-          ) : null}
-          {activeTab === 'map' ? (
-            <ScrollView
-              contentContainerStyle={styles.scrollContent}
-              refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={() => void loadWorkspace(true)} />
-              }
-            >
-              <MapPanel />
-            </ScrollView>
-          ) : null}
+  const handleOpenMap = useCallback(() => setActiveTab('map'), []);
+  const handleOpenDriverForm = useCallback(() => {
+    setActiveTab('drivers');
+    setShowDriverForm(true);
+  }, []);
+  const handleOpenDeliveryForm = useCallback(() => {
+    setActiveTab('deliveries');
+    setShowDeliveryForm(true);
+  }, []);
 
-          {workspace.profile.rol === 'administrador' && activeTab === 'drivers' ? (
-            <FAB
-              icon={showDriverForm ? 'close' : 'plus'}
-              style={styles.fab}
-              onPress={() => setShowDriverForm((visible) => !visible)}
-            />
-          ) : null}
-          {workspace.profile.rol === 'administrador' && activeTab === 'deliveries' ? (
-            <FAB
-              icon={showDeliveryForm ? 'close' : 'plus'}
-              style={styles.fab}
-              onPress={() => setShowDeliveryForm((visible) => !visible)}
-            />
-          ) : null}
-        </View>
-      )}
-    </HomeTemplate>
-  );
-}
-
-
-
-
-
-function getTabs(role: AppWorkspace['profile']['rol']): Array<BottomTabMenuItem<HomeTabKey>> {
-  if (role === 'asesor') {
-    return [
-      { key: 'home', label: 'Home', icon: 'home-outline', activeIcon: 'home' },
-      { key: 'admins', label: 'Admins', icon: 'account-tie-outline', activeIcon: 'account-tie' },
-    ];
-  }
-
-  if (role === 'chofer') {
-    return [
-      { key: 'home', label: 'Home', icon: 'home-outline', activeIcon: 'home' },
-      { key: 'deliveries', label: 'Pedidos', icon: 'truck-outline', activeIcon: 'truck' },
-      { key: 'map', label: 'Mapa', icon: 'map-outline', activeIcon: 'map' },
-    ];
-  }
-
-  return [
-    { key: 'home', label: 'Home', icon: 'home-outline', activeIcon: 'home' },
-    { key: 'deliveries', label: 'Entregas', icon: 'truck-outline', activeIcon: 'truck' },
-    { key: 'drivers', label: 'Choferes', icon: 'account-group-outline', activeIcon: 'account-group' },
-    { key: 'map', label: 'Mapa', icon: 'map-outline', activeIcon: 'map' },
-  ];
-}
-
-function getTitle(activeTab: HomeTabKey, role: AppWorkspace['profile']['rol']) {
-  const labels: Record<HomeTabKey, string> = {
-    home: role === 'asesor' ? 'Asesor' : role === 'chofer' ? 'Chofer' : 'Empresa',
-    deliveries: role === 'chofer' ? 'Mis pedidos' : 'Entregas',
-    drivers: 'Choferes',
-    admins: 'Administradores',
-    map: 'Mapa',
+  return {
+    activeTab,
+    setActiveTab,
+    drawerVisible,
+    setDrawerVisible,
+    workspace,
+    loading,
+    refreshing,
+    savingDriver,
+    savingDelivery,
+    showDriverForm,
+    setShowDriverForm,
+    showDeliveryForm,
+    setShowDeliveryForm,
+    driverFilter,
+    setDriverFilter,
+    deliveryFilter,
+    setDeliveryFilter,
+    assigningOrderId,
+    updatingOrderId,
+    error,
+    setError,
+    driverForm,
+    deliveryForm,
+    loadWorkspace,
+    handleSignOut,
+    updateDriverField,
+    updateDeliveryField,
+    handleCreateDriver,
+    handleCreateDelivery,
+    handleAssignDriver,
+    handleUpdateOrderStatus,
+    handleOpenMap,
+    handleOpenDriverForm,
+    handleOpenDeliveryForm,
+    subtitle,
+    tabs,
   };
-
-  return labels[activeTab];
 }
 
-const createStyles = (theme: MD3Theme) =>
-  StyleSheet.create({
-    screenBody: {
-      flex: 1,
-    },
-    loadingState: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 12,
-      padding: 24,
-    },
-    scrollContent: {
-      padding: 16,
-      paddingBottom: 96,
-    },
-    errorText: {
-      color: theme.colors.error,
-      fontWeight: '600',
-      marginBottom: 10,
-    },
-    mutedText: {
-      color: theme.colors.onSurfaceVariant,
-    },
-    fab: {
-      position: 'absolute',
-      right: 18,
-      bottom: 18,
-      backgroundColor: theme.colors.primary,
-    },
-  });
+export type {
+  AppWorkspace,
+  Company,
+  DeliveryFilter,
+  DeliveryForm,
+  DeliveryOrder,
+  Driver,
+  DriverFilter,
+  DriverForm,
+  HomeScreenProps,
+  HomeTabKey,
+  UserProfile,
+  UserRole,
+};

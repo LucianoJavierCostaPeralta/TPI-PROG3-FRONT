@@ -92,3 +92,8 @@ export async function updateDeliveryState(deliveryId: string, estadoId: 4 | 5, c
   );
   return data.data;
 }
+
+export async function deleteDriver(driverId: string) {
+  const { data } = await api.delete(`/admin/choferes/${driverId}`);
+  return data;
+}

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, View, ScrollView, Platform, FlatList } from 'react-native';
+import { StyleSheet, View, ScrollView, Platform, FlatList, TouchableOpacity, Alert } from 'react-native';
 import { Text, IconButton, Surface, useTheme, type MD3Theme, TextInput as PaperTextInput } from 'react-native-paper';
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { CTAButton, TextInputField, UserAvatar, EmptyState } from '../atoms';
@@ -13,34 +13,58 @@ import {
   formatDateForDisplay,
 } from '../../types/workspace';
 
-// Helper input sanitization
+
 const onlyDigits = (value: string, maxLength: number) => {
   return value.replace(/\D/g, '').slice(0, maxLength);
 };
 
-function DriverRow({ driver }: { driver: Driver }) {
+function DriverRow({ driver, onDelete }: { driver: Driver; onDelete?: (driverId: string) => void }) {
   const theme = useTheme<MD3Theme>();
   const styles = createStyles(theme);
   const vehicle = driver.vehiculo ?? driver.vehicle ?? driver.patente ?? 'Sin vehiculo';
   const zone = driver.zona ?? driver.zone ?? 'Sin zona';
 
+  const handlePress = () => {
+    Alert.alert(
+      'Eliminar Chofer',
+      `¿Estás seguro de que deseas eliminar a ${driver.nombre}? Esta acción no se puede deshacer.`,
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+        {
+          text: 'Eliminar',
+          style: 'destructive',
+          onPress: () => {
+            if (onDelete) {
+              onDelete(driver.id);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   return (
-    <Surface style={styles.driverCard} elevation={1}>
-      <UserAvatar name={driver.nombre} style={styles.driverAvatar} />
-      <View style={styles.flexContent}>
-        <Text variant="titleSmall" style={styles.primaryText}>{driver.nombre}</Text>
-        <Text variant="bodySmall" style={styles.mutedText}>Vehiculo: {String(vehicle)}</Text>
-        <Text variant="bodySmall" style={styles.mutedText}>Zona: {String(zone)}</Text>
-      </View>
-      <View style={styles.driverTrailing}>
-        <View style={[styles.statusBadge, driver.activo ? styles.statusBadgeActive : styles.statusBadgeInactive]}>
-          <Text variant="labelSmall" style={driver.activo ? styles.statusBadgeTextActive : styles.statusBadgeTextInactive}>
-            {driver.activo ? 'Activo' : 'Inactivo'}
-          </Text>
+    <TouchableOpacity onPress={handlePress} activeOpacity={0.7}>
+      <Surface style={styles.driverCard} elevation={1}>
+        <UserAvatar name={driver.nombre} style={styles.driverAvatar} />
+        <View style={styles.flexContent}>
+          <Text variant="titleSmall" style={styles.primaryText}>{driver.nombre}</Text>
+          <Text variant="bodySmall" style={styles.mutedText}>Vehiculo: {String(vehicle)}</Text>
+          <Text variant="bodySmall" style={styles.mutedText}>Zona: {String(zone)}</Text>
         </View>
-        <IconButton icon="chevron-right" size={20} onPress={() => undefined} />
-      </View>
-    </Surface>
+        <View style={styles.driverTrailing}>
+          <View style={[styles.statusBadge, driver.activo ? styles.statusBadgeActive : styles.statusBadgeInactive]}>
+            <Text variant="labelSmall" style={driver.activo ? styles.statusBadgeTextActive : styles.statusBadgeTextInactive}>
+              {driver.activo ? 'Activo' : 'Inactivo'}
+            </Text>
+          </View>
+          <IconButton icon="chevron-right" size={20} onPress={handlePress} />
+        </View>
+      </Surface>
+    </TouchableOpacity>
   );
 }
 
@@ -72,6 +96,7 @@ export function DriversPanel({
   onChange,
   onSubmit,
   onCancel,
+  onDelete,
   refreshing,
   onRefresh,
 }: {
@@ -85,13 +110,14 @@ export function DriversPanel({
   onChange: (field: keyof DriverForm, value: string) => void;
   onSubmit: () => void;
   onCancel: () => void;
+  onDelete?: (driverId: string) => void;
   refreshing?: boolean;
   onRefresh?: () => void;
 }) {
   const theme = useTheme<MD3Theme>();
   const styles = createStyles(theme);
   const [birthDatePickerVisible, setBirthDatePickerVisible] = useState(false);
-  
+
   const selectedBirthDate = form.fechaNacimiento
     ? parseDeliveryFormDate(form.fechaNacimiento)
     : new Date(1990, 0, 1);
@@ -223,7 +249,7 @@ export function DriversPanel({
         <FlatList
           data={filteredDrivers}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <DriverRow driver={item} />}
+          renderItem={({ item }) => <DriverRow driver={item} onDelete={onDelete} />}
           ListEmptyComponent={<EmptyState text="No hay choferes para este filtro." />}
           contentContainerStyle={styles.scrollContent}
           refreshing={refreshing}
