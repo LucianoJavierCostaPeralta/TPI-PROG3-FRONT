@@ -17,7 +17,8 @@ import {
 import { HomeTemplate } from '../components/templates';
 import { type BottomTabMenuItem } from '../components/molecules';
 import { CTAButton, TextInputField, UserAvatar } from '../components/atoms';
-import { HomePanel, DriversPanel, DeliveriesPanel, AdminsPanel, MapPanel } from '../components/organisms';
+import { HomePanel, DriversPanel, DeliveriesPanel, AdminsPanel } from '../components/organisms';
+import MapPanel from '../components/organisms/MapPanel';
 import { spacing, radii, dimensions } from '../styles/theme';
 import {
   acceptDelivery,
