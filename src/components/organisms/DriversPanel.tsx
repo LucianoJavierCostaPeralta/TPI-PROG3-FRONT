@@ -140,8 +140,12 @@ export function DriversPanel({
   return (
     <View style={styles.container}>
       {!showForm && (
-        <View style={styles.filterBar}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
+        <View style={styles.filterBarWrapper}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterRow}
+          >
             <FilterChip label="Activos" active={filter === 'activos'} onPress={() => onFilterChange('activos')} />
             <FilterChip label="Inactivos" active={filter === 'inactivos'} onPress={() => onFilterChange('inactivos')} />
             <FilterChip label="Todos" active={filter === 'todos'} onPress={() => onFilterChange('todos')} />
@@ -286,18 +290,24 @@ const createStyles = (theme: MD3Theme) =>
     panel: {
       gap: 14,
     },
+    filterBarWrapper: {
+      backgroundColor: theme.colors.surfaceVariant,
+      paddingVertical: 12,
+      marginBottom: 8,
+    },
     filterRow: {
       flexDirection: 'row',
+      alignItems: 'center',
       gap: 8,
       paddingHorizontal: 16,
     },
     filterChip: {
-      minWidth: 94,
+      minWidth: 100,
       borderRadius: radii.md,
-      marginRight: spacing.sm,
     },
     filterChipLabel: {
       fontSize: 12,
+      textAlign: 'center',
     },
     formCard: {
       padding: 16,

@@ -226,8 +226,12 @@ export function DeliveriesPanel({
   return (
     <View style={styles.container}>
       {!showForm && (
-        <View style={styles.filterBar}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
+        <View style={styles.filterBarWrapper}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterRow}
+          >
             <FilterChip label="Todos" active={filter === 'todos'} onPress={() => onFilterChange('todos')} />
             <FilterChip label="Pendientes" active={filter === 'pendiente'} onPress={() => onFilterChange('pendiente')} />
             <FilterChip label="En camino" active={filter === 'en camino'} onPress={() => onFilterChange('en camino')} />
@@ -378,18 +382,24 @@ const createStyles = (theme: MD3Theme) =>
     panel: {
       gap: 14,
     },
+    filterBarWrapper: {
+      backgroundColor: theme.colors.surfaceVariant,
+      paddingVertical: 12,
+      marginBottom: 8,
+    },
     filterRow: {
       flexDirection: 'row',
+      alignItems: 'center',
       gap: 8,
       paddingHorizontal: 16,
     },
     filterChip: {
-      minWidth: 94,
+      minWidth: 100,
       borderRadius: radii.md,
-      marginRight: spacing.sm,
     },
     filterChipLabel: {
       fontSize: 12,
+      textAlign: 'center',
     },
     formCard: {
       padding: 16,
