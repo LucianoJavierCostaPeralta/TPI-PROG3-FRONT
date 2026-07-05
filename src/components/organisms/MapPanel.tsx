@@ -1,17 +1,18 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { StyleSheet, View, ScrollView, Pressable } from 'react-native';
+import { StyleSheet, View, ScrollView, Pressable, TouchableOpacity } from 'react-native';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
-import { Text, Menu, Button, IconButton } from 'react-native-paper';
+import { Text, Portal, Dialog, Button, IconButton, Surface } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { type AppWorkspace, getDeliveryCoordinates, normalizeOrderStatus, fetchStreetRoute } from '../../types/workspace';
-import { MarkerNode } from '../atoms';
-import { RouteProgress, NextStopCard } from '../molecules';
+import { MarkerNode, UserAvatar } from '../atoms';
+import { RouteProgress } from '../molecules';
 
 interface MapPanelProps {
   workspace: AppWorkspace;
+  initialFocusOrderId?: string | null;
 }
 
-export function MapPanel({ workspace }: MapPanelProps) {
+export function MapPanel({ workspace, initialFocusOrderId }: MapPanelProps) {
   const role = workspace.profile.rol;
   const isChofer = role === 'chofer';
 
@@ -26,6 +27,14 @@ export function MapPanel({ workspace }: MapPanelProps) {
 
   // 1. Obtener choferes disponibles
   const drivers = workspace.drivers || [];
+
+  const [selectedMapOrderId, setSelectedMapOrderId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (initialFocusOrderId) {
+      setSelectedMapOrderId(initialFocusOrderId);
+    }
+  }, [initialFocusOrderId]);
 
   // 2. Filtrar y ordenar los pedidos para la visualización del mapa
   const mapData = useMemo(() => {
@@ -54,6 +63,29 @@ export function MapPanel({ workspace }: MapPanelProps) {
       };
     });
   }, [workspace.orders, workspace.profile.id, isChofer, selectedDriverId]);
+
+  const selectedMapOrder = useMemo(() => {
+    if (!selectedMapOrderId) return null;
+    return mapData.find(o => o.id === selectedMapOrderId) || null;
+  }, [selectedMapOrderId, mapData]);
+
+  // Centrar la cámara en el pedido enfocado inicialmente (si hay uno)
+  useEffect(() => {
+    if (initialFocusOrderId && mapRef.current) {
+      const order = mapData.find(o => o.id === initialFocusOrderId);
+      if (order && order.latitud && order.longitud) {
+        const timer = setTimeout(() => {
+          mapRef.current?.animateToRegion({
+            latitude: Number(order.latitud),
+            longitude: Number(order.longitud),
+            latitudeDelta: 0.015,
+            longitudeDelta: 0.015,
+          }, 1000);
+        }, 300);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [initialFocusOrderId, mapData]);
 
   // Coordenadas para la línea de la ruta
   const routeCoordinates = useMemo(() => {
@@ -113,6 +145,54 @@ export function MapPanel({ workspace }: MapPanelProps) {
     return { latitude: -27.4511, longitude: -58.9866 };
   }, [mapData, pendingOrders]);
 
+  // Obtener posiciones simuladas para los choferes en el mapa general (máximo 3)
+  const activeDriversOnMap = useMemo(() => {
+    if (isChofer || selectedDriverId) {
+      return [];
+    }
+    
+    const limit = 3;
+    const selectedDrivers = drivers.slice(0, limit);
+    
+    return selectedDrivers.map((driver) => {
+      const driverOrders = (workspace.orders || []).filter(o => o.chofer_id === driver.id);
+      const sorted = [...driverOrders].sort(
+        (a, b) => (Number(a.orden_ruta) || 0) - (Number(b.orden_ruta) || 0)
+      );
+      const pending = sorted.filter(o => normalizeOrderStatus(o.estado) !== 'realizado');
+      
+      let coordinate = { latitude: -27.4511, longitude: -58.9866 };
+      
+      if (pending.length > 0) {
+        const firstPending = pending[0];
+        const coords = getDeliveryCoordinates(firstPending, 0);
+        coordinate = {
+          latitude: coords.latitude - 0.0018,
+          longitude: coords.longitude - 0.0015,
+        };
+      } else if (sorted.length > 0) {
+        const last = sorted[sorted.length - 1];
+        const coords = getDeliveryCoordinates(last, 0);
+        coordinate = {
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+        };
+      } else {
+        const indexOffset = drivers.indexOf(driver) * 0.005;
+        coordinate = {
+          latitude: -27.4511 + indexOffset,
+          longitude: -58.9866 - indexOffset,
+        };
+      }
+      
+      return {
+        id: driver.id,
+        nombre: driver.nombre,
+        coordinate,
+      };
+    });
+  }, [drivers, workspace.orders, isChofer, selectedDriverId]);
+
   // Nombre del chofer activo
   const activeDriverName = useMemo(() => {
     if (isChofer) return workspace.profile.nombre;
@@ -146,47 +226,70 @@ export function MapPanel({ workspace }: MapPanelProps) {
               <Text variant="titleMedium" style={styles.driverName}>{activeDriverName}</Text>
               <Text variant="bodySmall" style={styles.vehicleInfo}>Vehículo: ABC123</Text>
             </View>
-            <MaterialCommunityIcons name="chevron-down" size={24} color="#7C7C7C" />
           </View>
         ) : (
           <View style={styles.adminHeader}>
-            <Text variant="titleMedium" style={styles.adminTitle}>Seguimiento de Choferes</Text>
+            <Text variant="titleMedium" style={styles.adminTitle}>Seleccione un chofer</Text>
             <View style={styles.dropdownContainer}>
-              <Menu
-                visible={menuVisible}
-                onDismiss={() => setMenuVisible(false)}
-                anchor={
-                  <Button
-                    mode="outlined"
-                    onPress={() => setMenuVisible(true)}
-                    icon="chevron-down"
-                    contentStyle={{ flexDirection: 'row-reverse' }}
-                    style={styles.dropdownButton}
-                  >
-                    {selectedDriverId 
-                      ? drivers.find(d => d.id === selectedDriverId)?.nombre 
-                      : 'Todos los choferes'}
-                  </Button>
-                }
+              <Button
+                mode="outlined"
+                onPress={() => setMenuVisible(true)}
+                icon="chevron-down"
+                contentStyle={{ flexDirection: 'row-reverse' }}
+                style={styles.dropdownButton}
               >
-                <Menu.Item
-                  onPress={() => {
-                    setSelectedDriverId(null);
-                    setMenuVisible(false);
-                  }}
-                  title="Todos los choferes"
-                />
-                {drivers.map(d => (
-                  <Menu.Item
-                    key={d.id}
-                    onPress={() => {
-                      setSelectedDriverId(d.id);
-                      setMenuVisible(false);
-                    }}
-                    title={d.nombre}
-                  />
-                ))}
-              </Menu>
+                {selectedDriverId 
+                  ? drivers.find(d => d.id === selectedDriverId)?.nombre 
+                  : 'Todos los choferes'}
+              </Button>
+
+              <Portal>
+                <Dialog visible={menuVisible} onDismiss={() => setMenuVisible(false)} style={styles.dialog}>
+                  <Dialog.Title style={styles.dialogTitle}>Seleccionar Chofer</Dialog.Title>
+                  <Dialog.Content style={styles.dialogContent}>
+                    <ScrollView style={styles.dialogScroll}>
+                      {/* Opción: Todos los choferes */}
+                      <TouchableOpacity
+                        style={styles.dialogRow}
+                        onPress={() => {
+                          setSelectedDriverId(null);
+                          setMenuVisible(false);
+                        }}
+                      >
+                        <View style={styles.avatarPlaceholder}>
+                          <MaterialCommunityIcons name="account-group" size={20} color="#2196F3" />
+                        </View>
+                        <View style={styles.dialogInfo}>
+                          <Text variant="titleSmall" style={styles.dialogName}>Todos los choferes</Text>
+                          <Text variant="bodySmall" style={styles.dialogSub}>Visualizar mapa general</Text>
+                        </View>
+                        <MaterialCommunityIcons name="chevron-right" size={20} color="#CCCCCC" />
+                      </TouchableOpacity>
+
+                      {drivers.map((driver) => (
+                        <TouchableOpacity
+                          key={driver.id}
+                          style={styles.dialogRow}
+                          onPress={() => {
+                            setSelectedDriverId(driver.id);
+                            setMenuVisible(false);
+                          }}
+                        >
+                          <UserAvatar name={driver.nombre} size={36} style={styles.avatar} />
+                          <View style={styles.dialogInfo}>
+                            <Text variant="titleSmall" style={styles.dialogName}>{driver.nombre}</Text>
+                            <Text variant="bodySmall" style={styles.dialogSub}>{driver.activo ? 'Activo' : 'Inactivo'}</Text>
+                          </View>
+                          <MaterialCommunityIcons name="chevron-right" size={20} color="#CCCCCC" />
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                  </Dialog.Content>
+                  <Dialog.Actions>
+                    <Button onPress={() => setMenuVisible(false)}>Cancelar</Button>
+                  </Dialog.Actions>
+                </Dialog>
+              </Portal>
             </View>
           </View>
         )}
@@ -198,6 +301,7 @@ export function MapPanel({ workspace }: MapPanelProps) {
           ref={mapRef}
           provider={PROVIDER_GOOGLE}
           style={styles.map}
+          onPress={() => setSelectedMapOrderId(null)}
           initialRegion={{
             latitude: -27.4511,
             longitude: -58.9866,
@@ -222,18 +326,34 @@ export function MapPanel({ workspace }: MapPanelProps) {
                 latitude: Number(order.latitud),
                 longitude: Number(order.longitud)
               }}
-              title={String(order.cliente)}
-              description={String(order.direccion_destino || 'Destino')}
               zIndex={1}
+              onPress={(e) => {
+                e.stopPropagation();
+                setSelectedMapOrderId(order.id);
+              }}
             >
               <MarkerNode
                 index={idx + 1}
                 status={normalizeOrderStatus(order.estado)}
+                showIconOnly={!isChofer && !selectedDriverId}
               />
             </Marker>
           ))}
 
-          {/* MARCADOR DEL CHOFER */}
+          {/* MARCADORES DE CHOFERES GENERALES (Máximo 3) */}
+          {!isChofer && !selectedDriverId && activeDriversOnMap.map((drv) => (
+            <Marker
+              key={drv.id}
+              coordinate={drv.coordinate}
+              title={`Chofer: ${drv.nombre}`}
+              flat
+              zIndex={100}
+            >
+              <MarkerNode isDriver />
+            </Marker>
+          ))}
+
+          {/* MARCADOR DEL CHOFER INDIVIDUAL */}
           {(isChofer || selectedDriverId) && mapData.length > 0 && (
             <Marker
               coordinate={driverCoordinate}
@@ -274,26 +394,47 @@ export function MapPanel({ workspace }: MapPanelProps) {
           <View style={[styles.legendDot, { backgroundColor: '#4CAF50' }]} />
           <Text variant="bodySmall" style={styles.legendText}>Entregada</Text>
         </View>
-        {(isChofer || selectedDriverId) && (
-          <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: '#2196F3', borderRadius: 2 }]} />
-            <Text variant="bodySmall" style={styles.legendText}>Chofer</Text>
-          </View>
-        )}
+        <View style={styles.legendItem}>
+          <View style={[styles.legendDot, { backgroundColor: '#2196F3', borderRadius: 2 }]} />
+          <Text variant="bodySmall" style={styles.legendText}>Chofer</Text>
+        </View>
       </View>
 
       {/* DETALLES E INDICADORES DE RUTA */}
-      {(isChofer || selectedDriverId) ? (
-        <ScrollView style={styles.infoScroll}>
-          <RouteProgress completed={completedOrders.length} total={mapData.length} />
-          <NextStopCard pendingOrders={pendingOrders} />
-        </ScrollView>
-      ) : (
-        <View style={styles.emptyContainer}>
-          <MaterialCommunityIcons name="map-marker-path" size={48} color="#CCCCCC" />
-          <Text style={styles.emptyLabel}>Selecciona un chofer para visualizar su ruta individual</Text>
+      {/* DETALLES E INDICADORES DE RUTA */}
+      {((isChofer || selectedDriverId) || selectedMapOrder) ? (
+        <View style={styles.bottomInfoContainer}>
+          {(isChofer || selectedDriverId) && (
+            <RouteProgress completed={completedOrders.length} total={mapData.length} />
+          )}
+          {selectedMapOrder && (
+            <Surface style={styles.selectedOrderCard} elevation={1}>
+              <View style={styles.selectedOrderHeader}>
+                <View style={styles.selectedOrderTitleBox}>
+                  <MaterialCommunityIcons name="map-marker" size={18} color="#2196F3" />
+                  <Text variant="titleSmall" style={styles.selectedOrderAddress} numberOfLines={1}>
+                    {String(selectedMapOrder.direccion_destino || '')}
+                  </Text>
+                </View>
+                <IconButton
+                  icon="close"
+                  size={16}
+                  style={styles.closeCardBtn}
+                  onPress={() => setSelectedMapOrderId(null)}
+                />
+              </View>
+              <View style={styles.selectedOrderBody}>
+                <Text variant="bodySmall" style={styles.selectedOrderText}>
+                  Cliente: <Text style={styles.boldText}>{String(selectedMapOrder.cliente || '')}</Text>
+                </Text>
+                <Text variant="bodySmall" style={styles.selectedOrderText}>
+                  Producto: {String(selectedMapOrder.producto || '')}
+                </Text>
+              </View>
+            </Surface>
+          )}
         </View>
-      )}
+      ) : null}
     </View>
   );
 }
@@ -366,7 +507,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   mapContainer: {
-    height: 320,
+    flex: 1,
     backgroundColor: '#E0E0E0',
   },
   map: {
@@ -395,8 +536,51 @@ const styles = StyleSheet.create({
     color: '#555555',
     fontSize: 12,
   },
-  infoScroll: {
+  bottomInfoContainer: {
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
+    paddingBottom: 8,
+  },
+  selectedOrderCard: {
+    padding: 14,
+    marginHorizontal: 16,
+    marginBottom: 10,
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  selectedOrderHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  selectedOrderTitleBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     flex: 1,
+  },
+  selectedOrderAddress: {
+    fontWeight: 'bold',
+    color: '#1C1B1F',
+    flex: 1,
+  },
+  closeCardBtn: {
+    margin: 0,
+    padding: 0,
+  },
+  selectedOrderBody: {
+    gap: 2,
+    paddingLeft: 22,
+  },
+  selectedOrderText: {
+    color: '#475569',
+  },
+  boldText: {
+    fontWeight: '700',
   },
   emptyContainer: {
     flex: 1,
@@ -427,5 +611,48 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
+  },
+  avatarPlaceholder: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  dialog: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+  },
+  dialogTitle: {
+    fontWeight: '700',
+  },
+  dialogContent: {
+    maxHeight: 300,
+  },
+  dialogScroll: {
+    gap: 8,
+  },
+  dialogRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+  },
+  dialogInfo: {
+    flex: 1,
+  },
+  dialogName: {
+    fontWeight: '600',
+    color: '#1C1B1F',
+  },
+  dialogSub: {
+    color: '#7C7C7C',
+  },
+  avatar: {
+    marginRight: 12,
   },
 });
