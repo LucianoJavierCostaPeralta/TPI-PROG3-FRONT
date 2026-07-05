@@ -1,24 +1,55 @@
-import { StyleSheet } from 'react-native';
-import { Appbar, useTheme, type MD3Theme } from 'react-native-paper';
+import { StyleSheet, View } from 'react-native';
+import { Appbar, useTheme, type MD3Theme, Badge } from 'react-native-paper';
 
 type AppTopBarProps = {
   title: string;
   onMenuPress: () => void;
+  onBackPress?: () => void;
   onBellPress?: () => void;
+  bellActive?: boolean;
+  unreadCount?: number;
 };
 
-export function AppTopBar({ title, onMenuPress, onBellPress }: AppTopBarProps) {
+export function AppTopBar({
+  title,
+  onMenuPress,
+  onBackPress,
+  onBellPress,
+  bellActive = false,
+  unreadCount = 0,
+}: AppTopBarProps) {
   const theme = useTheme<MD3Theme>();
   const styles = createStyles(theme);
-  const iconColor = theme.dark ? '#FFFFFF' : theme.colors.onPrimary;
+  const iconColor = '#FFFFFF'; // Forzar blanco puro para mantener diseño premium en la barra azul
 
   return (
     <Appbar.Header mode="center-aligned" elevated={false} style={styles.header} statusBarHeight={0}>
-      <Appbar.Action icon="menu" size={24} iconColor={iconColor} onPress={onMenuPress} style={styles.action} />
+      {onBackPress ? (
+        <Appbar.BackAction color={iconColor} onPress={onBackPress} size={24} />
+      ) : (
+        <Appbar.Action icon="menu" size={24} iconColor={iconColor} onPress={onMenuPress} style={styles.action} />
+      )}
 
       <Appbar.Content title={title} titleStyle={styles.title} />
 
-      <Appbar.Action icon="bell-outline" size={24} iconColor={iconColor} onPress={onBellPress} style={styles.action} />
+      <View style={styles.bellWrapper}>
+        <Appbar.Action
+          icon={bellActive ? "bell" : "bell-outline"}
+          size={24}
+          iconColor={iconColor}
+          onPress={onBellPress}
+          style={styles.action}
+        />
+        {!bellActive && unreadCount > 0 && (
+          <Badge
+            visible={true}
+            size={16}
+            style={styles.badge}
+          >
+            {unreadCount}
+          </Badge>
+        )}
+      </View>
     </Appbar.Header>
   );
 }
@@ -43,5 +74,16 @@ const createStyles = (theme: MD3Theme) =>
       fontSize: 20,
       fontWeight: '800',
       letterSpacing: 0.5,
+    },
+    bellWrapper: {
+      position: 'relative',
+    },
+    badge: {
+      position: 'absolute',
+      top: 2,
+      right: 2,
+      backgroundColor: '#EF4444', // Rojo brillante premium
+      color: '#FFFFFF',
+      fontWeight: '800',
     },
   });

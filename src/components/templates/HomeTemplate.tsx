@@ -22,6 +22,9 @@ type HomeTemplateProps<T extends string> = {
   onCloseDrawer: () => void;
   onSignOut: () => void;
   onBellPress?: () => void;
+  onBack?: () => void;
+  bellActive?: boolean;
+  unreadCount?: number;
 };
 
 export function HomeTemplate<T extends string>({
@@ -36,6 +39,9 @@ export function HomeTemplate<T extends string>({
   onCloseDrawer,
   onSignOut,
   onBellPress,
+  onBack,
+  bellActive = false,
+  unreadCount = 0,
 }: HomeTemplateProps<T>) {
   const theme = useTheme<MD3Theme>();
   const styles = createStyles(theme);
@@ -47,7 +53,10 @@ export function HomeTemplate<T extends string>({
         <AppTopBar
           title={activeTab === 'home' ? 'ZoneScore' : title}
           onMenuPress={onOpenDrawer}
+          onBackPress={onBack}
           onBellPress={onBellPress}
+          bellActive={bellActive}
+          unreadCount={unreadCount}
         />
 
         <View style={styles.content}>{children}</View>

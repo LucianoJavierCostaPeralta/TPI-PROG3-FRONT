@@ -41,19 +41,19 @@ function DonutChart({ segments, total }: { segments: PieChartSegment[]; total: n
             if (segment.percentage <= 0) return null;
 
             return (
-              <Circle
-                key={index}
-                cx="60"
-                cy="60"
-                r={radius}
-                fill="transparent"
-                stroke={segment.color}
-                strokeWidth={strokeWidth}
-                strokeDasharray={circumference}
-                strokeDashoffset={strokeDashoffset}
-                strokeLinecap="round"
-                transform={`rotate(${rotation} 60 60)`}
-              />
+              <G key={index} rotation={rotation} origin="60, 60">
+                <Circle
+                  cx="60"
+                  cy="60"
+                  r={radius}
+                  fill="transparent"
+                  stroke={segment.color}
+                  strokeWidth={strokeWidth}
+                  strokeDasharray={circumference}
+                  strokeDashoffset={strokeDashoffset}
+                  strokeLinecap="round"
+                />
+              </G>
             );
           })}
         </G>
@@ -160,19 +160,21 @@ export function HomePanel({
   // Lógica de cálculo de estadísticas para administrador
   const totalOrders = workspace.orders.length;
 
-  const countToday = workspace.orders.filter(order => {
-    if (!order.created_at) return false;
-    const d = new Date(order.created_at);
+  const countDeliveredToday = workspace.orders.filter(order => {
+    const isCompleted = order.estado_id === 5 || order.estado === 'realizado' || order.estado === 'entregado';
+    if (!isCompleted) return false;
+    if (!order.updated_at) return false;
+    const d = new Date(order.updated_at as string);
     const today = new Date();
     return d.getDate() === today.getDate() &&
            d.getMonth() === today.getMonth() &&
            d.getFullYear() === today.getFullYear();
   }).length;
 
-  const countOnWay = workspace.orders.filter(order => order.estado_id === 4 || order.estado === 'en camino').length;
-  const countPending = workspace.orders.filter(order => order.estado_id === 1 || order.estado === 'pendiente').length;
-  const countCancelled = workspace.orders.filter(order => order.estado_id === 7 || order.estado === 'cancelado').length;
-  const countDelivered = workspace.orders.filter(order => order.estado_id === 5 || order.estado === 'realizado' || order.estado === 'entregado').length;
+  const countOnWay = workspace.orders.filter(order => order.estado_id === 4 || order.estado === 'en camino' || order.estado === 'on_the_way').length;
+  const countPending = workspace.orders.filter(order => order.estado_id === 1 || order.estado_id === 2 || order.estado === 'pendiente' || order.estado === 'aceptado' || order.estado === 'assigned').length;
+  const countCancelled = workspace.orders.filter(order => order.estado_id === 7 || order.estado === 'cancelado' || order.estado === 'cancelled').length;
+  const countDelivered = workspace.orders.filter(order => order.estado_id === 5 || order.estado === 'realizado' || order.estado === 'entregado' || order.estado === 'delivered').length;
   
   const countOthers = totalOrders - (countOnWay + countPending + countCancelled + countDelivered);
 
@@ -184,44 +186,30 @@ export function HomePanel({
     { percentage: totalOrders > 0 ? countOthers / totalOrders : 0, color: palette.neutral500 },   // Otros (Gray)
   ].filter(s => s.percentage > 0);
 
-  // Alertas dinámicas basadas en datos reales
-  const activeAlerts: Array<{ id: string; title: string; subtitle: string; time: string; type: 'warning' | 'info' | 'error' }> = [];
+  // Obtener las notificaciones no leídas reales
+  const getRelativeTime = (dateStr: string) => {
+    const now = new Date();
+    const diffMs = now.getTime() - new Date(dateStr).getTime();
+    const diffMins = Math.floor(diffMs / 60000);
 
-  // Alert 1: Pedidos sin chofer asignado (Pendientes críticos)
-  const unassignedOrders = workspace.orders.filter(o => !o.chofer_id);
-  unassignedOrders.slice(0, 2).forEach(order => {
-    activeAlerts.push({
-      id: `unassigned-${order.id}`,
-      title: `Entrega a ${order.cliente} sin chofer`,
-      subtitle: `Destino: ${order.destino || order.direccion_destino}`,
-      time: 'Hace un momento',
-      type: 'warning',
-    });
-  });
+    if (diffMins < 1) return 'Hace un momento';
+    if (diffMins < 60) return `Hace ${diffMins} min`;
+    
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `Hace ${diffHours} hr`;
 
-  // Alert 2: Choferes inactivos
-  const inactiveDrivers = workspace.drivers.filter(d => !d.activo);
-  inactiveDrivers.slice(0, 2).forEach(driver => {
-    activeAlerts.push({
-      id: `inactive-${driver.id}`,
-      title: `Chofer ${driver.nombre} inactivo`,
-      subtitle: 'Debe ser activado para asignarle entregas',
-      time: 'Hoy, 08:30',
-      type: 'error',
-    });
-  });
+    return 'Ayer';
+  };
 
-  // Alert 3: Pedido pendiente de aceptación
-  const pendingOldOrders = workspace.orders.filter(o => (o.estado_id === 1 || o.estado === 'pendiente') && o.chofer_id);
-  pendingOldOrders.slice(0, 1).forEach(order => {
-    activeAlerts.push({
-      id: `pending-${order.id}`,
-      title: `Entrega #${order.id.slice(0, 6).toUpperCase()} pendiente`,
-      subtitle: `Asignado a: ${(order.chofer as any)?.nombre_completo ?? (order.chofer as any)?.nombre ?? 'Chofer'}`,
-      time: 'Hoy, 09:15',
-      type: 'info',
-    });
-  });
+  const activeAlerts = (workspace.notifications || [])
+    .filter((n) => !n.leida)
+    .map((n) => ({
+      id: n.id,
+      title: n.titulo,
+      subtitle: n.mensaje,
+      time: getRelativeTime(n.created_at),
+      type: n.tipo,
+    }));
 
   return (
     <View style={styles.panel}>
@@ -234,8 +222,8 @@ export function HomePanel({
               <View style={[styles.kpiIconContainer, { backgroundColor: palette.successLight }]}>
                 <IconButton icon="check-circle-outline" iconColor={palette.success} size={24} style={styles.kpiIcon} />
               </View>
-              <Text variant="headlineMedium" style={styles.kpiValue}>{countToday}</Text>
-              <Text variant="bodySmall" style={styles.kpiLabel}>Entregas hoy</Text>
+              <Text variant="headlineMedium" style={styles.kpiValue}>{countDeliveredToday}</Text>
+              <Text variant="bodySmall" style={styles.kpiLabel}>Completadas hoy</Text>
             </Surface>
             <Surface style={styles.kpiCard} elevation={1}>
               <View style={[styles.kpiIconContainer, { backgroundColor: palette.infoLight }]}>
@@ -287,7 +275,7 @@ export function HomePanel({
         <View style={styles.sectionHeaderRow}>
           <Text variant="titleMedium" style={styles.sectionHeader}>Alertas activas</Text>
           {activeAlerts.length > 0 && (
-            <TouchableOpacity onPress={() => setActiveTab('deliveries')}>
+            <TouchableOpacity onPress={() => setActiveTab('notifications')}>
               <Text variant="labelLarge" style={styles.alertLinkText}>Ver todas</Text>
             </TouchableOpacity>
           )}
@@ -301,20 +289,22 @@ export function HomePanel({
           </Surface>
         ) : (
           activeAlerts.slice(0, 3).map(alert => (
-            <Surface key={alert.id} style={styles.alertCard} elevation={1}>
-              <IconButton 
-                icon={alert.type === 'error' ? 'alert-circle-outline' : alert.type === 'warning' ? 'alert-outline' : 'information-outline'} 
-                iconColor={alert.type === 'error' ? palette.error : alert.type === 'warning' ? palette.warning : palette.secondary} 
-                size={22} 
-                style={styles.alertIcon} 
-              />
-              <View style={styles.alertContent}>
-                <Text variant="bodyMedium" style={styles.alertTitleText}>{alert.title}</Text>
-                <Text variant="bodySmall" style={styles.mutedText}>{alert.subtitle}</Text>
-                <Text variant="labelSmall" style={styles.alertTimeText}>{alert.time}</Text>
-              </View>
-              <IconButton icon="chevron-right" size={20} iconColor={palette.neutral400} />
-            </Surface>
+            <TouchableOpacity key={alert.id} activeOpacity={0.8} onPress={() => setActiveTab('notifications')}>
+              <Surface style={styles.alertCard} elevation={1}>
+                <IconButton 
+                  icon={alert.type === 'error' ? 'alert-circle-outline' : alert.type === 'warning' ? 'alert-outline' : alert.type === 'success' ? 'check-circle-outline' : 'information-outline'} 
+                  iconColor={alert.type === 'error' ? palette.error : alert.type === 'warning' ? palette.warning : alert.type === 'success' ? palette.success : palette.secondary} 
+                  size={22} 
+                  style={styles.alertIcon} 
+                />
+                <View style={styles.alertContent}>
+                  <Text variant="bodyMedium" style={styles.alertTitleText}>{alert.title}</Text>
+                  <Text variant="bodySmall" style={styles.mutedText}>{alert.subtitle}</Text>
+                  <Text variant="labelSmall" style={styles.alertTimeText}>{alert.time}</Text>
+                </View>
+                <IconButton icon="chevron-right" size={20} iconColor={palette.neutral400} />
+              </Surface>
+            </TouchableOpacity>
           ))
         )}
       </View>
