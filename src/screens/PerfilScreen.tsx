@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View, BackHandler } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { IconButton, Surface, Text, useTheme, type MD3Theme } from 'react-native-paper';
 import { InfoCard } from '../components/molecules/InfoCard';
@@ -41,7 +41,15 @@ export function PerfilScreen({ onBack, onEdit }: PerfilScreenProps) {
   useFocusEffect(
     useCallback(() => {
       void loadProfile();
-    }, [loadProfile])
+
+      const handleBack = () => {
+        onBack();
+        return true;
+      };
+
+      const subscription = BackHandler.addEventListener('hardwareBackPress', handleBack);
+      return () => subscription.remove();
+    }, [loadProfile, onBack])
   );
 
   const getRoleLabel = (roleName?: string) => {

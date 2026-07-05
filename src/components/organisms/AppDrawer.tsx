@@ -14,28 +14,35 @@ type AppDrawerProps = {
   visible: boolean;
   onClose: () => void;
   onSignOut: () => void;
+  activeTab: string;
 };
 
-export function AppDrawer({ visible, onClose, onSignOut }: AppDrawerProps) {
+export function AppDrawer({ visible, onClose, onSignOut, activeTab }: AppDrawerProps) {
   const theme = useTheme<MD3Theme>();
   const styles = createStyles(theme);
   const router = useRouter();
 
   const handleOpenProfile = () => {
     onClose();
-    router.push('/perfil');
+    router.push({
+      pathname: '/perfil',
+      params: { fromTab: activeTab },
+    });
   };
 
   const handleOpenSettings = () => {
     onClose();
-    router.push('/configuracion');
+    router.push({
+      pathname: '/configuracion',
+      params: { fromTab: activeTab },
+    });
   };
 
   const handleOpenLegal = (titulo: string) => {
     onClose();
     router.push({
       pathname: '/legal',
-      params: { titulo },
+      params: { titulo, fromTab: activeTab },
     });
   };
 

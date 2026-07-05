@@ -1,4 +1,5 @@
-import { StyleSheet, View } from 'react-native';
+import { useEffect } from 'react';
+import { StyleSheet, View, BackHandler } from 'react-native';
 import { Text, useTheme, type MD3Theme, Surface } from 'react-native-paper';
 import { ScreenLayout } from '../components/templates/ScreenLayout';
 import { spacing, radii } from '../styles/theme';
@@ -28,6 +29,15 @@ const PRIVACIDAD_TEXT = `En ZoneScore, nos comprometemos a proteger su privacida
 export function LegalScreen({ titulo, contenido, onBack }: LegalScreenProps) {
   const theme = useTheme<MD3Theme>();
   const styles = createStyles(theme);
+
+  useEffect(() => {
+    const handleBack = () => {
+      onBack();
+      return true;
+    };
+    const subscription = BackHandler.addEventListener('hardwareBackPress', handleBack);
+    return () => subscription.remove();
+  }, [onBack]);
 
   const textContent = contenido || (titulo.toLowerCase().includes('privacidad') ? PRIVACIDAD_TEXT : TERMINOS_TEXT);
 

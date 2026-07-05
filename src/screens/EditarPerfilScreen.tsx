@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Platform, StyleSheet, View, BackHandler } from 'react-native';
 import { IconButton, Surface, Text, useTheme, type MD3Theme } from 'react-native-paper';
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
@@ -74,6 +74,15 @@ export function EditarPerfilScreen({ onBack, onSaveSuccess }: EditarPerfilScreen
   useEffect(() => {
     void loadProfileData();
   }, [loadProfileData]);
+
+  useEffect(() => {
+    const handleBack = () => {
+      onBack();
+      return true;
+    };
+    const subscription = BackHandler.addEventListener('hardwareBackPress', handleBack);
+    return () => subscription.remove();
+  }, [onBack]);
 
   const pickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();

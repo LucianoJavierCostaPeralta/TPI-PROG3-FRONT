@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Platform, RefreshControl, ScrollView, StyleSheet, View, TouchableOpacity } from 'react-native';
+import { Alert, Platform, RefreshControl, ScrollView, StyleSheet, View, TouchableOpacity, BackHandler } from 'react-native';
 import Svg, { Circle, G } from 'react-native-svg';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import {
   ActivityIndicator,
@@ -91,9 +91,9 @@ const initialDeliveryForm: DeliveryForm = {
   choferId: null,
 };
 
-const initialNotifications: AppNotification[] = [
+const initialAdminNotifications: AppNotification[] = [
   {
-    id: '1',
+    id: 'admin-1',
     titulo: 'Entrega retrasada',
     mensaje: 'La entrega #ENT-204 presenta un retraso de 25 minutos.',
     tipo: 'warning',
@@ -101,7 +101,7 @@ const initialNotifications: AppNotification[] = [
     created_at: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
   },
   {
-    id: '2',
+    id: 'admin-2',
     titulo: 'Chofer desconectado',
     mensaje: 'El chofer Juan Pérez perdió conexión con el sistema.',
     tipo: 'error',
@@ -109,12 +109,31 @@ const initialNotifications: AppNotification[] = [
     created_at: new Date(Date.now() - 25 * 60 * 1000).toISOString(),
   },
   {
-    id: '3',
+    id: 'admin-3',
     titulo: 'Entrega completada',
     mensaje: 'La entrega #ENT-198 fue completada correctamente.',
     tipo: 'success',
     leida: true,
     created_at: new Date(Date.now() - 26 * 60 * 60 * 1000).toISOString(),
+  },
+];
+
+const initialChoferNotifications: AppNotification[] = [
+  {
+    id: 'chofer-1',
+    titulo: 'Nuevo pedido asignado',
+    mensaje: 'Se te ha asignado el pedido #PED-0002. Por favor, revisá los detalles de la entrega.',
+    tipo: 'info',
+    leida: false,
+    created_at: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
+  },
+  {
+    id: 'chofer-2',
+    titulo: 'Asignación removida',
+    mensaje: 'Se te ha quitado la asignación del pedido #PED-0005.',
+    tipo: 'warning',
+    leida: false,
+    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
   },
 ];
 
@@ -138,7 +157,7 @@ const emptyWorkspace: AppWorkspace = {
   drivers: [],
   orders: [],
   admins: [],
-  notifications: initialNotifications,
+  notifications: initialAdminNotifications,
 };
 
 function normalizeRole(role?: string): UserRole {
@@ -184,8 +203,22 @@ async function loadRoleData(_user: AuthUser, role: UserRole) {
 export function HomeScreen({ navigation }: HomeScreenProps) {
   const theme = useTheme<MD3Theme>();
   const styles = createStyles(theme);
+
+  const params = useLocalSearchParams<{ openDrawer?: string; activeTab?: string }>();
+  const router = useRouter();
+
   const [activeTab, setActiveTab] = useState<HomeTabKey>('home');
   const [drawerVisible, setDrawerVisible] = useState(false);
+
+  useEffect(() => {
+    if (params.openDrawer === 'true') {
+      setDrawerVisible(true);
+      if (params.activeTab) {
+        setActiveTab(params.activeTab as HomeTabKey);
+      }
+      router.setParams({ openDrawer: undefined, activeTab: undefined });
+    }
+  }, [params.openDrawer, params.activeTab]);
   const [workspace, setWorkspace] = useState<AppWorkspace>(emptyWorkspace);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -217,6 +250,25 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
       const user = await getProfile();
       const role = normalizeRole(user.rol?.nombre_rol);
       const roleData = await loadRoleData(user, role);
+
+      if (role === 'chofer' && roleData.orders.length > 0) {
+        const sorted = [...roleData.orders].sort(
+          (a, b) => (Number(a.orden_ruta) || 0) - (Number(b.orden_ruta) || 0)
+        );
+        const firstPending = sorted.find(
+          o => !(o.estado_id === 5 || o.estado_id === 6 || o.estado === 'realizado' || o.estado === 'entregado')
+        );
+        if (firstPending && (firstPending.estado_id === 2 || firstPending.estado_id === 3)) {
+          try {
+            await updateDeliveryState(firstPending.id, 4);
+            const updatedRoleData = await loadRoleData(user, role);
+            roleData.orders = updatedRoleData.orders;
+          } catch (e) {
+            // Silently ignore or log auto-start failures
+          }
+        }
+      }
+
       setWorkspace((prev) => ({
         ...emptyWorkspace,
         ...roleData,
@@ -236,7 +288,9 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
           email: null,
           telefono: null,
         } : null,
-        notifications: prev.notifications.length > 0 ? prev.notifications : initialNotifications,
+        notifications: prev.notifications.length > 0 && prev.profile.rol === role
+          ? prev.notifications
+          : (role === 'chofer' ? initialChoferNotifications : initialAdminNotifications),
       }));
     } catch (requestError) {
       setError(getApiErrorMessage(requestError, 'No se pudo cargar el perfil.'));
@@ -265,18 +319,65 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
   useFocusEffect(
     useCallback(() => {
       void loadWorkspace();
-    }, [loadWorkspace])
+
+      const handleBackPress = () => {
+        if (selectedDelivery) {
+          if (isEditingDelivery) {
+            setIsEditingDelivery(false);
+          } else {
+            setSelectedDelivery(null);
+          }
+          return true;
+        }
+        if (selectedDriver) {
+          setSelectedDriver(null);
+          return true;
+        }
+        if (showDeliveryForm) {
+          setShowDeliveryForm(false);
+          return true;
+        }
+        if (showDriverForm) {
+          setShowDriverForm(false);
+          return true;
+        }
+        if (activeTab !== 'home') {
+          setActiveTab('home');
+          return true;
+        }
+        return false;
+      };
+
+      const subscription = BackHandler.addEventListener('hardwareBackPress', handleBackPress);
+      return () => subscription.remove();
+    }, [loadWorkspace, selectedDelivery, isEditingDelivery, selectedDriver, showDeliveryForm, showDriverForm, activeTab])
   );
 
-  const handleSignOut = async () => {
-    try {
-      await logout();
-    } finally {
-      navigation?.reset({
-        index: 0,
-        routes: [{ name: 'LoginScreen' }],
-      });
-    }
+  const handleSignOut = () => {
+    Alert.alert(
+      'Cerrar Sesión',
+      '¿Estás seguro de que deseas cerrar sesión?',
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+        {
+          text: 'Cerrar Sesión',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await logout();
+            } finally {
+              navigation?.reset({
+                index: 0,
+                routes: [{ name: 'LoginScreen' }],
+              });
+            }
+          },
+        },
+      ]
+    );
   };
 
   const updateDriverField = (field: keyof DriverForm, value: string) => {
@@ -487,9 +588,85 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
     setError('');
 
     try {
-      if (action === 'accept') await acceptDelivery(orderId);
-      if (action === 'on_the_way') await updateDeliveryState(orderId, 4);
-      if (action === 'delivered') await updateDeliveryState(orderId, 5, clienteDni);
+      let updatedOrder: DeliveryOrder | null = null;
+      if (action === 'accept') {
+        const res = await acceptDelivery(orderId);
+        updatedOrder = mapDelivery(res);
+        
+        // Simular notificación locales
+        setWorkspace((prev) => {
+          const isChofer = prev.profile.rol === 'chofer';
+          const newNotif = isChofer ? {
+            id: String(Date.now()),
+            titulo: 'Pedido aceptado',
+            mensaje: `Aceptaste realizar el pedido #${orderId.slice(0, 8).toUpperCase()}.`,
+            tipo: 'success' as const,
+            leida: false,
+            created_at: new Date().toISOString(),
+          } : {
+            id: String(Date.now()),
+            titulo: 'Pedido Aceptado',
+            mensaje: `El chofer ${prev.profile.nombre} aceptó realizar el pedido #${orderId.slice(0, 8).toUpperCase()}.`,
+            tipo: 'success' as const,
+            leida: false,
+            created_at: new Date().toISOString(),
+          };
+          return {
+            ...prev,
+            notifications: [newNotif, ...(prev.notifications || [])],
+          };
+        });
+      }
+      if (action === 'on_the_way') {
+        const res = await updateDeliveryState(orderId, 4);
+        updatedOrder = mapDelivery(res);
+      }
+      if (action === 'delivered') {
+        const res = await updateDeliveryState(orderId, 5, clienteDni);
+        updatedOrder = mapDelivery(res);
+
+        // Simular notificación locales según rol
+        setWorkspace((prev) => {
+          const isChofer = prev.profile.rol === 'chofer';
+          const newNotif = isChofer ? {
+            id: String(Date.now()),
+            titulo: 'Entrega finalizada',
+            mensaje: `Entregaste el pedido #${orderId.slice(0, 8).toUpperCase()} con éxito.`,
+            tipo: 'success' as const,
+            leida: false,
+            created_at: new Date().toISOString(),
+          } : {
+            id: String(Date.now()),
+            titulo: 'Entrega Finalizada',
+            mensaje: `El chofer ${prev.profile.nombre} finalizó la entrega del pedido #${orderId.slice(0, 8).toUpperCase()}.`,
+            tipo: 'success' as const,
+            leida: false,
+            created_at: new Date().toISOString(),
+          };
+          return {
+            ...prev,
+            notifications: [newNotif, ...(prev.notifications || [])],
+          };
+        });
+
+        // Auto-iniciar la siguiente parada si el rol es chofer
+        if (workspace.profile.rol === 'chofer') {
+          const driverOrders = workspace.orders.filter(o => o.chofer_id === workspace.profile.id);
+          const sorted = [...driverOrders].sort(
+            (a, b) => (Number(a.orden_ruta) || 0) - (Number(b.orden_ruta) || 0)
+          );
+          const nextPending = sorted.find(
+            o => o.id !== orderId && !(o.estado_id === 5 || o.estado_id === 6 || o.estado === 'realizado' || o.estado === 'entregado')
+          );
+          if (nextPending) {
+            await updateDeliveryState(nextPending.id, 4);
+          }
+        }
+      }
+
+      if (updatedOrder) {
+        setSelectedDelivery(updatedOrder);
+      }
       await loadWorkspace(true);
     } catch (requestError) {
       setError(getApiErrorMessage(requestError, 'No se pudo actualizar el estado.'));
@@ -587,6 +764,8 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
                 setShowDeliveryForm={setShowDeliveryForm}
                 setShowDriverForm={setShowDriverForm}
                 setDeliveryFilter={setDeliveryFilter}
+                onUpdateStatus={handleUpdateOrderStatus}
+                updatingOrderId={updatingOrderId}
               />
             </ScrollView>
           ) : null}
@@ -601,6 +780,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
             <DriversPanel
               form={driverForm}
               drivers={workspace.drivers}
+              orders={workspace.orders}
               saving={savingDriver}
               showForm={showDriverForm}
               filter={driverFilter}
@@ -644,6 +824,11 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
                   });
                   setIsEditingDelivery(true);
                 }}
+                onUpdateStatus={handleUpdateOrderStatus}
+                onViewOnMap={(order) => {
+                  setActiveTab('map');
+                }}
+                updatingOrderId={updatingOrderId}
               />
             ) : (
               <DeliveriesPanel
@@ -669,7 +854,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
             )
           ) : null}
           {activeTab === 'map' ? (
-            <MapPanel workspace={workspace} />
+            <MapPanel workspace={workspace} initialFocusOrderId={selectedDelivery?.id} />
           ) : null}
           {activeTab === 'notifications' ? (
             <NotificationsPanel

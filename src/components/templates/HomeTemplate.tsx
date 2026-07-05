@@ -72,6 +72,7 @@ export function HomeTemplate<T extends string>({
         visible={drawerVisible}
         onClose={onCloseDrawer}
         onSignOut={onSignOut}
+        activeTab={activeTab}
       />
     </SafeAreaView>
   );
