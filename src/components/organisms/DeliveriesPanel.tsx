@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { StyleSheet, View, ScrollView, Platform, ActivityIndicator, FlatList } from 'react-native';
-import { Text, IconButton, Surface, useTheme, type MD3Theme, Divider, TextInput as PaperTextInput } from 'react-native-paper';
+import { StyleSheet, View, ScrollView, Platform, ActivityIndicator, FlatList, TouchableOpacity } from 'react-native';
+import { Text, IconButton, Surface, useTheme, type MD3Theme, Divider, TextInput as PaperTextInput, Portal, Dialog, Button } from 'react-native-paper';
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import { CTAButton, TextInputField, EmptyState } from '../atoms';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { CTAButton, TextInputField, EmptyState, UserAvatar } from '../atoms';
 import { radii, spacing, palette } from '../../styles/theme';
 import {
   type Driver,
@@ -27,23 +28,7 @@ const onlyDigits = (value: string, maxLength: number) => {
   return value.replace(/\D/g, '').slice(0, maxLength);
 };
 
-function getOrderStatusStyle(status: DeliveryFilter, styles: ReturnType<typeof createStyles>) {
-  if (status === 'realizado') return styles.orderStatusDone;
-  if (status === 'en camino') return styles.orderStatusOnWay;
-  return styles.orderStatusPending;
-}
 
-function OrderMeta({ label, value }: { label: string; value: string | null }) {
-  const theme = useTheme<MD3Theme>();
-  const styles = createStyles(theme);
-
-  return (
-    <View style={styles.orderMetaItem}>
-      <Text variant="labelSmall" style={styles.inputLabel}>{label}</Text>
-      <Text variant="bodySmall" style={styles.primaryText} numberOfLines={2}>{value ?? '-'}</Text>
-    </View>
-  );
-}
 
 function FilterChip({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
   const theme = useTheme<MD3Theme>();
@@ -80,6 +65,7 @@ export function DeliveriesPanel({
   onUpdateStatus,
   refreshing,
   onRefresh,
+  setSelectedDelivery,
 }: {
   role: 'administrador' | 'asesor' | 'chofer';
   form: DeliveryForm;
@@ -98,10 +84,12 @@ export function DeliveriesPanel({
   onUpdateStatus: (orderId: string, action: string, clienteDni?: string) => void;
   refreshing?: boolean;
   onRefresh?: () => void;
+  setSelectedDelivery: (order: DeliveryOrder) => void;
 }) {
   const theme = useTheme<MD3Theme>();
   const styles = createStyles(theme);
   const [datePickerVisible, setDatePickerVisible] = useState(false);
+  const [driverModalVisible, setDriverModalVisible] = useState(false);
   const [deliveryDnis, setDeliveryDnis] = useState<Record<string, string>>({});
   const selectedDate = parseDeliveryFormDate(form.fecha);
 
@@ -119,103 +107,59 @@ export function DeliveriesPanel({
     return normalizeOrderStatus(order.estado) === filter;
   });
 
-  const renderOrderCard = ({ item: order }: { item: DeliveryOrder }) => {
-    const assignedDriver = drivers.find((driver) => driver.usuario_id === order.chofer_id || driver.id === order.chofer_id);
+  const renderOrderCard = ({ item: order, index: idx }: { item: DeliveryOrder; index: number }) => {
     const currentStatus = normalizeOrderStatus(order.estado_id ?? order.estado);
-    const isAssigning = assigningOrderId === order.id;
-    const isUpdating = updatingOrderId === order.id;
-    const canEditStatus = role === 'chofer';
+    const orderPedId = `#PED-${String(idx + 1).padStart(4, '0')}`;
+
+    const getBadgeStyle = (status: string) => {
+      if (status === 'realizado') return styles.badgeDelivered;
+      if (status === 'en camino') return styles.badgeOnWay;
+      return styles.badgePending;
+    };
+
+    const getBadgeTextStyle = (status: string) => {
+      if (status === 'realizado') return styles.badgeTextDelivered;
+      if (status === 'en camino') return styles.badgeTextOnWay;
+      return styles.badgeTextPending;
+    };
+
+    const getBadgeLabel = (status: string) => {
+      if (status === 'realizado') return 'Entregada';
+      if (status === 'en camino') return 'En camino';
+      return 'Pendiente';
+    };
 
     return (
-      <Surface key={order.id} style={styles.orderCard} elevation={1}>
-        <View style={styles.orderHeader}>
-          <View style={styles.flexContent}>
-            <Text variant="titleMedium" style={styles.cardTitle}>{getOrderTitle(order)}</Text>
-            <Text variant="bodySmall" style={styles.mutedText}>{getOrderDestination(order)}</Text>
-          </View>
-          <View style={[styles.orderStatusBadge, getOrderStatusStyle(currentStatus, styles as any)]}>
-            <Text variant="labelSmall" style={styles.orderStatusText}>{getBackendStatusLabel(order)}</Text>
-          </View>
-          {isAssigning || isUpdating ? <ActivityIndicator size="small" /> : null}
-        </View>
-
-        <View style={styles.orderMetaGrid}>
-          <OrderMeta label="Cliente" value={getOrderField(order, ['cliente', 'cliente_nombre', 'nombre_cliente'])} />
-          <OrderMeta label="Referencia" value={getOrderField(order, ['referencia', 'codigo_cliente', 'numero', 'codigo'])} />
-          <OrderMeta label="Fecha" value={formatOrderDate(order)} />
-          <OrderMeta
-            label="Chofer"
-            value={assignedDriver?.nombre ?? getAssignedDriverName(order) ?? (role === 'chofer' ? 'Vos' : 'Sin asignar')}
-          />
-        </View>
-
-        {getOrderProducts(order) ? (
-          <Text variant="bodySmall" style={styles.mutedText}>{getOrderProducts(order)}</Text>
-        ) : null}
-
-        <Divider style={styles.divider} />
-
-        {role === 'administrador' ? (
-          <View style={styles.sectionBlock}>
-            <Text variant="labelLarge" style={styles.inputLabel}>Asignar chofer</Text>
-            <View style={styles.driverActions}>
-              {drivers.length === 0 ? (
-                <Text variant="bodySmall" style={styles.mutedText}>Primero crea un chofer.</Text>
-              ) : (
-                drivers.map((driver) => (
-                  <CTAButton
-                    key={driver.id}
-                    variant={driver.usuario_id === order.chofer_id || driver.id === order.chofer_id ? 'primary' : 'secondary'}
-                    compact
-                    onPress={() => onAssign(order.id, driver.usuario_id === order.chofer_id || driver.id === order.chofer_id ? null : driver.usuario_id ?? driver.id)}
-                    disabled={isAssigning}
-                    style={styles.smallButton}
-                    labelStyle={styles.smallButtonLabel}
-                  >
-                    {driver.nombre.split(' ')[0]}
-                  </CTAButton>
-                ))
-              )}
-            </View>
-          </View>
-        ) : null}
-
-        {canEditStatus ? (
-          <View style={styles.sectionBlock}>
-            {currentStatus === 'pendiente' ? (
-              <CTAButton
-                onPress={() => onUpdateStatus(order.id, 'on_the_way')}
-                disabled={isUpdating}
-                style={styles.smallButton}
-                labelStyle={styles.smallButtonLabel}
-              >
-                Iniciar Entrega
-              </CTAButton>
-            ) : null}
-
-            {currentStatus === 'en camino' ? (
-              <View style={styles.formContent}>
-                <TextInputField
-                  label="Confirmar DNI del cliente"
-                  placeholder="DNI del cliente para entrega"
-                  value={deliveryDnis[order.id] ?? ''}
-                  onChangeText={(val) => setDeliveryDnis((prev) => ({ ...prev, [order.id]: onlyDigits(val, 8) }))}
-                  keyboardType="number-pad"
-                  disabled={isUpdating}
-                />
-                <CTAButton
-                  onPress={() => onUpdateStatus(order.id, 'delivered', deliveryDnis[order.id])}
-                  disabled={isUpdating}
-                  style={styles.smallButton}
-                  labelStyle={styles.smallButtonLabel}
-                >
-                  Finalizar Entrega
-                </CTAButton>
+      <TouchableOpacity
+        key={order.id}
+        activeOpacity={0.7}
+        onPress={() => setSelectedDelivery(order)}
+      >
+        <Surface style={styles.cleanOrderCard} elevation={1}>
+          <View style={styles.cardLeftContent}>
+            <View style={styles.cardHeaderRow}>
+              <Text variant="titleMedium" style={styles.cardPedId}>{orderPedId}</Text>
+              <View style={[styles.cleanBadge, getBadgeStyle(currentStatus)]}>
+                <Text variant="labelSmall" style={[styles.cleanBadgeText, getBadgeTextStyle(currentStatus)]}>
+                  {getBadgeLabel(currentStatus)}
+                </Text>
               </View>
-            ) : null}
+            </View>
+            
+            <Text variant="bodyMedium" style={styles.cardAddress} numberOfLines={2}>
+              {getOrderDestination(order) || 'Dirección no especificada'}
+            </Text>
+            
+            <Text variant="bodySmall" style={styles.cardDate}>
+              {formatOrderDate(order)}
+            </Text>
           </View>
-        ) : null}
-      </Surface>
+          
+          <View style={styles.cardRightContent}>
+            <MaterialCommunityIcons name="chevron-right" size={24} color="#7C7C7C" />
+          </View>
+        </Surface>
+      </TouchableOpacity>
     );
   };
 
@@ -313,6 +257,38 @@ export function DeliveriesPanel({
                   Listo
                 </CTAButton>
               ) : null}
+              {(() => {
+                const assignedDriver = drivers.find(d => d.usuario_id === form.choferId || d.id === form.choferId);
+                return (
+                  <TextInputField
+                    label="Chofer asignado"
+                    placeholder="Seleccionar chofer"
+                    value={assignedDriver ? assignedDriver.nombre : 'Sin asignar'}
+                    onPressIn={() => !saving && setDriverModalVisible(true)}
+                    editable={false}
+                    showSoftInputOnFocus={false}
+                    disabled={saving}
+                    icon="truck-delivery-outline"
+                    right={
+                      assignedDriver ? (
+                        <PaperTextInput.Icon
+                          icon="close-circle-outline"
+                          onPress={() => onChange('choferId', '')}
+                          disabled={saving}
+                          color={palette.error}
+                        />
+                      ) : (
+                        <PaperTextInput.Icon
+                          icon="chevron-down"
+                          onPress={() => setDriverModalVisible(true)}
+                          disabled={saving}
+                        />
+                      )
+                    }
+                  />
+                );
+              })()}
+
               <TextInputField
                 label="Productos"
                 placeholder="Detalle de productos"
@@ -355,6 +331,41 @@ export function DeliveriesPanel({
           onRefresh={onRefresh}
         />
       )}
+
+      {/* MODAL DIALOG DE SELECCIÓN SEGURA DE CHOFER */}
+      <Portal>
+        <Dialog visible={driverModalVisible} onDismiss={() => setDriverModalVisible(false)} style={styles.dialog}>
+          <Dialog.Title style={styles.dialogTitle}>Seleccionar Chofer</Dialog.Title>
+          <Dialog.Content style={styles.dialogContent}>
+            {drivers.length === 0 ? (
+              <Text variant="bodyMedium" style={styles.emptyText}>No hay choferes disponibles.</Text>
+            ) : (
+              <ScrollView style={styles.dialogScroll}>
+                {drivers.map((driver) => (
+                  <TouchableOpacity
+                    key={driver.id}
+                    style={styles.dialogRow}
+                    onPress={() => {
+                      onChange('choferId', driver.usuario_id ?? driver.id);
+                      setDriverModalVisible(false);
+                    }}
+                  >
+                    <UserAvatar name={driver.nombre} size={36} style={styles.avatar} />
+                    <View style={styles.dialogInfo}>
+                      <Text variant="titleSmall" style={styles.dialogName}>{driver.nombre}</Text>
+                      <Text variant="bodySmall" style={styles.dialogSub}>{driver.activo ? 'Activo' : 'Inactivo'}</Text>
+                    </View>
+                    <MaterialCommunityIcons name="chevron-right" size={20} color="#CCCCCC" />
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            )}
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setDriverModalVisible(false)}>Cancelar</Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
     </View>
   );
 }
@@ -437,64 +448,149 @@ const createStyles = (theme: MD3Theme) =>
     actionButton: {
       flex: 1,
     },
-    orderCard: {
-      padding: 14,
+    cleanOrderCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 16,
       borderRadius: radii.md,
       backgroundColor: theme.colors.surface,
-      gap: 10,
+      borderWidth: 1,
+      borderColor: theme.colors.outline,
     },
-    orderStatusBadge: {
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: 10,
+    cardLeftContent: {
+      flex: 1,
+      gap: 4,
     },
-    orderStatusPending: {
-      backgroundColor: palette.pendingLightBg,
-    },
-    orderStatusOnWay: {
-      backgroundColor: palette.infoLightBg,
-    },
-    orderStatusDone: {
-      backgroundColor: palette.successLightBg,
-    },
-    orderStatusText: {
-      color: theme.colors.onSurface,
-      fontWeight: '800',
-    },
-    orderMetaGrid: {
+    cardHeaderRow: {
       flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: 10,
-    },
-    orderMetaItem: {
-      width: '47%',
-      minWidth: 130,
-      gap: 2,
-    },
-    inputLabel: {
-      color: theme.colors.onSurfaceVariant,
-    },
-    primaryText: {
-      color: theme.colors.onSurface,
-      fontWeight: '700',
-    },
-    divider: {
-      backgroundColor: theme.colors.outline,
-      marginVertical: 4,
-    },
-    sectionBlock: {
-      gap: 8,
-    },
-    driverActions: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
       alignItems: 'center',
       gap: 8,
+      marginBottom: 2,
     },
-    smallButton: {
+    cardPedId: {
+      fontWeight: '800',
+      color: theme.colors.onSurface,
+    },
+    cleanBadge: {
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 10,
+    },
+    cleanBadgeText: {
+      fontWeight: '800',
+    },
+    badgePending: {
+      backgroundColor: palette.pendingLightBg,
+    },
+    badgeOnWay: {
+      backgroundColor: palette.infoLightBg,
+    },
+    badgeDelivered: {
+      backgroundColor: palette.successLightBg,
+    },
+    badgeTextPending: {
+      color: palette.warning,
+    },
+    badgeTextOnWay: {
+      color: palette.secondary,
+    },
+    badgeTextDelivered: {
+      color: palette.successDark,
+    },
+    cardAddress: {
+      color: theme.colors.onSurface,
+      fontSize: 14,
+    },
+    cardDate: {
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 12,
+    },
+    cardRightContent: {
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingLeft: 8,
+    },
+    choferSection: {
+      marginVertical: spacing.xs,
+      gap: 6,
+    },
+    choferLabel: {
+      color: theme.colors.onSurface,
+      fontWeight: '600',
+    },
+    assignedCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 12,
+      borderRadius: radii.md,
+      backgroundColor: palette.successLightBg,
+      borderWidth: 1,
+      borderColor: palette.success,
+    },
+    unassignedCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 12,
+      borderRadius: radii.md,
+      backgroundColor: theme.colors.surfaceVariant,
+      borderWidth: 1,
+      borderColor: theme.colors.outline,
+      borderStyle: 'dashed',
+    },
+    avatar: {
+      marginRight: spacing.sm,
+    },
+    choferInfo: {
+      flex: 1,
+    },
+    choferName: {
+      fontWeight: '700',
+      color: theme.colors.onSurface,
+    },
+    choferSub: {
+      color: theme.colors.onSurfaceVariant,
+    },
+    removeBtn: {
+      padding: 4,
+    },
+    unassignedText: {
+      flex: 1,
+      color: theme.colors.onSurfaceVariant,
+      fontStyle: 'italic',
+    },
+    dialog: {
+      backgroundColor: theme.colors.surface,
       borderRadius: radii.md,
     },
-    smallButtonLabel: {
-      fontSize: 12,
+    dialogTitle: {
+      fontWeight: '700',
+    },
+    dialogContent: {
+      maxHeight: 300,
+    },
+    dialogScroll: {
+      gap: 8,
+    },
+    dialogRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 10,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.outline,
+    },
+    dialogInfo: {
+      flex: 1,
+    },
+    dialogName: {
+      fontWeight: '600',
+      color: theme.colors.onSurface,
+    },
+    dialogSub: {
+      color: theme.colors.onSurfaceVariant,
+    },
+    emptyText: {
+      color: theme.colors.onSurfaceVariant,
+      fontStyle: 'italic',
+      textAlign: 'center',
     },
   });

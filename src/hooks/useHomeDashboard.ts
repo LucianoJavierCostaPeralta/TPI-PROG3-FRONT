@@ -61,6 +61,7 @@ type Driver = {
   zone?: unknown;
   activo: boolean;
   created_at: string;
+  fecha_nacimiento?: string | null;
 };
 
 type DeliveryOrder = {
@@ -69,7 +70,13 @@ type DeliveryOrder = {
   chofer_id?: string | null;
   estado?: string | null;
   estado_id?: number;
+  cliente?: string | null;
+  cliente_dni?: string | null;
   created_at?: string | null;
+  updated_at?: string | null;
+  referencia?: string | null;
+  producto?: string | null;
+  observaciones?: string | null;
   [key: string]: unknown;
 };
 
@@ -108,6 +115,7 @@ type DeliveryForm = {
   observaciones: string;
   fecha: string;
   productos: string;
+  choferId?: string | null;
 };
 
 const initialDriverForm: DriverForm = {
@@ -167,6 +175,7 @@ function mapDriver(driver: ApiDriver): Driver {
     documento: driver.dni,
     activo: driver.activo,
     created_at: driver.created_at,
+    fecha_nacimiento: driver.fecha_nacimiento,
   };
 }
 

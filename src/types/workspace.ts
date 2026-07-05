@@ -34,6 +34,7 @@ export type Driver = {
   zone?: unknown;
   activo: boolean;
   created_at: string;
+  fecha_nacimiento?: string | null;
 };
 
 export type DeliveryOrder = {
@@ -43,11 +44,25 @@ export type DeliveryOrder = {
   estado?: string | null;
   estado_id?: number;
   cliente?: string | null;
+  cliente_dni?: string | null;
   direccion_destino?: string | null;
   latitud?: string | number | null;
   longitud?: string | number | null;
   created_at?: string | null;
+  updated_at?: string | null;
+  referencia?: string | null;
+  producto?: string | null;
+  observaciones?: string | null;
   [key: string]: unknown;
+};
+
+export type AppNotification = {
+  id: string;
+  titulo: string;
+  mensaje: string;
+  tipo: 'warning' | 'info' | 'error' | 'success';
+  leida: boolean;
+  created_at: string; // ISO string
 };
 
 export type AppWorkspace = {
@@ -56,6 +71,7 @@ export type AppWorkspace = {
   drivers: Driver[];
   orders: DeliveryOrder[];
   admins: UserProfile[];
+  notifications: AppNotification[];
 };
 
 export type HomeScreenProps = {
@@ -64,7 +80,7 @@ export type HomeScreenProps = {
   };
 };
 
-export type HomeTabKey = 'home' | 'deliveries' | 'drivers' | 'admins' | 'map';
+export type HomeTabKey = 'home' | 'deliveries' | 'drivers' | 'admins' | 'map' | 'notifications';
 
 export type DriverFilter = 'activos' | 'inactivos' | 'todos';
 export type DeliveryFilter = 'todos' | 'pendiente' | 'en camino' | 'realizado';
@@ -85,6 +101,7 @@ export type DeliveryForm = {
   observaciones: string;
   fecha: string;
   productos: string;
+  choferId?: string | null;
 };
 
 // HELPER FUNCTIONS FOR RENDERING AND DATE PARSING
@@ -219,6 +236,13 @@ export async function fetchStreetRoute(coordinates: { latitude: number; longitud
 
   try {
     const response = await fetch(url);
+    if (!response.ok) {
+      return [];
+    }
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      return [];
+    }
     const data = await response.json();
 
     if (data.code === 'Ok' && data.routes && data.routes[0]?.geometry?.coordinates) {

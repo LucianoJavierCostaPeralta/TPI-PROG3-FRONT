@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { StyleSheet, View, ScrollView, Platform, FlatList, TouchableOpacity, Alert } from 'react-native';
+import { StyleSheet, View, ScrollView, Platform, FlatList, TouchableOpacity } from 'react-native';
 import { Text, IconButton, Surface, useTheme, type MD3Theme, TextInput as PaperTextInput } from 'react-native-paper';
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { CTAButton, TextInputField, UserAvatar, EmptyState } from '../atoms';
 import { radii, spacing, palette } from '../../styles/theme';
+import { DriverDetailPanel } from './DriverDetailPanel';
 import {
   type Driver,
   type DriverForm,
@@ -18,36 +19,14 @@ const onlyDigits = (value: string, maxLength: number) => {
   return value.replace(/\D/g, '').slice(0, maxLength);
 };
 
-function DriverRow({ driver, onDelete }: { driver: Driver; onDelete?: (driverId: string) => void }) {
+function DriverRow({ driver, onPress }: { driver: Driver; onPress: (driver: Driver) => void }) {
   const theme = useTheme<MD3Theme>();
   const styles = createStyles(theme);
   const vehicle = driver.vehiculo ?? driver.vehicle ?? driver.patente ?? 'Sin vehiculo';
   const zone = driver.zona ?? driver.zone ?? 'Sin zona';
 
-  const handlePress = () => {
-    Alert.alert(
-      'Eliminar Chofer',
-      `¿Estás seguro de que deseas eliminar a ${driver.nombre}? Esta acción no se puede deshacer.`,
-      [
-        {
-          text: 'Cancelar',
-          style: 'cancel',
-        },
-        {
-          text: 'Eliminar',
-          style: 'destructive',
-          onPress: () => {
-            if (onDelete) {
-              onDelete(driver.id);
-            }
-          },
-        },
-      ]
-    );
-  };
-
   return (
-    <TouchableOpacity onPress={handlePress} activeOpacity={0.7}>
+    <TouchableOpacity onPress={() => onPress(driver)} activeOpacity={0.7}>
       <Surface style={styles.driverCard} elevation={1}>
         <UserAvatar name={driver.nombre} style={styles.driverAvatar} />
         <View style={styles.flexContent}>
@@ -61,7 +40,7 @@ function DriverRow({ driver, onDelete }: { driver: Driver; onDelete?: (driverId:
               {driver.activo ? 'Activo' : 'Inactivo'}
             </Text>
           </View>
-          <IconButton icon="chevron-right" size={20} onPress={handlePress} />
+          <IconButton icon="chevron-right" size={20} onPress={() => onPress(driver)} />
         </View>
       </Surface>
     </TouchableOpacity>
@@ -99,6 +78,8 @@ export function DriversPanel({
   onDelete,
   refreshing,
   onRefresh,
+  selectedDriver,
+  setSelectedDriver,
 }: {
   form: DriverForm;
   drivers: Driver[];
@@ -113,6 +94,8 @@ export function DriversPanel({
   onDelete?: (driverId: string) => void;
   refreshing?: boolean;
   onRefresh?: () => void;
+  selectedDriver: Driver | null;
+  setSelectedDriver: (driver: Driver | null) => void;
 }) {
   const theme = useTheme<MD3Theme>();
   const styles = createStyles(theme);
@@ -137,6 +120,21 @@ export function DriversPanel({
     return true;
   });
 
+  if (selectedDriver) {
+    return (
+      <DriverDetailPanel
+        driver={selectedDriver}
+        onBack={() => setSelectedDriver(null)}
+        onDelete={(driverId) => {
+          if (onDelete) {
+            onDelete(driverId);
+          }
+          setSelectedDriver(null);
+        }}
+      />
+    );
+  }
+
   return (
     <View style={styles.container}>
       {!showForm && (
@@ -156,10 +154,7 @@ export function DriversPanel({
       {canCreate && showForm ? (
         <ScrollView contentContainerStyle={styles.formScroll}>
           <Surface style={styles.formCard} elevation={1}>
-            <View style={styles.orderHeader}>
-              <Text variant="titleMedium" style={[styles.cardTitle, styles.flexContent]}>Nuevo Chofer</Text>
-              <IconButton icon="close" size={20} onPress={onCancel} disabled={saving} />
-            </View>
+
             <View style={styles.formContent}>
               <TextInputField
                 label="Nombre y Apellido"
@@ -253,7 +248,7 @@ export function DriversPanel({
         <FlatList
           data={filteredDrivers}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <DriverRow driver={item} onDelete={onDelete} />}
+          renderItem={({ item }) => <DriverRow driver={item} onPress={setSelectedDriver} />}
           ListEmptyComponent={<EmptyState text="No hay choferes para este filtro." />}
           contentContainerStyle={styles.scrollContent}
           refreshing={refreshing}
