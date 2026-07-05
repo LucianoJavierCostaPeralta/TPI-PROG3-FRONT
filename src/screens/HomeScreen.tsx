@@ -574,6 +574,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
 
       setSelectedDelivery(updatedOrder);
       setIsEditingDelivery(false);
+      setDeliveryForm(initialDeliveryForm);
       await loadWorkspace(true);
       Alert.alert('Éxito', 'La entrega ha sido guardada correctamente.');
     } catch (requestError) {
@@ -803,7 +804,10 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
                 drivers={workspace.drivers}
                 onChange={updateDeliveryField}
                 onSubmit={handleEditDelivery}
-                onCancel={() => setIsEditingDelivery(false)}
+                onCancel={() => {
+                  setIsEditingDelivery(false);
+                  setDeliveryForm(initialDeliveryForm);
+                }}
                 saving={savingDelivery}
               />
             ) : selectedDelivery ? (
@@ -844,7 +848,10 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
                 onFilterChange={setDeliveryFilter}
                 onChange={updateDeliveryField}
                 onSubmit={handleCreateDelivery}
-                onCancel={() => setShowDeliveryForm(false)}
+                onCancel={() => {
+                  setShowDeliveryForm(false);
+                  setDeliveryForm(initialDeliveryForm);
+                }}
                 onAssign={handleAssignDriver}
                 onUpdateStatus={handleUpdateOrderStatus}
                 refreshing={refreshing}
@@ -876,7 +883,12 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
             <FAB
               icon={showDeliveryForm ? 'close' : 'plus'}
               style={styles.fab}
-              onPress={() => setShowDeliveryForm((visible) => !visible)}
+              onPress={() => {
+                if (!showDeliveryForm) {
+                  setDeliveryForm(initialDeliveryForm);
+                }
+                setShowDeliveryForm((visible) => !visible);
+              }}
             />
           ) : null}
         </View>
