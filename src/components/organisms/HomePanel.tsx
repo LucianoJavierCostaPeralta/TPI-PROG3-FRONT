@@ -1,8 +1,11 @@
-import { StyleSheet, View, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, View, TouchableOpacity, Linking, Platform } from 'react-native';
 import Svg, { Circle, G } from 'react-native-svg';
-import { Text, IconButton, Surface, useTheme, type MD3Theme } from 'react-native-paper';
+import { Text, IconButton, Surface, useTheme, type MD3Theme, TextInput } from 'react-native-paper';
 import { type AppWorkspace, type HomeTabKey, type DeliveryFilter } from '../../types/workspace';
-import { radii, palette } from '../../styles/theme';
+import { radii, palette, spacing } from '../../styles/theme';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { CTAButton } from '../atoms';
 
 type PieChartSegment = {
   percentage: number;
@@ -117,12 +120,16 @@ export function HomePanel({
   setShowDeliveryForm,
   setShowDriverForm,
   setDeliveryFilter,
+  onUpdateStatus,
+  updatingOrderId,
 }: {
   workspace: AppWorkspace;
   setActiveTab: (tab: HomeTabKey) => void;
   setShowDeliveryForm: (show: boolean) => void;
   setShowDriverForm: (show: boolean) => void;
   setDeliveryFilter: (filter: DeliveryFilter) => void;
+  onUpdateStatus?: (orderId: string, action: string, clienteDni?: string) => Promise<void>;
+  updatingOrderId?: string | null;
 }) {
   const theme = useTheme<MD3Theme>();
   const styles = createStyles(theme);
@@ -140,19 +147,276 @@ export function HomePanel({
   }
 
   if (workspace.profile.rol === 'chofer') {
-    const pendingOrders = workspace.orders.filter((order) => order.estado !== 'realizado').length;
+    // Ordenar entregas del chófer por orden_ruta
+    const driverOrders = [...(workspace.orders || [])].sort(
+      (a, b) => (Number(a.orden_ruta) || 0) - (Number(b.orden_ruta) || 0)
+    );
+
+    const completedStops = driverOrders.filter(
+      (o) => o.estado_id === 5 || o.estado_id === 6 || o.estado === 'realizado' || o.estado === 'entregado'
+    );
+    
+    const remainingStops = driverOrders.filter(
+      (o) => !(o.estado_id === 5 || o.estado_id === 6 || o.estado === 'realizado' || o.estado === 'entregado')
+    );
+
+    const totalStops = driverOrders.length;
+    const nextStopOrder = remainingStops[0] || null;
+    const secondStopOrder = remainingStops[1] || null;
+
+    // Estado local para DNI en caso de estar en camino
+    const [dniInput, setDniInput] = useState('');
+
+    const handleNavigate = () => {
+      if (nextStopOrder) {
+        const address = String(nextStopOrder.direccion_destino || nextStopOrder.destino || '');
+        const url = Platform.select({
+          ios: `maps:0,0?q=${encodeURIComponent(address)}`,
+          android: `geo:0,0?q=${encodeURIComponent(address)}`,
+        });
+        if (url) {
+          Linking.canOpenURL(url).then((supported) => {
+            if (supported) {
+              Linking.openURL(url);
+            } else {
+              Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`);
+            }
+          });
+        }
+      }
+    };
+
+    if (totalStops === 0) {
+      return (
+        <View style={styles.panel}>
+          <Surface style={styles.completedStateCard} elevation={1}>
+            <MaterialCommunityIcons name="truck-delivery-outline" size={64} color={palette.neutral400} />
+            <Text variant="headlineSmall" style={styles.completedTitleText}>Sin entregas asignadas</Text>
+            <Text variant="bodyMedium" style={styles.completedSubtitleText}>
+              Cuando el administrador te asigne un pedido, aparecerá aquí.
+            </Text>
+            <CTAButton
+              variant="primary"
+              onPress={() => setActiveTab('deliveries')}
+              icon="calendar-text-outline"
+            >
+              Ver mis pedidos
+            </CTAButton>
+          </Surface>
+        </View>
+      );
+    }
+
+    if (!nextStopOrder) {
+      return (
+        <View style={styles.panel}>
+          <Surface style={styles.completedStateCard} elevation={1}>
+            <MaterialCommunityIcons name="check-circle-outline" size={64} color={palette.successDark} />
+            <Text variant="headlineSmall" style={styles.completedTitleText}>¡Ruta completada!</Text>
+            <Text variant="bodyMedium" style={styles.completedSubtitleText}>
+              Completaste las {totalStops} entregas asignadas para el día de hoy.
+            </Text>
+            <View style={styles.metricsRow}>
+              <Metric label="Realizadas" value={completedStops.length} />
+              <Metric label="Distancia aprox." value={`${(totalStops * 3.5).toFixed(1)} km`} />
+            </View>
+            <CTAButton
+              variant="secondary"
+              onPress={() => {
+                setDeliveryFilter('realizado');
+                setActiveTab('deliveries');
+              }}
+              icon="history"
+              style={{ marginTop: 12 }}
+            >
+              Ver historial de entregas
+            </CTAButton>
+          </Surface>
+        </View>
+      );
+    }
+
+    const currentStopIndex = completedStops.length + 1;
+    const distanceSim = (totalStops * 3.5).toFixed(1);
+
+    // Obtener badge config para la parada actual
+    const getBadgeConfig = (statusId?: number, statusText?: string) => {
+      const id = statusId ?? 1;
+      const text = statusText ?? 'pendiente';
+      
+      if (id === 2 || id === 3 || ['2', '3', 'assigned', 'accepted', 'por aceptar', 'aceptado', 'asignado'].includes(text.toLowerCase())) {
+        return { label: 'Asignado', color: '#0369A1', bg: '#E0F2FE' };
+      }
+      if (id === 4 || text.toLowerCase() === 'on_the_way' || text.toLowerCase() === 'en camino') {
+        return { label: 'En camino', color: '#15803D', bg: '#DCFCE7' };
+      }
+      return { label: 'Pendiente', color: palette.neutral600, bg: palette.neutral200 };
+    };
+
+    const currentBadge = getBadgeConfig(nextStopOrder.estado_id, nextStopOrder.estado || undefined);
+    const isUpdating = updatingOrderId === nextStopOrder.id;
 
     return (
       <View style={styles.panel}>
-        <Surface style={styles.summaryCard} elevation={1}>
-          <Text variant="titleMedium" style={styles.cardTitle}>Chofer</Text>
-          <Text variant="headlineSmall" style={styles.primaryText}>{workspace.profile.nombre}</Text>
-          <Text variant="bodyMedium" style={styles.mutedText}>{workspace.company?.nombre ?? 'Empresa sin datos'}</Text>
+        {/* PARADA ACTUAL (Tarjeta Importante / Más Grande) */}
+        <Surface style={[styles.nextStopCard, { borderColor: currentBadge.color, borderWidth: 1.5 }]} elevation={2}>
+          <View style={styles.nextStopHeaderRow}>
+            <Text style={[styles.nextStopLabel, { color: currentBadge.color }]}>Parada Actual</Text>
+            <View style={[styles.statusBadge, { backgroundColor: currentBadge.bg }]}>
+              <Text style={[styles.statusBadgeText, { color: currentBadge.color }]}>{currentBadge.label}</Text>
+            </View>
+          </View>
+          
+          <View style={styles.nextStopAddressRow}>
+            <View style={styles.nextStopAddressContainer}>
+              <MaterialCommunityIcons name="map-marker-radius" size={28} color={currentBadge.color} style={{ marginTop: 2 }} />
+              <Text style={styles.nextStopAddressText}>
+                {String(nextStopOrder.direccion_destino || nextStopOrder.destino || '')}
+              </Text>
+            </View>
+          </View>
+          
+          <Text style={styles.nextStopSubtitle}>
+            Cliente: {String(nextStopOrder.cliente || '')} {nextStopOrder.referencia ? `(${nextStopOrder.referencia})` : ''}
+          </Text>
+
+          <View style={styles.metricsDivider} />
+
+          {/* Acciones de la Parada Actual */}
+          <View style={styles.currentStopActionBox}>
+            {nextStopOrder.estado_id === 2 || nextStopOrder.estado_id === 3 || ['assigned', 'accepted'].includes(nextStopOrder.estado?.toLowerCase() || '') ? (
+              <View style={styles.btnRow}>
+                <CTAButton
+                  variant="primary"
+                  icon="play"
+                  onPress={() => onUpdateStatus?.(nextStopOrder.id, 'on_the_way')}
+                  loading={isUpdating}
+                  style={{ flex: 1 }}
+                >
+                  Comenzar entrega
+                </CTAButton>
+              </View>
+            ) : nextStopOrder.estado_id === 4 || nextStopOrder.estado?.toLowerCase() === 'on_the_way' ? (
+              <View style={styles.deliveryProgressForm}>
+                <TextInput
+                  mode="outlined"
+                  label="DNI del Cliente (8 dígitos)"
+                  placeholder="Ej. 12345678"
+                  value={dniInput}
+                  onChangeText={(val) => setDniInput(val.replace(/[^0-9]/g, ''))}
+                  keyboardType="numeric"
+                  maxLength={8}
+                  style={styles.dniInputHome}
+                  activeOutlineColor={palette.primaryBlue}
+                />
+                <View style={styles.btnRow}>
+                  <CTAButton
+                    variant="primary"
+                    icon="checkbox-marked-circle-outline"
+                    onPress={() => {
+                      if (dniInput.length === 8) {
+                        onUpdateStatus?.(nextStopOrder.id, 'delivered', dniInput);
+                        setDniInput('');
+                      }
+                    }}
+                    disabled={dniInput.length !== 8}
+                    loading={isUpdating}
+                    style={{ flex: 1 }}
+                  >
+                    Finalizar entrega
+                  </CTAButton>
+                  <IconButton
+                    icon="navigation"
+                    iconColor="#FFFFFF"
+                    containerColor={palette.primaryBlue}
+                    size={20}
+                    style={styles.navigationIconButton}
+                    onPress={handleNavigate}
+                  />
+                </View>
+              </View>
+            ) : null}
+          </View>
+
+          <View style={styles.metricsDivider} />
+          
+          <View style={styles.statsContainerRow}>
+            <View style={styles.statBox}>
+              <Text style={styles.statLabel}>Parada</Text>
+              <Text style={styles.statValue}>{currentStopIndex} de {totalStops}</Text>
+            </View>
+            <View style={[styles.statBox, styles.statBorder]}>
+              <Text style={styles.statLabel}>Entregas Hoy</Text>
+              <Text style={styles.statValue}>{totalStops}</Text>
+            </View>
+            <View style={[styles.statBox, styles.statBorder]}>
+              <Text style={styles.statLabel}>Distancia Total</Text>
+              <Text style={styles.statValue}>{distanceSim} km</Text>
+            </View>
+            <View style={styles.statBox}>
+              <Text style={styles.etaText}>12 min</Text>
+              <Text style={styles.etaSubText}>ETA</Text>
+            </View>
+          </View>
         </Surface>
-        <View style={styles.metricsRow}>
-          <Metric label="Pendientes" value={pendingOrders} />
-          <Metric label="Realizados" value={workspace.orders.length - pendingOrders} />
-        </View>
+
+        {/* PRÓXIMA PARADA (Si hay una segunda parada) */}
+        {secondStopOrder && (
+          <Surface style={styles.nextStopCard} elevation={1}>
+            <Text style={styles.nextStopLabel}>Siguiente parada</Text>
+            <View style={styles.nextStopAddressRow}>
+              <View style={styles.nextStopAddressContainer}>
+                <MaterialCommunityIcons name="map-marker-outline" size={20} color={palette.neutral600} />
+                <Text style={[styles.nextStopAddressText, { fontSize: 16 }]}>
+                  {String(secondStopOrder.direccion_destino || secondStopOrder.destino || '')}
+                </Text>
+              </View>
+              <View style={[styles.statusBadge, { backgroundColor: getBadgeConfig(secondStopOrder.estado_id, secondStopOrder.estado || undefined).bg }]}>
+                <Text style={[styles.statusBadgeText, { fontSize: 10, color: getBadgeConfig(secondStopOrder.estado_id, secondStopOrder.estado || undefined).color }]}>
+                  {getBadgeConfig(secondStopOrder.estado_id, secondStopOrder.estado || undefined).label}
+                </Text>
+              </View>
+            </View>
+            <Text style={styles.nextStopSubtitle}>
+              Cliente: {String(secondStopOrder.cliente || '')}
+            </Text>
+          </Surface>
+        )}
+
+        {/* ENTREGAS RESTANTES (Lista desde la tercera parada) */}
+        {remainingStops.length > 2 && (
+          <Surface style={styles.remainingStopsContainer} elevation={1}>
+            <Text style={styles.remainingTitle}>Resto del recorrido</Text>
+            
+            <View style={styles.remainingList}>
+              {remainingStops.slice(2, 5).map((order, idx) => {
+                const stopNum = currentStopIndex + idx + 2;
+                const etaTimeSim = (idx + 3) * 8 - 1;
+                return (
+                  <View key={order.id} style={styles.remainingItemRow}>
+                    <View style={styles.remainingItemLeft}>
+                      <View style={styles.circleBadge}>
+                        <Text style={styles.circleBadgeText}>{stopNum}</Text>
+                      </View>
+                      <Text style={styles.remainingAddressText} numberOfLines={1}>
+                        {String(order.direccion_destino || order.destino || '')}
+                      </Text>
+                    </View>
+                    <Text style={styles.remainingTimeText}>{etaTimeSim} min</Text>
+                  </View>
+                );
+              })}
+            </View>
+            
+            <TouchableOpacity 
+              style={styles.viewAllButton} 
+              onPress={() => setActiveTab('deliveries')}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.viewAllText}>Ver todas las entregas v</Text>
+            </TouchableOpacity>
+          </Surface>
+        )}
       </View>
     );
   }
@@ -571,5 +835,225 @@ const createStyles = (theme: MD3Theme) =>
     alertTimeText: {
       color: palette.neutral500,
       marginTop: 2,
+    },
+    driverContainer: {
+      flex: 1,
+      padding: spacing.md,
+      gap: spacing.lg,
+    },
+    nextStopCard: {
+      borderRadius: radii.lg,
+      padding: spacing.lg,
+      backgroundColor: theme.colors.surface,
+      borderWidth: 1,
+      borderColor: theme.colors.outline,
+      position: 'relative',
+    },
+    nextStopHeaderRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    nextStopLabel: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: theme.colors.onSurfaceVariant,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+      marginBottom: spacing.xs,
+    },
+    nextStopAddressRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: spacing.md,
+      marginVertical: spacing.sm,
+    },
+    nextStopAddressContainer: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: spacing.xs,
+    },
+    nextStopAddressText: {
+      fontWeight: '900',
+      color: theme.colors.onSurface,
+      fontSize: 20,
+      lineHeight: 26,
+    },
+    nextStopSubtitle: {
+      fontSize: 14,
+      color: theme.colors.onSurfaceVariant,
+      marginLeft: spacing.lg,
+      marginTop: -spacing.xs,
+    },
+    navigationIconButton: {
+      backgroundColor: '#E0E7FF',
+      borderRadius: radii.pill,
+      margin: 0,
+    },
+    metricsDivider: {
+      height: 1,
+      backgroundColor: theme.colors.outline,
+      marginVertical: spacing.md,
+      opacity: 0.5,
+    },
+    statsContainerRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    statBox: {
+      flex: 1,
+      alignItems: 'center',
+    },
+    statBorder: {
+      borderLeftWidth: 1,
+      borderRightWidth: 1,
+      borderColor: theme.colors.outline,
+      opacity: 0.8,
+    },
+    statValue: {
+      fontWeight: '900',
+      color: theme.colors.onSurface,
+      fontSize: 16,
+      marginBottom: 2,
+    },
+    statLabel: {
+      fontSize: 10,
+      color: theme.colors.onSurfaceVariant,
+      textTransform: 'uppercase',
+      fontWeight: '600',
+    },
+    etaText: {
+      fontWeight: '900',
+      color: theme.colors.onSurface,
+      fontSize: 16,
+    },
+    etaSubText: {
+      fontSize: 10,
+      color: theme.colors.onSurfaceVariant,
+      fontWeight: '600',
+    },
+    remainingStopsContainer: {
+      borderRadius: radii.lg,
+      padding: spacing.lg,
+      backgroundColor: theme.colors.surface,
+      borderWidth: 1,
+      borderColor: theme.colors.outline,
+      gap: spacing.md,
+    },
+    remainingTitle: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: theme.colors.onSurfaceVariant,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+      marginBottom: spacing.xs,
+    },
+    remainingList: {
+      gap: spacing.sm,
+    },
+    remainingItemRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: spacing.sm,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.surfaceVariant,
+    },
+    remainingItemLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      flex: 1,
+    },
+    circleBadge: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: theme.colors.outline,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.colors.surface,
+    },
+    circleBadgeText: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: theme.colors.onSurfaceVariant,
+    },
+    remainingAddressText: {
+      fontSize: 14,
+      color: theme.colors.onSurface,
+      fontWeight: '500',
+      flex: 1,
+    },
+    remainingTimeText: {
+      fontSize: 12,
+      color: theme.colors.onSurfaceVariant,
+      fontWeight: '500',
+    },
+    viewAllButton: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingTop: spacing.xs,
+    },
+    viewAllText: {
+      fontWeight: '700',
+      color: theme.colors.primary,
+      fontSize: 14,
+    },
+    navigateBottomButton: {
+      marginVertical: spacing.sm,
+    },
+    completedStateCard: {
+      borderRadius: radii.lg,
+      padding: spacing.xl,
+      backgroundColor: theme.colors.surface,
+      borderWidth: 1,
+      borderColor: theme.colors.outline,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.md,
+    },
+    completedTitleText: {
+      fontWeight: '900',
+      color: theme.colors.onSurface,
+      textAlign: 'center',
+    },
+    completedSubtitleText: {
+      color: theme.colors.onSurfaceVariant,
+      textAlign: 'center',
+      marginBottom: spacing.md,
+    },
+    statusBadge: {
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: radii.sm,
+      alignSelf: 'flex-start',
+    },
+    statusBadgeText: {
+      fontSize: 12,
+      fontWeight: '700',
+    },
+    currentStopActionBox: {
+      marginTop: spacing.xs,
+      marginBottom: spacing.xs,
+    },
+    btnRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      width: '100%',
+    },
+    deliveryProgressForm: {
+      gap: spacing.sm,
+      width: '100%',
+    },
+    dniInputHome: {
+      backgroundColor: '#FFFFFF',
+      height: 48,
+      fontSize: 14,
     },
   });

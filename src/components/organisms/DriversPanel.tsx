@@ -9,6 +9,7 @@ import {
   type Driver,
   type DriverForm,
   type DriverFilter,
+  type DeliveryOrder,
   parseDeliveryFormDate,
   formatDateForInput,
   formatDateForDisplay,
@@ -67,6 +68,7 @@ function FilterChip({ label, active, onPress }: { label: string; active: boolean
 export function DriversPanel({
   form,
   drivers,
+  orders = [],
   saving,
   showForm,
   filter,
@@ -83,6 +85,7 @@ export function DriversPanel({
 }: {
   form: DriverForm;
   drivers: Driver[];
+  orders?: DeliveryOrder[];
   saving: boolean;
   showForm: boolean;
   filter: DriverFilter;
@@ -124,6 +127,7 @@ export function DriversPanel({
     return (
       <DriverDetailPanel
         driver={selectedDriver}
+        orders={orders}
         onBack={() => setSelectedDriver(null)}
         onDelete={(driverId) => {
           if (onDelete) {

@@ -111,23 +111,45 @@ export function DeliveriesPanel({
     const currentStatus = normalizeOrderStatus(order.estado_id ?? order.estado);
     const orderPedId = `#PED-${String(idx + 1).padStart(4, '0')}`;
 
-    const getBadgeStyle = (status: string) => {
-      if (status === 'realizado') return styles.badgeDelivered;
-      if (status === 'en camino') return styles.badgeOnWay;
-      return styles.badgePending;
+    const getBadgeConfig = (id: number | undefined, nameVal: unknown) => {
+      const name = String(nameVal ?? '').toLowerCase();
+
+      if (id === 5 || id === 6 || ['5', '6', 'realizado', 'entregado', 'entregada', 'delivered', 'finalizado'].includes(name)) {
+        return {
+          label: 'Entregada',
+          bg: palette.successLightBg,
+          text: palette.successDark,
+        };
+      }
+      if (id === 4 || ['4', 'en camino', 'en_camino', 'encamino', 'on the way', 'on_the_way'].includes(name)) {
+        return {
+          label: 'En camino',
+          bg: palette.infoLightBg,
+          text: palette.secondary,
+        };
+      }
+      if (id === 3 || ['3', 'aceptado', 'accepted'].includes(name)) {
+        return {
+          label: 'Asignado',
+          bg: '#E0F2FE',
+          text: '#0369A1',
+        };
+      }
+      if (id === 2 || ['2', 'asignado', 'assigned'].includes(name)) {
+        return {
+          label: 'Asignado',
+          bg: '#E0F2FE',
+          text: '#0369A1',
+        };
+      }
+      return {
+        label: 'Pendiente',
+        bg: palette.pendingLightBg,
+        text: palette.warning,
+      };
     };
 
-    const getBadgeTextStyle = (status: string) => {
-      if (status === 'realizado') return styles.badgeTextDelivered;
-      if (status === 'en camino') return styles.badgeTextOnWay;
-      return styles.badgeTextPending;
-    };
-
-    const getBadgeLabel = (status: string) => {
-      if (status === 'realizado') return 'Entregada';
-      if (status === 'en camino') return 'En camino';
-      return 'Pendiente';
-    };
+    const badgeConfig = getBadgeConfig(order.estado_id, order.estado);
 
     return (
       <TouchableOpacity
@@ -139,9 +161,9 @@ export function DeliveriesPanel({
           <View style={styles.cardLeftContent}>
             <View style={styles.cardHeaderRow}>
               <Text variant="titleMedium" style={styles.cardPedId}>{orderPedId}</Text>
-              <View style={[styles.cleanBadge, getBadgeStyle(currentStatus)]}>
-                <Text variant="labelSmall" style={[styles.cleanBadgeText, getBadgeTextStyle(currentStatus)]}>
-                  {getBadgeLabel(currentStatus)}
+              <View style={[styles.cleanBadge, { backgroundColor: badgeConfig.bg }]}>
+                <Text variant="labelSmall" style={[styles.cleanBadgeText, { color: badgeConfig.text }]}>
+                  {badgeConfig.label}
                 </Text>
               </View>
             </View>

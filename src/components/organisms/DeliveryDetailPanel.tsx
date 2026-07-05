@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Surface, Text, useTheme, type MD3Theme } from 'react-native-paper';
 import { InfoCard } from '../molecules/InfoCard';
-import { CTAButton, UserAvatar } from '../atoms';
+import { CTAButton, UserAvatar, TextInputField } from '../atoms';
 import { spacing, radii, palette } from '../../styles/theme';
 import {
   type Driver,
@@ -20,6 +20,9 @@ interface DeliveryDetailPanelProps {
   drivers: Driver[];
   role: 'administrador' | 'asesor' | 'chofer';
   onEdit: () => void;
+  onUpdateStatus?: (orderId: string, action: string, clienteDni?: string) => void;
+  onViewOnMap?: (order: DeliveryOrder) => void;
+  updatingOrderId?: string | null;
 }
 
 export function DeliveryDetailPanel({
@@ -27,24 +30,56 @@ export function DeliveryDetailPanel({
   drivers,
   role,
   onEdit,
+  onUpdateStatus,
+  onViewOnMap,
+  updatingOrderId,
 }: DeliveryDetailPanelProps) {
   const theme = useTheme<MD3Theme>();
   const styles = createStyles(theme);
 
-  const currentStatus = normalizeOrderStatus(order.estado_id ?? order.estado);
+  const [clienteDni, setClienteDni] = useState('');
+  const [dniError, setDniError] = useState('');
+
   const assignedDriver = drivers.find((driver) => driver.usuario_id === order.chofer_id || driver.id === order.chofer_id);
 
-  const getStatusStyle = (status: string) => {
-    if (status === 'realizado') return styles.statusBadgeDelivered;
-    if (status === 'en camino') return styles.statusBadgeOnWay;
-    return styles.statusBadgePending;
+  const getBadgeConfig = (id: number | undefined, nameVal: unknown) => {
+    const name = String(nameVal ?? '').toLowerCase();
+    if (id === 5 || id === 6 || ['5', '6', 'realizado', 'entregado', 'entregada', 'delivered', 'finalizado'].includes(name)) {
+      return {
+        label: 'Entregada',
+        bg: palette.successLightBg,
+        text: palette.successDark,
+      };
+    }
+    if (id === 4 || ['4', 'en camino', 'en_camino', 'encamino', 'on the way', 'on_the_way'].includes(name)) {
+      return {
+        label: 'En camino',
+        bg: palette.infoLightBg,
+        text: palette.secondary,
+      };
+    }
+    if (id === 3 || ['3', 'aceptado', 'accepted'].includes(name)) {
+      return {
+        label: 'Aceptado',
+        bg: '#E0F2FE',
+        text: '#0369A1',
+      };
+    }
+    if (id === 2 || ['2', 'asignado', 'assigned'].includes(name)) {
+      return {
+        label: 'Por aceptar',
+        bg: '#FEE2E2',
+        text: '#B91C1C',
+      };
+    }
+    return {
+      label: 'Pendiente',
+      bg: palette.pendingLightBg,
+      text: palette.warning,
+    };
   };
 
-  const getStatusTextStyle = (status: string) => {
-    if (status === 'realizado') return styles.statusTextDelivered;
-    if (status === 'en camino') return styles.statusTextOnWay;
-    return styles.statusTextPending;
-  };
+  const badgeConfig = getBadgeConfig(order.estado_id, order.estado);
 
   return (
     <View style={styles.container}>
@@ -54,9 +89,9 @@ export function DeliveryDetailPanel({
           <Text variant="headlineSmall" style={styles.orderId}>
             #{order.id.slice(0, 8).toUpperCase()}
           </Text>
-          <View style={[styles.statusBadge, getStatusStyle(currentStatus)]}>
-            <Text variant="labelMedium" style={[styles.statusText, getStatusTextStyle(currentStatus)]}>
-              {getBackendStatusLabel(order)}
+          <View style={[styles.statusBadge, { backgroundColor: badgeConfig.bg }]}>
+            <Text variant="labelMedium" style={[styles.statusText, { color: badgeConfig.text }]}>
+              {badgeConfig.label}
             </Text>
           </View>
         </View>
@@ -129,6 +164,108 @@ export function DeliveryDetailPanel({
           >
             Editar datos de entrega
           </CTAButton>
+        )}
+
+        {/* Sección de acciones para el Chofer */}
+        {role === 'chofer' && (
+          <View style={styles.driverActionsContainer}>
+            {(order.estado_id === 2 || order.estado_id === 3) && (
+              <>
+                <CTAButton
+                  variant="primary"
+                  onPress={() => onUpdateStatus?.(order.id, 'on_the_way')}
+                  style={styles.actionButton}
+                  loading={updatingOrderId === order.id}
+                  disabled={!!updatingOrderId}
+                  icon="truck-delivery"
+                >
+                  Comenzar entrega
+                </CTAButton>
+
+                <CTAButton
+                  variant="secondary"
+                  onPress={() => onViewOnMap?.(order)}
+                  style={styles.actionButton}
+                  disabled={!!updatingOrderId}
+                  icon="map-marker-outline"
+                >
+                  Ver en mapa
+                </CTAButton>
+              </>
+            )}
+
+            {order.estado_id === 4 && (
+              <View style={styles.dniVerificationBox}>
+                <Text variant="titleMedium" style={styles.dniBoxTitle}>Confirmación de Entrega</Text>
+                <Text variant="bodySmall" style={styles.dniBoxSubtitle}>
+                  Ingresá los últimos 8 números del DNI del cliente para validar la entrega.
+                </Text>
+                
+                <TextInputField
+                  label="DNI del Cliente"
+                  placeholder="DNI del receptor"
+                  value={clienteDni}
+                  onChangeText={(val) => {
+                    setClienteDni(val.replace(/[^0-9]/g, '').slice(0, 8));
+                    setDniError('');
+                  }}
+                  keyboardType="number-pad"
+                  disabled={updatingOrderId === order.id}
+                  icon="card-account-details-outline"
+                />
+                {!!dniError && (
+                  <Text variant="bodySmall" style={styles.errorText}>
+                    {dniError}
+                  </Text>
+                )}
+
+                <CTAButton
+                  variant="primary"
+                  onPress={() => {
+                    if (clienteDni.length < 8) {
+                      setDniError('El DNI debe tener 8 dígitos.');
+                      return;
+                    }
+                    onUpdateStatus?.(order.id, 'delivered', clienteDni);
+                  }}
+                  style={styles.actionButton}
+                  loading={updatingOrderId === order.id}
+                  disabled={!!updatingOrderId}
+                  icon="check-circle-outline"
+                >
+                  Finalizar entrega
+                </CTAButton>
+
+                <CTAButton
+                  variant="secondary"
+                  onPress={() => onViewOnMap?.(order)}
+                  style={styles.actionButton}
+                  disabled={!!updatingOrderId}
+                  icon="map-marker-outline"
+                >
+                  Ver en mapa
+                </CTAButton>
+              </View>
+            )}
+
+            {(order.estado_id === 5 || order.estado_id === 6) && (
+              <View style={styles.completedBox}>
+                <Surface style={styles.completedCard} elevation={0}>
+                  <MaterialCommunityIcons name="check-circle" size={32} color={palette.successDark} />
+                  <Text variant="titleMedium" style={styles.completedText}>¡Entrega completada!</Text>
+                </Surface>
+                
+                <CTAButton
+                  variant="secondary"
+                  onPress={() => onViewOnMap?.(order)}
+                  style={styles.actionButton}
+                  icon="map-marker-outline"
+                >
+                  Ver en mapa
+                </CTAButton>
+              </View>
+            )}
+          </View>
         )}
       </ScrollView>
     </View>
@@ -205,5 +342,54 @@ const createStyles = (theme: MD3Theme) =>
     },
     editButton: {
       marginBottom: spacing.xl,
+    },
+    driverActionsContainer: {
+      marginTop: spacing.md,
+      gap: spacing.sm,
+    },
+    actionButton: {
+      marginVertical: spacing.xs,
+    },
+    dniVerificationBox: {
+      padding: spacing.md,
+      borderRadius: radii.md,
+      backgroundColor: theme.colors.surfaceVariant,
+      borderWidth: 1,
+      borderColor: theme.colors.outline,
+      marginVertical: spacing.md,
+      gap: spacing.md,
+    },
+    dniBoxTitle: {
+      fontWeight: '700',
+      color: theme.colors.onSurface,
+    },
+    dniBoxSubtitle: {
+      color: theme.colors.onSurfaceVariant,
+      marginBottom: spacing.xs,
+    },
+    errorText: {
+      color: theme.colors.error,
+      fontWeight: '600',
+      marginTop: -spacing.xs,
+    },
+    completedBox: {
+      marginVertical: spacing.md,
+      gap: spacing.sm,
+    },
+    completedCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: spacing.md,
+      borderRadius: radii.md,
+      backgroundColor: palette.successLightBg,
+      borderWidth: 1,
+      borderColor: palette.successDark,
+      gap: spacing.sm,
+      marginBottom: spacing.sm,
+    },
+    completedText: {
+      fontWeight: '800',
+      color: palette.successDark,
     },
   });
