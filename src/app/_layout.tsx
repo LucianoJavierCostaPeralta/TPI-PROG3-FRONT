@@ -55,6 +55,7 @@ export default function RootLayout() {
           <Stack.Screen name="configuracion" options={{ animation: 'slide_from_right', animationDuration: 300 }} />
           <Stack.Screen name="perfil" options={{ animation: 'slide_from_right', animationDuration: 300 }} />
           <Stack.Screen name="editar-perfil" options={{ animation: 'slide_from_right', animationDuration: 300 }} />
+          <Stack.Screen name="legal" options={{ animation: 'slide_from_right', animationDuration: 300 }} />
         </Stack>
       </AppProviders>
     </SafeAreaProvider>

@@ -31,6 +31,14 @@ export function AppDrawer({ visible, onClose, onSignOut }: AppDrawerProps) {
     router.push('/configuracion');
   };
 
+  const handleOpenLegal = (titulo: string) => {
+    onClose();
+    router.push({
+      pathname: '/legal',
+      params: { titulo },
+    });
+  };
+
   return (
     <Portal>
       <Modal
@@ -75,12 +83,40 @@ export function AppDrawer({ visible, onClose, onSignOut }: AppDrawerProps) {
         <View style={styles.divider} />
 
         <View style={styles.legalSection}>
-          <Text variant="bodySmall" style={styles.legalText}>
-            Terminos y Condiciones
-          </Text>
-          <Text variant="bodySmall" style={styles.legalText}>
-            Politica de Privacidad
-          </Text>
+          <Drawer.Item
+            icon="file-document-outline"
+            label="Términos y Condiciones"
+            onPress={() => handleOpenLegal('Términos y Condiciones')}
+            theme={{
+              fonts: {
+                labelLarge: {
+                  fontSize: 13,
+                  fontWeight: '500',
+                },
+              },
+              colors: {
+                onSurfaceVariant: theme.colors.secondary,
+              },
+            } as any}
+            style={styles.legalItem}
+          />
+          <Drawer.Item
+            icon="shield-check-outline"
+            label="Política de Privacidad"
+            onPress={() => handleOpenLegal('Política de Privacidad')}
+            theme={{
+              fonts: {
+                labelLarge: {
+                  fontSize: 13,
+                  fontWeight: '500',
+                },
+              },
+              colors: {
+                onSurfaceVariant: theme.colors.secondary,
+              },
+            } as any}
+            style={styles.legalItem}
+          />
         </View>
       </Modal>
     </Portal>
@@ -121,11 +157,11 @@ const createStyles = (theme: MD3Theme) =>
       backgroundColor: theme.colors.outline,
     },
     legalSection: {
-      paddingTop: 24,
-      paddingHorizontal: 16,
-      gap: 18,
+      marginTop: 8,
+      marginBottom: 8,
     },
-    legalText: {
-      color: theme.colors.onSurfaceVariant,
+    legalItem: {
+      height: 40,
+      justifyContent: 'center',
     },
   });
