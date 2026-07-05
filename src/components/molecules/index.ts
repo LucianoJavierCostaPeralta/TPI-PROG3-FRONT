@@ -7,3 +7,5 @@ export { RegisterForm, type RegisterData } from './RegisterForm';
 export { OnboardingStep } from './OnboardingStep';
 export { RegisterFooter } from './RegisterFooter';
 export { VehicleSelector, type FleetSize } from './VehicleSelector';
+export { RouteProgress } from './RouteProgress';
+export { NextStopCard } from './NextStopCard';

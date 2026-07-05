@@ -17,8 +17,7 @@ import {
 import { HomeTemplate } from '../components/templates';
 import { type BottomTabMenuItem } from '../components/molecules';
 import { CTAButton, TextInputField, UserAvatar } from '../components/atoms';
-import { HomePanel, DriversPanel, DeliveriesPanel, AdminsPanel } from '../components/organisms';
-import MapPanel from '../components/organisms/MapPanel';
+import { HomePanel, DriversPanel, DeliveriesPanel, AdminsPanel, MapPanel } from '../components/organisms';
 import { spacing, radii, dimensions } from '../styles/theme';
 import {
   acceptDelivery,
@@ -474,15 +473,9 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
             />
           ) : null}
           {activeTab === 'map' ? (
-            <ScrollView
-              contentContainerStyle={styles.scrollContent}
-              refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={() => void loadWorkspace(true)} />
-              }
-            >
-              <MapPanel />
-            </ScrollView>
+            <MapPanel workspace={workspace} />
           ) : null}
+
 
           {workspace.profile.rol === 'administrador' && activeTab === 'drivers' ? (
             <FAB

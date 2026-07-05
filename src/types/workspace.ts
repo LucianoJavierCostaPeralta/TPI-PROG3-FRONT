@@ -42,6 +42,10 @@ export type DeliveryOrder = {
   chofer_id?: string | null;
   estado?: string | null;
   estado_id?: number;
+  cliente?: string | null;
+  direccion_destino?: string | null;
+  latitud?: string | number | null;
+  longitud?: string | number | null;
   created_at?: string | null;
   [key: string]: unknown;
 };
@@ -183,3 +187,52 @@ export function getBackendStatusLabel(order: DeliveryOrder) {
   }
   return getOrderStatusLabel(normalizeOrderStatus(status));
 }
+
+export function getDeliveryCoordinates(order: DeliveryOrder, index: number) {
+  // Coordenadas de Resistencia, Chaco
+  const baseLat = -27.4511;
+  const baseLng = -58.9866;
+
+  // Generar offsets deterministas basados en el ID del pedido
+  const idStr = order.id || '';
+  let hash = 0;
+  for (let i = 0; i < idStr.length; i++) {
+    hash = idStr.charCodeAt(i) + ((hash << 5) - hash);
+  }
+
+  // Pequeña dispersión geográfica (radio de ~2-3 km)
+  const latOffset = ((Math.abs(hash) % 150) / 4000) * (index % 2 === 0 ? 1 : -1);
+  const lngOffset = ((Math.abs(hash >> 8) % 150) / 4000) * (index % 3 === 0 ? 1 : -1);
+
+  return {
+    latitude: baseLat + latOffset,
+    longitude: baseLng + lngOffset,
+  };
+}
+
+export async function fetchStreetRoute(coordinates: { latitude: number; longitude: number }[]) {
+  if (coordinates.length < 2) return [];
+
+  // OSRM requiere las coordenadas en formato "longitud,latitud" separadas por ";"
+  const coordsQuery = coordinates.map(c => `${c.longitude},${c.latitude}`).join(';');
+  const url = `https://router.project-osrm.org/route/v1/driving/${coordsQuery}?overview=full&geometries=geojson`;
+
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (data.code === 'Ok' && data.routes && data.routes[0]?.geometry?.coordinates) {
+      const routePoints = data.routes[0].geometry.coordinates;
+      // OSRM responde con [longitud, latitud], lo convertimos al formato de React Native Maps
+      return routePoints.map(([lng, lat]: [number, number]) => ({
+        latitude: lat,
+        longitude: lng,
+      }));
+    }
+  } catch (error) {
+    console.error('Error al obtener la ruta de calles de OSRM:', error);
+  }
+
+  return [];
+}
+
