@@ -1,16 +1,26 @@
 import { useRouter } from 'expo-router';
-import { SplashScreen } from '../screens/SplashScreen';
-import { screenToPath } from '../utils/routes';
+import { SplashTemplate } from '../components/templates/SplashTemplate';
+import { clearSession, getProfile, hasStoredSession } from '../services/api';
 
 export default function IndexRoute() {
   const router = useRouter();
 
+  const handleAnimationComplete = async () => {
+    const hasSession = await hasStoredSession();
+    if (hasSession) {
+      try {
+        await getProfile();
+        router.replace('/home');
+        return;
+      } catch {
+        await clearSession();
+      }
+    }
+
+    router.replace('/onboarding1');
+  };
+
   return (
-    <SplashScreen
-      navigation={{
-        navigate: (screen) => router.push(screenToPath(screen)),
-        reset: (state) => router.replace(screenToPath(state.routes[state.index]?.name ?? 'Onboarding1')),
-      }}
-    />
+    <SplashTemplate onAnimationComplete={handleAnimationComplete} />
   );
 }

@@ -1,9 +1,18 @@
 import { useRouter } from 'expo-router';
-import { Onboarding2 } from '../screens/Onboarding2';
-import { screenToPath } from '../utils/routes';
+import { OnboardingStep } from '../components/molecules/OnboardingStep';
 
 export default function Onboarding2Route() {
   const router = useRouter();
 
-  return <Onboarding2 navigation={{ navigate: (screen) => router.push(screenToPath(screen)) }} />;
+  return (
+    <OnboardingStep
+      illustration="🚚"
+      title="Rutas optimizadas, resultados eficientes"
+      subtitle="Optimiza rutas, monitorea conductores y mejora la eficiencia de tu operación."
+      currentStep={2}
+      totalSteps={2}
+      onNext={() => router.replace('/login')}
+      buttonText="Comenzar"
+    />
+  );
 }

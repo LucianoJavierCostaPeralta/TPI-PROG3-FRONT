@@ -1,9 +1,19 @@
 import { useRouter } from 'expo-router';
-import { Onboarding1 } from '../screens/Onboarding1';
-import { screenToPath } from '../utils/routes';
+import { OnboardingStep } from '../components/molecules/OnboardingStep';
 
 export default function Onboarding1Route() {
   const router = useRouter();
 
-  return <Onboarding1 navigation={{ navigate: (screen) => router.push(screenToPath(screen)) }} />;
+  return (
+    <OnboardingStep
+      illustration="📋✓"
+      title="Gestión de entregas inteligente"
+      subtitle="Organiza, asigna y realiza seguimiento de todas tus entregas en tiempo real."
+      currentStep={1}
+      totalSteps={2}
+      onNext={() => router.push('/onboarding2')}
+      onSkip={() => router.replace('/login')}
+      buttonText="Siguiente"
+    />
+  );
 }
