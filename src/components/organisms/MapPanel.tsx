@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { StyleSheet, View, ScrollView, Pressable } from 'react-native';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
-import { Text, Menu } from 'react-native-paper';
+import { Text, Menu, Button, IconButton } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { type AppWorkspace, getDeliveryCoordinates, normalizeOrderStatus, fetchStreetRoute } from '../../types/workspace';
 import { MarkerNode } from '../atoms';
@@ -15,12 +15,11 @@ export function MapPanel({ workspace }: MapPanelProps) {
   const role = workspace.profile.rol;
   const isChofer = role === 'chofer';
 
-  // ID del chofer seleccionado (usado únicamente si el rol es administrador)
-  const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null);
+  const mapRef = useRef<MapView>(null);
   const [menuVisible, setMenuVisible] = useState(false);
 
-  // Referencia para animar y centrar la cámara del mapa
-  const mapRef = useRef<MapView>(null);
+  // ID del chofer seleccionado (usado únicamente si el rol es administrador)
+  const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null);
 
   // Estado para la ruta que sigue las calles reales
   const [streetCoordinates, setStreetCoordinates] = useState<{ latitude: number; longitude: number }[]>([]);
@@ -124,14 +123,15 @@ export function MapPanel({ workspace }: MapPanelProps) {
     return null;
   }, [isChofer, selectedDriverId, workspace.profile.nombre, drivers]);
 
-  // Función para centrar la cámara del mapa en el camión del chofer
+  // Centrar cámara en el chofer
   const centerOnDriver = () => {
-    if (mapRef.current && driverCoordinate) {
+    if (mapRef.current && (isChofer || selectedDriverId) && mapData.length > 0) {
       mapRef.current.animateToRegion({
-        ...driverCoordinate,
-        latitudeDelta: 0.015,
-        longitudeDelta: 0.015,
-      }, 800); // Duración de la animación de 800 ms
+        latitude: driverCoordinate.latitude,
+        longitude: driverCoordinate.longitude,
+        latitudeDelta: 0.02,
+        longitudeDelta: 0.02,
+      }, 1000);
     }
   };
 
@@ -151,24 +151,22 @@ export function MapPanel({ workspace }: MapPanelProps) {
         ) : (
           <View style={styles.adminHeader}>
             <Text variant="titleMedium" style={styles.adminTitle}>Seguimiento de Choferes</Text>
-            <View style={styles.adminDropdownContainer}>
+            <View style={styles.dropdownContainer}>
               <Menu
                 visible={menuVisible}
                 onDismiss={() => setMenuVisible(false)}
                 anchor={
-                  <Pressable
-                    style={styles.dropdownTrigger}
+                  <Button
+                    mode="outlined"
                     onPress={() => setMenuVisible(true)}
+                    icon="chevron-down"
+                    contentStyle={{ flexDirection: 'row-reverse' }}
+                    style={styles.dropdownButton}
                   >
-                    <View style={styles.dropdownContent}>
-                      <Text style={styles.dropdownLabel}>
-                        {selectedDriverId
-                          ? drivers.find(d => d.id === selectedDriverId)?.nombre
-                          : 'Todos los choferes'}
-                      </Text>
-                      <MaterialCommunityIcons name="chevron-down" size={20} color="#7C7C7C" />
-                    </View>
-                  </Pressable>
+                    {selectedDriverId 
+                      ? drivers.find(d => d.id === selectedDriverId)?.nombre 
+                      : 'Todos los choferes'}
+                  </Button>
                 }
               >
                 <Menu.Item
@@ -226,6 +224,7 @@ export function MapPanel({ workspace }: MapPanelProps) {
               }}
               title={String(order.cliente)}
               description={String(order.direccion_destino || 'Destino')}
+              zIndex={1}
             >
               <MarkerNode
                 index={idx + 1}
@@ -240,6 +239,7 @@ export function MapPanel({ workspace }: MapPanelProps) {
               coordinate={driverCoordinate}
               title="Chofer en camino"
               flat
+              zIndex={100}
             >
               <MarkerNode isDriver />
             </Marker>
@@ -248,9 +248,15 @@ export function MapPanel({ workspace }: MapPanelProps) {
 
         {/* BOTÓN FLOTANTE PARA CENTRAR CÁMARA EN EL CAMIÓN */}
         {(isChofer || selectedDriverId) && mapData.length > 0 && (
-          <Pressable style={styles.centerButton} onPress={centerOnDriver}>
-            <MaterialCommunityIcons name="truck" size={22} color="#2196F3" />
-          </Pressable>
+          <IconButton
+            icon="truck-delivery"
+            mode="contained"
+            containerColor="#2196F3"
+            iconColor="#FFFFFF"
+            size={28}
+            onPress={centerOnDriver}
+            style={styles.fabCenter}
+          />
         )}
       </View>
 
@@ -404,42 +410,22 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 14,
   },
-  centerButton: {
+  dropdownContainer: {
+    marginTop: 8,
+    alignSelf: 'stretch',
+  },
+  dropdownButton: {
+    borderRadius: 8,
+    borderColor: '#CCCCCC',
+  },
+  fabCenter: {
     position: 'absolute',
-    bottom: 16,
     right: 16,
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
+    bottom: 16,
     elevation: 4,
-    shadowColor: '#000',
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-  },
-  adminDropdownContainer: {
-    marginTop: 6,
-    width: '100%',
-  },
-  dropdownTrigger: {
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
-    backgroundColor: '#FAFAFA',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-  },
-  dropdownContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  dropdownLabel: {
-    fontSize: 14,
-    color: '#1C1B1F',
-    fontWeight: '500',
   },
 });
