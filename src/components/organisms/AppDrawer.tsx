@@ -38,6 +38,14 @@ export function AppDrawer({ visible, onClose, onSignOut, activeTab }: AppDrawerP
     });
   };
 
+  const handleOpenContactarAsesor = () => {
+    onClose();
+    router.push({
+      pathname: '/contactar-asesor',
+      params: { fromTab: activeTab },
+    });
+  };
+
   const handleOpenLegal = (titulo: string) => {
     onClose();
     router.push({
@@ -61,8 +69,17 @@ export function AppDrawer({ visible, onClose, onSignOut, activeTab }: AppDrawerP
         </View>
 
         <Drawer.Section showDivider={false} style={styles.section}>
-          <Drawer.Item icon="account-outline" label="Mi Perfil" onPress={handleOpenProfile} />
-          <Drawer.Item icon="cog-outline" label="Configuración" onPress={handleOpenSettings} />
+          <Drawer.Item
+            icon="account-outline"
+            label="Mi Perfil"
+            onPress={handleOpenProfile}
+          />
+
+          <Drawer.Item
+            icon="cog-outline"
+            label="Configuración"
+            onPress={handleOpenSettings}
+          />
         </Drawer.Section>
 
         <View style={styles.divider} />
@@ -71,8 +88,12 @@ export function AppDrawer({ visible, onClose, onSignOut, activeTab }: AppDrawerP
           <Drawer.Item
             icon="headset"
             label="Contactar Asesor"
-            onPress={onClose}
-            theme={{ colors: { onSurfaceVariant: theme.colors.primary } }}
+            onPress={handleOpenContactarAsesor}
+            theme={{
+              colors: {
+                onSurfaceVariant: theme.colors.primary,
+              },
+            }}
           />
         </Drawer.Section>
 
@@ -83,7 +104,11 @@ export function AppDrawer({ visible, onClose, onSignOut, activeTab }: AppDrawerP
             icon="logout"
             label="Cerrar sesión"
             onPress={onSignOut}
-            theme={{ colors: { onSurfaceVariant: theme.colors.error } }}
+            theme={{
+              colors: {
+                onSurfaceVariant: theme.colors.error,
+              },
+            }}
           />
         </Drawer.Section>
 
@@ -107,6 +132,7 @@ export function AppDrawer({ visible, onClose, onSignOut, activeTab }: AppDrawerP
             } as any}
             style={styles.legalItem}
           />
+
           <Drawer.Item
             icon="shield-check-outline"
             label="Política de Privacidad"
