@@ -6,10 +6,16 @@ Aplicación de gestión logística desarrollada con React Native y Expo. Permite
 
 - Registro de empresas y administradores.
 - Inicio, recuperación y persistencia de sesión con Laravel Sanctum.
-- Alta y listado de choferes.
-- Creación y asignación de entregas.
-- Flujo del chofer: asignada, aceptada, en camino y finalizada.
+- Alta, listado, edición y eliminación de choferes.
+- Creación, asignación, consulta y edición de entregas.
+- Flujo operativo del chofer con parada actual, próximas entregas y controles manuales del viaje.
 - Confirmación de entrega mediante el DNI del cliente.
+- Mapa general de entregas, selección de chofer y seguimiento individual de recorridos.
+- Trazado de rutas sobre calles reales mediante OSRM.
+- Panel de métricas de operación y rendimiento de choferes.
+- Centro de notificaciones con alertas leídas y pendientes.
+- Edición del perfil y selección de foto desde el dispositivo.
+- Solicitudes de contacto con un asesor e información legal.
 - Validación de email, DNI, CUIT, teléfono y fechas.
 - Tema claro, oscuro o sincronizado con el dispositivo.
 - Compatibilidad con Android, iOS y web.
@@ -21,10 +27,13 @@ Aplicación de gestión logística desarrollada con React Native y Expo. Permite
 - TypeScript
 - Expo Router
 - React Native Paper
+- React Native Maps
 - Redux Toolkit
 - Axios
 - React Hook Form, Zod
 - AsyncStorage
+- Expo Image Picker
+- OSRM para el trazado de rutas
 - Laravel Sanctum en el backend
 
 ## Requisitos
@@ -139,9 +148,12 @@ npx expo start --clear
 5. Asignar la entrega al chofer.
 6. Cerrar la sesión del administrador.
 7. Iniciar sesión con el email del chofer.
-8. Aceptar la entrega.
-9. Iniciar el recorrido.
-10. Finalizar la entrega ingresando el DNI correcto del cliente.
+8. Iniciar el viaje para aceptar la entrega asignada.
+9. Comenzar la entrega para marcarla como en camino.
+10. Consultar la parada y el recorrido en el mapa.
+11. Finalizar la entrega ingresando el DNI correcto del cliente.
+
+Desde el perfil administrador también se pueden consultar las métricas, editar entregas, revisar notificaciones y filtrar el mapa por chofer.
 
 Los cambios de estado válidos son:
 
@@ -154,28 +166,34 @@ Pendiente → Asignada → Aceptada → En camino → Finalizada
 El frontend sigue una arquitectura por responsabilidades:
 
 - **Expo Router** define las rutas y la navegación basada en archivos.
+- **Route groups** separan los flujos de autenticación y de la aplicación en `(auth)` y `(main)` sin modificar las URLs.
 - **Screens** coordinan el estado de cada pantalla y los casos de uso.
 - **Atomic Design** organiza la interfaz en átomos, moléculas, organismos y templates.
 - **Services** encapsula Axios y los contratos de la API Laravel.
+- **Hooks** encapsula la carga y las operaciones del panel principal.
 - **Redux Toolkit** administra estado global, como las preferencias visuales.
 - **AsyncStorage** conserva el token de autenticación y preferencias locales.
-- **Utils** centraliza reglas reutilizables, como las validaciones.
+- **Types y Utils** centralizan contratos, normalización de estados, rutas y validaciones reutilizables.
 
 ### Estructura principal
 
 ```text
 src/
 ├── app/              # Rutas de Expo Router
+│   ├── (auth)/       # Login, registro, recuperación y onboarding
+│   └── (main)/       # Panel, perfil, configuración, contacto y legales
 ├── assets/           # Imágenes, iconos y recursos
 ├── components/       # Componentes con Atomic Design
 │   ├── atoms/
 │   ├── molecules/
 │   ├── organisms/
 │   └── templates/
+├── hooks/            # Estado y operaciones reutilizables
 ├── screens/          # Pantallas y lógica de presentación
 ├── services/api/     # Cliente Axios y servicios de Laravel
 ├── store/            # Redux y providers
 ├── styles/           # Tema y tokens visuales
+├── types/            # Contratos y helpers del espacio de trabajo
 └── utils/            # Validaciones compartidas
 ```
 
