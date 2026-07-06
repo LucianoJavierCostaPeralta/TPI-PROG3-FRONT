@@ -9,10 +9,14 @@ import {
     KeyboardAvoidingView,
     Platform
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ScreenLayout } from '../components/templates';
 import { Ionicons } from '@expo/vector-icons';
 
-export default function ContactarAsesor() {
+type ContactarAsesorProps = {
+    onBack: () => void;
+};
+
+export default function ContactarAsesor({ onBack }: ContactarAsesorProps) {
     const [consulta, setConsulta] = useState('');
     const [modalVisible, setModalVisible] = useState(false);
 
@@ -26,13 +30,17 @@ export default function ContactarAsesor() {
     };
 
     return (
-        <SafeAreaView style={styles.safeArea}>
+        <ScreenLayout
+            title="Contactar asesor"
+            onBack={onBack}
+            scrollable={false}
+            contentContainerStyle={styles.screenContent}
+        >
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={styles.container}
             >
                 <View style={styles.header}>
-                    <Text style={styles.title}>Contactar asesor</Text>
                     <Text style={styles.subtitle}>
                         Escribí tu consulta y nuestros asesores se pondrán en contacto con vos.
                     </Text>
@@ -84,29 +92,20 @@ export default function ContactarAsesor() {
                     </View>
                 </View>
             </Modal>
-        </SafeAreaView>
+        </ScreenLayout>
     );
 }
 
 const styles = StyleSheet.create({
-    safeArea: {
+    screenContent: {
         flex: 1,
-        backgroundColor: '#FFFFFF', // Fondo blanco puro para contraste
     },
     container: {
         flex: 1,
-        padding: 24,
         justifyContent: 'space-between',
     },
     header: {
-        marginTop: 20,
         marginBottom: 24,
-    },
-    title: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        color: '#121212',
-        marginBottom: 8,
     },
     subtitle: {
         fontSize: 16,
