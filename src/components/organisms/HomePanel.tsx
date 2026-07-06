@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, TouchableOpacity, Linking, Platform } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Linking, Platform, Alert } from 'react-native';
 import Svg, { Circle, G } from 'react-native-svg';
 import { Text, IconButton, Surface, useTheme, type MD3Theme, TextInput } from 'react-native-paper';
-import { type AppWorkspace, type HomeTabKey, type DeliveryFilter } from '../../types/workspace';
+import { type AppWorkspace, type HomeTabKey, type DeliveryFilter, ORDER_STATUS } from '../../types/workspace';
 import { radii, palette, spacing } from '../../styles/theme';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { CTAButton } from '../atoms';
@@ -148,21 +148,42 @@ export function HomePanel({
 
   if (workspace.profile.rol === 'chofer') {
     // Ordenar entregas del chófer por orden_ruta
-    const driverOrders = [...(workspace.orders || [])].sort(
+    const rawDriverOrders = [...(workspace.orders || [])].sort(
       (a, b) => (Number(a.orden_ruta) || 0) - (Number(b.orden_ruta) || 0)
     );
 
+    // Filtrar las canceladas para que las paradas y conteos se actualicen dinámicamente
+    const driverOrders = rawDriverOrders.filter(
+      (o) => o.estado_id !== ORDER_STATUS.CANCELLED && 
+             !['7', 'cancelado', 'cancelled'].includes(String(o.estado || '').toLowerCase())
+    );
+
     const completedStops = driverOrders.filter(
-      (o) => o.estado_id === 5 || o.estado_id === 6 || o.estado === 'realizado' || o.estado === 'entregado'
+      (o) => o.estado_id === ORDER_STATUS.DELIVERED || 
+             o.estado_id === ORDER_STATUS.FINISHED || 
+             ['realizado', 'entregado', 'finalizado'].includes(String(o.estado || '').toLowerCase())
     );
     
     const remainingStops = driverOrders.filter(
-      (o) => !(o.estado_id === 5 || o.estado_id === 6 || o.estado === 'realizado' || o.estado === 'entregado')
+      (o) => !(o.estado_id === ORDER_STATUS.DELIVERED || 
+               o.estado_id === ORDER_STATUS.FINISHED || 
+               ['realizado', 'entregado', 'finalizado'].includes(String(o.estado || '').toLowerCase()))
     );
 
     const totalStops = driverOrders.length;
-    const nextStopOrder = remainingStops[0] || null;
-    const secondStopOrder = remainingStops[1] || null;
+
+    // Si hay algún pedido en curso (aceptado o en camino), promoverlo al primer lugar para que sea la parada actual
+    const activeOrderIndex = remainingStops.findIndex(
+      (o) => o.estado_id === ORDER_STATUS.ACCEPTED || o.estado_id === ORDER_STATUS.ON_THE_WAY
+    );
+    let sortedRemaining = [...remainingStops];
+    if (activeOrderIndex > 0) {
+      const activeOrder = sortedRemaining.splice(activeOrderIndex, 1)[0];
+      sortedRemaining.unshift(activeOrder);
+    }
+
+    const nextStopOrder = sortedRemaining[0] || null;
+    const secondStopOrder = sortedRemaining[1] || null;
 
     // Estado local para DNI en caso de estar en camino
     const [dniInput, setDniInput] = useState('');
@@ -208,17 +229,44 @@ export function HomePanel({
     }
 
     if (!nextStopOrder) {
+      const deliveredCount = driverOrders.filter(
+        (o) => o.estado_id === ORDER_STATUS.DELIVERED || 
+               o.estado_id === ORDER_STATUS.FINISHED || 
+               ['realizado', 'entregado', 'finalizado'].includes(String(o.estado || '').toLowerCase())
+      ).length;
+
+      if (deliveredCount === 0) {
+        return (
+          <View style={styles.panel}>
+            <Surface style={styles.completedStateCard} elevation={1}>
+              <MaterialCommunityIcons name="truck-delivery-outline" size={64} color={palette.neutral400} />
+              <Text variant="headlineSmall" style={styles.completedTitleText}>Sin entregas asignadas</Text>
+              <Text variant="bodyMedium" style={styles.completedSubtitleText}>
+                No tienes pedidos asignados para el día de hoy.
+              </Text>
+              <CTAButton
+                variant="primary"
+                onPress={() => setActiveTab('deliveries')}
+                icon="calendar-text-outline"
+              >
+                Ver mis pedidos
+              </CTAButton>
+            </Surface>
+          </View>
+        );
+      }
+
       return (
         <View style={styles.panel}>
           <Surface style={styles.completedStateCard} elevation={1}>
             <MaterialCommunityIcons name="check-circle-outline" size={64} color={palette.successDark} />
             <Text variant="headlineSmall" style={styles.completedTitleText}>¡Ruta completada!</Text>
             <Text variant="bodyMedium" style={styles.completedSubtitleText}>
-              Completaste las {totalStops} entregas asignadas para el día de hoy.
+              Completaste las {deliveredCount} entregas asignadas para el día de hoy.
             </Text>
             <View style={styles.metricsRow}>
-              <Metric label="Realizadas" value={completedStops.length} />
-              <Metric label="Distancia aprox." value={`${(totalStops * 3.5).toFixed(1)} km`} />
+              <Metric label="Realizadas" value={deliveredCount} />
+              <Metric label="Distancia aprox." value={`${(deliveredCount * 3.5).toFixed(1)} km`} />
             </View>
             <CTAButton
               variant="secondary"
@@ -244,13 +292,16 @@ export function HomePanel({
       const id = statusId ?? 1;
       const text = statusText ?? 'pendiente';
       
+      if (id === 7 || ['7', 'cancelado', 'cancelled'].includes(text.toLowerCase())) {
+        return { label: 'Cancelada', color: '#B91C1C', bg: '#FEE2E2', dotColor: '#B91C1C' };
+      }
       if (id === 2 || id === 3 || ['2', '3', 'assigned', 'accepted', 'por aceptar', 'aceptado', 'asignado'].includes(text.toLowerCase())) {
-        return { label: 'Asignado', color: '#0369A1', bg: '#E0F2FE' };
+        return { label: 'Asignado', color: '#0369A1', bg: '#E0F2FE', dotColor: '#0369A1' };
       }
       if (id === 4 || text.toLowerCase() === 'on_the_way' || text.toLowerCase() === 'en camino') {
-        return { label: 'En camino', color: '#15803D', bg: '#DCFCE7' };
+        return { label: 'En camino', color: '#15803D', bg: '#DCFCE7', dotColor: '#15803D' };
       }
-      return { label: 'Pendiente', color: palette.neutral600, bg: palette.neutral200 };
+      return { label: 'Pendiente', color: palette.neutral600, bg: palette.neutral200, dotColor: palette.neutral600 };
     };
 
     const currentBadge = getBadgeConfig(nextStopOrder.estado_id, nextStopOrder.estado || undefined);
@@ -262,14 +313,17 @@ export function HomePanel({
         <Surface style={[styles.nextStopCard, { borderColor: currentBadge.color, borderWidth: 1.5 }]} elevation={2}>
           <View style={styles.nextStopHeaderRow}>
             <Text style={[styles.nextStopLabel, { color: currentBadge.color }]}>Parada Actual</Text>
-            <View style={[styles.statusBadge, { backgroundColor: currentBadge.bg }]}>
+            <View style={[styles.statusBadge, { backgroundColor: currentBadge.bg, flexDirection: 'row', alignItems: 'center' }]}>
+              <View style={[styles.statusDot, { backgroundColor: currentBadge.dotColor }]} />
               <Text style={[styles.statusBadgeText, { color: currentBadge.color }]}>{currentBadge.label}</Text>
             </View>
           </View>
           
           <View style={styles.nextStopAddressRow}>
             <View style={styles.nextStopAddressContainer}>
-              <MaterialCommunityIcons name="map-marker-radius" size={28} color={currentBadge.color} style={{ marginTop: 2 }} />
+              <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: currentBadge.bg, alignItems: 'center', justifyContent: 'center' }}>
+                <MaterialCommunityIcons name="map-marker" size={22} color={currentBadge.color} />
+              </View>
               <Text style={styles.nextStopAddressText}>
                 {String(nextStopOrder.direccion_destino || nextStopOrder.destino || '')}
               </Text>
@@ -284,32 +338,73 @@ export function HomePanel({
 
           {/* Acciones de la Parada Actual */}
           <View style={styles.currentStopActionBox}>
-            {nextStopOrder.estado_id === 2 || nextStopOrder.estado_id === 3 || ['assigned', 'accepted'].includes(nextStopOrder.estado?.toLowerCase() || '') ? (
+            {nextStopOrder.estado_id === ORDER_STATUS.ASSIGNED || nextStopOrder.estado?.toLowerCase() === 'assigned' ? (
               <View style={styles.btnRow}>
                 <CTAButton
                   variant="primary"
                   icon="play"
-                  onPress={() => onUpdateStatus?.(nextStopOrder.id, 'on_the_way')}
+                  onPress={() => onUpdateStatus?.(nextStopOrder.id, 'accept')}
                   loading={isUpdating}
                   style={{ flex: 1 }}
                 >
-                  Comenzar entrega
+                  Iniciar viaje
                 </CTAButton>
               </View>
-            ) : nextStopOrder.estado_id === 4 || nextStopOrder.estado?.toLowerCase() === 'on_the_way' ? (
+            ) : nextStopOrder.estado_id === ORDER_STATUS.ACCEPTED || nextStopOrder.estado?.toLowerCase() === 'accepted' ? (
+              <View style={{ width: '100%' }}>
+                <View style={styles.btnRow}>
+                  <CTAButton
+                    variant="primary"
+                    icon="play"
+                    onPress={() => onUpdateStatus?.(nextStopOrder.id, 'on_the_way')}
+                    loading={isUpdating}
+                    style={{ flex: 1 }}
+                  >
+                    Comenzar entrega
+                  </CTAButton>
+                </View>
+                <View style={[styles.btnRow, { marginTop: spacing.xs }]}>
+                  <CTAButton
+                    variant="destructive"
+                    icon="close"
+                    onPress={() => {
+                      Alert.alert(
+                        'Cancelar pedido',
+                        '¿Estás seguro de que deseas cancelar este pedido?',
+                        [
+                          { text: 'No, volver', style: 'cancel' },
+                          {
+                            text: 'Sí, cancelar',
+                            style: 'destructive',
+                            onPress: () => onUpdateStatus?.(nextStopOrder.id, 'cancelled'),
+                          },
+                        ]
+                      );
+                    }}
+                    disabled={isUpdating}
+                    style={{ flex: 1 }}
+                  >
+                    Cancelar pedido
+                  </CTAButton>
+                </View>
+              </View>
+            ) : nextStopOrder.estado_id === ORDER_STATUS.ON_THE_WAY || nextStopOrder.estado?.toLowerCase() === 'on_the_way' ? (
               <View style={styles.deliveryProgressForm}>
+                <Text style={{ fontSize: 13, fontWeight: '500', color: palette.neutral600, marginBottom: 2 }}>
+                  DNI del Cliente (8 dígitos)
+                </Text>
                 <TextInput
                   mode="outlined"
-                  label="DNI del Cliente (8 dígitos)"
-                  placeholder="Ej. 12345678"
+                  placeholder="Ingresa el DNI del cliente"
                   value={dniInput}
                   onChangeText={(val) => setDniInput(val.replace(/[^0-9]/g, ''))}
                   keyboardType="numeric"
                   maxLength={8}
                   style={styles.dniInputHome}
-                  activeOutlineColor={palette.primaryBlue}
+                  activeOutlineColor="#2196F3"
+                  left={<TextInput.Icon icon="account-box-outline" color={palette.neutral400} />}
                 />
-                <View style={styles.btnRow}>
+                <View style={[styles.btnRow, { marginTop: spacing.xs }]}>
                   <CTAButton
                     variant="primary"
                     icon="checkbox-marked-circle-outline"
@@ -325,14 +420,36 @@ export function HomePanel({
                   >
                     Finalizar entrega
                   </CTAButton>
-                  <IconButton
-                    icon="navigation"
-                    iconColor="#FFFFFF"
-                    containerColor={palette.primaryBlue}
-                    size={20}
-                    style={styles.navigationIconButton}
+                  <TouchableOpacity
+                    style={styles.navigationIconButtonCircular}
                     onPress={handleNavigate}
-                  />
+                  >
+                    <MaterialCommunityIcons name="navigation-variant" size={24} color="#1D4ED8" style={{ transform: [{ rotate: '45deg' }] }} />
+                  </TouchableOpacity>
+                </View>
+                <View style={[styles.btnRow, { marginTop: spacing.xs }]}>
+                  <CTAButton
+                    variant="destructive"
+                    icon="close"
+                    onPress={() => {
+                      Alert.alert(
+                        'Cancelar pedido',
+                        '¿Estás seguro de que deseas cancelar este pedido?',
+                        [
+                          { text: 'No, volver', style: 'cancel' },
+                          {
+                            text: 'Sí, cancelar',
+                            style: 'destructive',
+                            onPress: () => onUpdateStatus?.(nextStopOrder.id, 'cancelled'),
+                          },
+                        ]
+                      );
+                    }}
+                    disabled={isUpdating}
+                    style={{ flex: 1 }}
+                  >
+                    Cancelar pedido
+                  </CTAButton>
                 </View>
               </View>
             ) : null}
@@ -342,46 +459,52 @@ export function HomePanel({
           
           <View style={styles.statsContainerRow}>
             <View style={styles.statBox}>
+              <MaterialCommunityIcons name="flag-outline" size={22} color="#1D4ED8" />
               <Text style={styles.statLabel}>Parada</Text>
               <Text style={styles.statValue}>{currentStopIndex} de {totalStops}</Text>
             </View>
             <View style={[styles.statBox, styles.statBorder]}>
+              <MaterialCommunityIcons name="package-variant-closed" size={22} color="#1D4ED8" />
               <Text style={styles.statLabel}>Entregas Hoy</Text>
               <Text style={styles.statValue}>{totalStops}</Text>
             </View>
             <View style={[styles.statBox, styles.statBorder]}>
+              <MaterialCommunityIcons name="map-marker-distance" size={22} color="#1D4ED8" />
               <Text style={styles.statLabel}>Distancia Total</Text>
               <Text style={styles.statValue}>{distanceSim} km</Text>
-            </View>
-            <View style={styles.statBox}>
-              <Text style={styles.etaText}>12 min</Text>
-              <Text style={styles.etaSubText}>ETA</Text>
             </View>
           </View>
         </Surface>
 
         {/* PRÓXIMA PARADA (Si hay una segunda parada) */}
-        {secondStopOrder && (
-          <Surface style={styles.nextStopCard} elevation={1}>
-            <Text style={styles.nextStopLabel}>Siguiente parada</Text>
-            <View style={styles.nextStopAddressRow}>
-              <View style={styles.nextStopAddressContainer}>
-                <MaterialCommunityIcons name="map-marker-outline" size={20} color={palette.neutral600} />
-                <Text style={[styles.nextStopAddressText, { fontSize: 16 }]}>
-                  {String(secondStopOrder.direccion_destino || secondStopOrder.destino || '')}
-                </Text>
+        {secondStopOrder && (() => {
+          const nextBadge = getBadgeConfig(secondStopOrder.estado_id, secondStopOrder.estado || undefined);
+          return (
+            <Surface style={styles.followingStopCard} elevation={1}>
+              <Text style={styles.followingStopTitle}>Siguiente parada</Text>
+              <View style={styles.followingStopBodyRow}>
+                <View style={[styles.followingStopLeftCircle, { backgroundColor: nextBadge.bg }]}>
+                  <MaterialCommunityIcons name="map-marker" size={20} color={nextBadge.color} />
+                </View>
+                <View style={styles.followingStopMiddle}>
+                  <View style={styles.followingStopAddressRow}>
+                    <Text style={styles.followingStopAddress} numberOfLines={1}>
+                      {String(secondStopOrder.direccion_destino || secondStopOrder.destino || '')}
+                    </Text>
+                    <View style={[styles.statusBadgeSmall, { backgroundColor: nextBadge.bg }]}>
+                      <View style={[styles.greenDot, { backgroundColor: nextBadge.dotColor }]} />
+                      <Text style={[styles.statusBadgeTextSmall, { color: nextBadge.color }]}>{nextBadge.label}</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.followingStopClient}>
+                    Cliente: {String(secondStopOrder.cliente || '')}
+                  </Text>
+                </View>
+                <MaterialCommunityIcons name="chevron-right" size={20} color={palette.neutral400} />
               </View>
-              <View style={[styles.statusBadge, { backgroundColor: getBadgeConfig(secondStopOrder.estado_id, secondStopOrder.estado || undefined).bg }]}>
-                <Text style={[styles.statusBadgeText, { fontSize: 10, color: getBadgeConfig(secondStopOrder.estado_id, secondStopOrder.estado || undefined).color }]}>
-                  {getBadgeConfig(secondStopOrder.estado_id, secondStopOrder.estado || undefined).label}
-                </Text>
-              </View>
-            </View>
-            <Text style={styles.nextStopSubtitle}>
-              Cliente: {String(secondStopOrder.cliente || '')}
-            </Text>
-          </Surface>
-        )}
+            </Surface>
+          );
+        })()}
 
         {/* ENTREGAS RESTANTES (Lista desde la tercera parada) */}
         {remainingStops.length > 2 && (
@@ -594,25 +717,6 @@ export function HomePanel({
               onPress={() => {
                 setActiveTab('drivers');
                 setShowDriverForm(true);
-              }} 
-            />
-          </View>
-          <View style={styles.actionsRow}>
-            <QuickActionButton 
-              label="Ver mapa" 
-              icon="map-outline" 
-              color={palette.brandPurple} 
-              onPress={() => {
-                setActiveTab('map');
-              }} 
-            />
-            <QuickActionButton 
-              label="Reportes" 
-              icon="chart-bar" 
-              color={palette.warning} 
-              onPress={() => {
-                setActiveTab('deliveries');
-                setDeliveryFilter('todos');
               }} 
             />
           </View>
@@ -909,9 +1013,7 @@ const createStyles = (theme: MD3Theme) =>
     },
     statBorder: {
       borderLeftWidth: 1,
-      borderRightWidth: 1,
-      borderColor: theme.colors.outline,
-      opacity: 0.8,
+      borderColor: '#E5E7EB',
     },
     statValue: {
       fontWeight: '900',
@@ -1055,5 +1157,89 @@ const createStyles = (theme: MD3Theme) =>
       backgroundColor: '#FFFFFF',
       height: 48,
       fontSize: 14,
+    },
+    statusDot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      marginRight: 6,
+    },
+    navigationIconButtonCircular: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: '#EFF6FF',
+    },
+    followingStopCard: {
+      borderRadius: radii.lg,
+      padding: spacing.md,
+      backgroundColor: theme.colors.surface,
+      borderWidth: 1,
+      borderColor: theme.colors.outlineVariant,
+      marginTop: spacing.md,
+    },
+    followingStopHeader: {
+      marginBottom: spacing.xs,
+    },
+    followingStopTitle: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: '#1D4ED8',
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+    },
+    followingStopBodyRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    followingStopLeftCircle: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: '#EFF6FF',
+    },
+    followingStopMiddle: {
+      flex: 1,
+    },
+    followingStopAddressRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: spacing.sm,
+    },
+    followingStopAddress: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: theme.colors.onSurface,
+      flex: 1,
+    },
+    statusBadgeSmall: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: radii.sm,
+    },
+    statusBadgeTextSmall: {
+      fontSize: 10,
+      fontWeight: '700',
+      color: '#15803D',
+    },
+    greenDot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: '#15803D',
+      marginRight: 4,
+    },
+    followingStopClient: {
+      fontSize: 12,
+      color: theme.colors.onSurfaceVariant,
+      marginTop: 2,
     },
   });

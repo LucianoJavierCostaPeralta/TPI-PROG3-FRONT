@@ -21,6 +21,7 @@ import {
   getOrderProducts,
   getAssignedDriverName,
   formatOrderDate,
+  ORDER_STATUS,
 } from '../../types/workspace';
 
 // Helper input sanitization
@@ -114,6 +115,13 @@ export function DeliveriesPanel({
     const getBadgeConfig = (id: number | undefined, nameVal: unknown) => {
       const name = String(nameVal ?? '').toLowerCase();
 
+      if (id === ORDER_STATUS.CANCELLED || ['7', 'cancelado', 'cancelled'].includes(name)) {
+        return {
+          label: 'Cancelada',
+          bg: '#FEE2E2',
+          text: '#B91C1C',
+        };
+      }
       if (id === 5 || id === 6 || ['5', '6', 'realizado', 'entregado', 'entregada', 'delivered', 'finalizado'].includes(name)) {
         return {
           label: 'Entregada',
@@ -362,10 +370,12 @@ export function DeliveriesPanel({
             {drivers.length === 0 ? (
               <Text variant="bodyMedium" style={styles.emptyText}>No hay choferes disponibles.</Text>
             ) : (
-              <ScrollView style={styles.dialogScroll}>
-                {drivers.map((driver) => (
+              <FlatList
+                data={drivers}
+                keyExtractor={(item) => item.id}
+                style={styles.dialogScroll}
+                renderItem={({ item: driver }) => (
                   <TouchableOpacity
-                    key={driver.id}
                     style={styles.dialogRow}
                     onPress={() => {
                       onChange('choferId', driver.usuario_id ?? driver.id);
@@ -379,8 +389,8 @@ export function DeliveriesPanel({
                     </View>
                     <MaterialCommunityIcons name="chevron-right" size={20} color="#CCCCCC" />
                   </TouchableOpacity>
-                ))}
-              </ScrollView>
+                )}
+              />
             )}
           </Dialog.Content>
           <Dialog.Actions>

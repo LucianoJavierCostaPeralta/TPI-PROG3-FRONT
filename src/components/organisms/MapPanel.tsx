@@ -1,9 +1,9 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { StyleSheet, View, ScrollView, Pressable, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, ScrollView, Pressable, TouchableOpacity, FlatList } from 'react-native';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import { Text, Portal, Dialog, Button, IconButton, Surface } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { type AppWorkspace, getDeliveryCoordinates, normalizeOrderStatus, fetchStreetRoute } from '../../types/workspace';
+import { type AppWorkspace, getDeliveryCoordinates, normalizeOrderStatus, fetchStreetRoute, ORDER_STATUS } from '../../types/workspace';
 import { MarkerNode, UserAvatar } from '../atoms';
 import { RouteProgress } from '../molecules';
 
@@ -30,15 +30,15 @@ export function MapPanel({ workspace, initialFocusOrderId }: MapPanelProps) {
 
   const [selectedMapOrderId, setSelectedMapOrderId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (initialFocusOrderId) {
-      setSelectedMapOrderId(initialFocusOrderId);
-    }
-  }, [initialFocusOrderId]);
-
   // 2. Filtrar y ordenar los pedidos para la visualización del mapa
   const mapData = useMemo(() => {
     let ordersToDisplay = workspace.orders || [];
+
+    // Filtrar pedidos cancelados para no mostrarlos en el mapa
+    ordersToDisplay = ordersToDisplay.filter(
+      (o) => o.estado_id !== ORDER_STATUS.CANCELLED && 
+             !['7', 'cancelado', 'cancelled'].includes(String(o.estado || '').toLowerCase())
+    );
 
     // Si es chofer, solo ve sus pedidos
     if (isChofer) {
@@ -64,15 +64,30 @@ export function MapPanel({ workspace, initialFocusOrderId }: MapPanelProps) {
     });
   }, [workspace.orders, workspace.profile.id, isChofer, selectedDriverId]);
 
+  useEffect(() => {
+    if (initialFocusOrderId) {
+      setSelectedMapOrderId(initialFocusOrderId);
+    } else {
+      // Si es chofer y no hay un foco inicial, enfocar el pedido actualmente activo (aceptado o en camino)
+      const activeOrder = mapData.find(
+        (o) => o.estado_id === ORDER_STATUS.ACCEPTED || o.estado_id === ORDER_STATUS.ON_THE_WAY
+      );
+      if (activeOrder) {
+        setSelectedMapOrderId(activeOrder.id);
+      }
+    }
+  }, [initialFocusOrderId, mapData]);
+
   const selectedMapOrder = useMemo(() => {
     if (!selectedMapOrderId) return null;
     return mapData.find(o => o.id === selectedMapOrderId) || null;
   }, [selectedMapOrderId, mapData]);
 
-  // Centrar la cámara en el pedido enfocado inicialmente (si hay uno)
+  // Centrar la cámara en el pedido enfocado (si hay uno)
   useEffect(() => {
-    if (initialFocusOrderId && mapRef.current) {
-      const order = mapData.find(o => o.id === initialFocusOrderId);
+    const focusId = initialFocusOrderId || selectedMapOrderId;
+    if (focusId && mapRef.current) {
+      const order = mapData.find(o => o.id === focusId);
       if (order && order.latitud && order.longitud) {
         const timer = setTimeout(() => {
           mapRef.current?.animateToRegion({
@@ -85,7 +100,7 @@ export function MapPanel({ workspace, initialFocusOrderId }: MapPanelProps) {
         return () => clearTimeout(timer);
       }
     }
-  }, [initialFocusOrderId, mapData]);
+  }, [initialFocusOrderId, selectedMapOrderId, mapData]);
 
   // Coordenadas para la línea de la ruta
   const routeCoordinates = useMemo(() => {
@@ -128,7 +143,11 @@ export function MapPanel({ workspace, initialFocusOrderId }: MapPanelProps) {
   // Posición simulada del chofer: cerca de la primera parada pendiente
   const driverCoordinate = useMemo(() => {
     if (pendingOrders.length > 0) {
-      const firstPending = pendingOrders[0];
+      // Priorizar el pedido actualmente activo (aceptado o en camino)
+      const activeOrder = pendingOrders.find(
+        (o) => o.estado_id === ORDER_STATUS.ACCEPTED || o.estado_id === ORDER_STATUS.ON_THE_WAY
+      );
+      const firstPending = activeOrder || pendingOrders[0];
       return {
         latitude: Number(firstPending.latitud) - 0.0018,
         longitude: Number(firstPending.longitud) - 0.0015,
@@ -247,28 +266,30 @@ export function MapPanel({ workspace, initialFocusOrderId }: MapPanelProps) {
                 <Dialog visible={menuVisible} onDismiss={() => setMenuVisible(false)} style={styles.dialog}>
                   <Dialog.Title style={styles.dialogTitle}>Seleccionar Chofer</Dialog.Title>
                   <Dialog.Content style={styles.dialogContent}>
-                    <ScrollView style={styles.dialogScroll}>
-                      {/* Opción: Todos los choferes */}
-                      <TouchableOpacity
-                        style={styles.dialogRow}
-                        onPress={() => {
-                          setSelectedDriverId(null);
-                          setMenuVisible(false);
-                        }}
-                      >
-                        <View style={styles.avatarPlaceholder}>
-                          <MaterialCommunityIcons name="account-group" size={20} color="#2196F3" />
-                        </View>
-                        <View style={styles.dialogInfo}>
-                          <Text variant="titleSmall" style={styles.dialogName}>Todos los choferes</Text>
-                          <Text variant="bodySmall" style={styles.dialogSub}>Visualizar mapa general</Text>
-                        </View>
-                        <MaterialCommunityIcons name="chevron-right" size={20} color="#CCCCCC" />
-                      </TouchableOpacity>
-
-                      {drivers.map((driver) => (
+                    <FlatList
+                      data={drivers}
+                      keyExtractor={(item) => item.id}
+                      style={styles.dialogScroll}
+                      ListHeaderComponent={
                         <TouchableOpacity
-                          key={driver.id}
+                          style={styles.dialogRow}
+                          onPress={() => {
+                            setSelectedDriverId(null);
+                            setMenuVisible(false);
+                          }}
+                        >
+                          <View style={styles.avatarPlaceholder}>
+                            <MaterialCommunityIcons name="account-group" size={20} color="#2196F3" />
+                          </View>
+                          <View style={styles.dialogInfo}>
+                            <Text variant="titleSmall" style={styles.dialogName}>Todos los choferes</Text>
+                            <Text variant="bodySmall" style={styles.dialogSub}>Visualizar mapa general</Text>
+                          </View>
+                          <MaterialCommunityIcons name="chevron-right" size={20} color="#CCCCCC" />
+                        </TouchableOpacity>
+                      }
+                      renderItem={({ item: driver }) => (
+                        <TouchableOpacity
                           style={styles.dialogRow}
                           onPress={() => {
                             setSelectedDriverId(driver.id);
@@ -282,8 +303,8 @@ export function MapPanel({ workspace, initialFocusOrderId }: MapPanelProps) {
                           </View>
                           <MaterialCommunityIcons name="chevron-right" size={20} color="#CCCCCC" />
                         </TouchableOpacity>
-                      ))}
-                    </ScrollView>
+                      )}
+                    />
                   </Dialog.Content>
                   <Dialog.Actions>
                     <Button onPress={() => setMenuVisible(false)}>Cancelar</Button>

@@ -85,7 +85,7 @@ export async function acceptDelivery(deliveryId: string) {
   return data.data;
 }
 
-export async function updateDeliveryState(deliveryId: string, estadoId: 4 | 5, clienteDni?: string) {
+export async function updateDeliveryState(deliveryId: string, estadoId: 4 | 5 | 7, clienteDni?: string) {
   const { data } = await api.patch<{ data: Delivery }>(
     `/chofer/entregas/${deliveryId}/state`,
     { estado_id: estadoId, ...(clienteDni ? { cliente_dni: clienteDni } : {}) },

@@ -1,3 +1,17 @@
+/**
+ * @file workspace.ts
+ * @description Define los tipos de datos principales, interfaces de TypeScript, 
+ * constantes de estado de pedidos y funciones auxiliares para formateo y 
+ * geolocalización dentro del espacio de trabajo de la aplicación (TPI-PROG3-FRONT).
+ * 
+ * Contiene:
+ * - Roles de usuarios (Administrador, Asesor, Chofer).
+ * - Estructuras de datos para Choferes, Pedidos, Notificaciones y Empresas.
+ * - Helpers de visualización de direcciones, fechas y cálculo de rutas de calles por OSRM.
+ */
+
+import axios from 'axios';
+
 export type UserRole = 'administrador' | 'asesor' | 'chofer';
 
 export type Company = {
@@ -235,15 +249,7 @@ export async function fetchStreetRoute(coordinates: { latitude: number; longitud
   const url = `https://router.project-osrm.org/route/v1/driving/${coordsQuery}?overview=full&geometries=geojson`;
 
   try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      return [];
-    }
-    const contentType = response.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-      return [];
-    }
-    const data = await response.json();
+    const { data } = await axios.get(url, { timeout: 8000 });
 
     if (data.code === 'Ok' && data.routes && data.routes[0]?.geometry?.coordinates) {
       const routePoints = data.routes[0].geometry.coordinates;
@@ -260,3 +266,12 @@ export async function fetchStreetRoute(coordinates: { latitude: number; longitud
   return [];
 }
 
+export const ORDER_STATUS = {
+  PENDING: 1,
+  ASSIGNED: 2,
+  ACCEPTED: 3,
+  ON_THE_WAY: 4,
+  DELIVERED: 5,
+  FINISHED: 6,
+  CANCELLED: 7,
+} as const;

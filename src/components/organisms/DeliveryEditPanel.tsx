@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, ScrollView, Platform, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, ScrollView, Platform, TouchableOpacity, FlatList } from 'react-native';
 import { Surface, Text, TextInput as PaperTextInput, Portal, Dialog, Button, useTheme, type MD3Theme } from 'react-native-paper';
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { CTAButton, TextInputField, UserAvatar } from '../atoms';
@@ -201,10 +201,12 @@ export function DeliveryEditPanel({
             {drivers.length === 0 ? (
               <Text variant="bodyMedium" style={styles.emptyText}>No hay choferes disponibles.</Text>
             ) : (
-              <ScrollView style={styles.dialogScroll}>
-                {drivers.map((driver) => (
+              <FlatList
+                data={drivers}
+                keyExtractor={(item) => item.id}
+                style={styles.dialogScroll}
+                renderItem={({ item: driver }) => (
                   <TouchableOpacity
-                    key={driver.id}
                     style={styles.dialogRow}
                     onPress={() => {
                       onChange('choferId', driver.usuario_id ?? driver.id);
@@ -218,8 +220,8 @@ export function DeliveryEditPanel({
                     </View>
                     <MaterialCommunityIcons name="chevron-right" size={20} color="#CCCCCC" />
                   </TouchableOpacity>
-                ))}
-              </ScrollView>
+                )}
+              />
             )}
           </Dialog.Content>
           <Dialog.Actions>

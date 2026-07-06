@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Platform, RefreshControl, ScrollView, StyleSheet, View, TouchableOpacity, BackHandler } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Svg, { Circle, G } from 'react-native-svg';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
@@ -70,6 +71,7 @@ import {
   getOrderStatusLabel,
   getBackendStatusLabel,
   AppNotification,
+  ORDER_STATUS,
 } from '../types/workspace';
 
 const initialDriverForm: DriverForm = {
@@ -183,19 +185,62 @@ function mapDriver(driver: ApiDriver): Driver {
 function mapDelivery(delivery: Delivery): DeliveryOrder {
   return {
     ...delivery,
+    id: String(delivery.id),
     estado: delivery.estado?.nombre_estado ?? String(delivery.estado_id),
     destino: delivery.direccion_destino,
     productos: delivery.producto,
   };
 }
 
+const CANCELLED_ORDERS_KEY = 'zonescore:cancelled_orders';
+
+async function getCancelledOrderIds(): Promise<string[]> {
+  try {
+    const stored = await AsyncStorage.getItem(CANCELLED_ORDERS_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+}
+
+async function markOrderAsCancelled(orderId: string): Promise<void> {
+  try {
+    const current = await getCancelledOrderIds();
+    if (!current.includes(orderId)) {
+      current.push(orderId);
+      await AsyncStorage.setItem(CANCELLED_ORDERS_KEY, JSON.stringify(current));
+    }
+  } catch (e) {
+    console.error('Error storing cancelled order:', e);
+  }
+}
+
 async function loadRoleData(_user: AuthUser, role: UserRole) {
   if (role === 'chofer') {
-    return { drivers: [], orders: (await listDriverDeliveries()).map(mapDelivery) };
+    const cancelledIds = await getCancelledOrderIds();
+    const deliveries = await listDriverDeliveries();
+    const mapped = deliveries.map(d => {
+      const order = mapDelivery(d);
+      if (cancelledIds.includes(order.id)) {
+        order.estado_id = ORDER_STATUS.CANCELLED;
+        order.estado = 'cancelled';
+      }
+      return order;
+    });
+    return { drivers: [], orders: mapped };
   }
   if (role === 'administrador') {
+    const cancelledIds = await getCancelledOrderIds();
     const [drivers, orders] = await Promise.all([listDrivers(), listAdminDeliveries()]);
-    return { drivers: drivers.map(mapDriver), orders: orders.map(mapDelivery) };
+    const mapped = orders.map(o => {
+      const order = mapDelivery(o);
+      if (cancelledIds.includes(order.id)) {
+        order.estado_id = ORDER_STATUS.CANCELLED;
+        order.estado = 'cancelled';
+      }
+      return order;
+    });
+    return { drivers: drivers.map(mapDriver), orders: mapped };
   }
   return { drivers: [], orders: [] };
 }
@@ -250,24 +295,6 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
       const user = await getProfile();
       const role = normalizeRole(user.rol?.nombre_rol);
       const roleData = await loadRoleData(user, role);
-
-      if (role === 'chofer' && roleData.orders.length > 0) {
-        const sorted = [...roleData.orders].sort(
-          (a, b) => (Number(a.orden_ruta) || 0) - (Number(b.orden_ruta) || 0)
-        );
-        const firstPending = sorted.find(
-          o => !(o.estado_id === 5 || o.estado_id === 6 || o.estado === 'realizado' || o.estado === 'entregado')
-        );
-        if (firstPending && (firstPending.estado_id === 2 || firstPending.estado_id === 3)) {
-          try {
-            await updateDeliveryState(firstPending.id, 4);
-            const updatedRoleData = await loadRoleData(user, role);
-            roleData.orders = updatedRoleData.orders;
-          } catch (e) {
-            // Silently ignore or log auto-start failures
-          }
-        }
-      }
 
       setWorkspace((prev) => ({
         ...emptyWorkspace,
@@ -585,6 +612,21 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
   };
 
   const handleUpdateOrderStatus = async (orderId: string, action: string, clienteDni?: string) => {
+    // Controlar que solo haya un pedido activo a la vez para el chofer
+    if (workspace.profile.rol === 'chofer' && (action === 'accept' || action === 'on_the_way')) {
+      const activeOrder = workspace.orders.find(
+        (o) => (o.estado_id === ORDER_STATUS.ACCEPTED || o.estado_id === ORDER_STATUS.ON_THE_WAY) && 
+               String(o.id) !== String(orderId)
+      );
+      if (activeOrder) {
+        Alert.alert(
+          'Pedido en curso',
+          'Ya tienes un pedido activo. Debes completar o cancelar tu pedido actual antes de iniciar otro.'
+        );
+        return;
+      }
+    }
+
     setUpdatingOrderId(orderId);
     setError('');
 
@@ -619,11 +661,11 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
         });
       }
       if (action === 'on_the_way') {
-        const res = await updateDeliveryState(orderId, 4);
+        const res = await updateDeliveryState(orderId, ORDER_STATUS.ON_THE_WAY);
         updatedOrder = mapDelivery(res);
       }
       if (action === 'delivered') {
-        const res = await updateDeliveryState(orderId, 5, clienteDni);
+        const res = await updateDeliveryState(orderId, ORDER_STATUS.DELIVERED, clienteDni);
         updatedOrder = mapDelivery(res);
 
         // Simular notificación locales según rol
@@ -649,20 +691,41 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
             notifications: [newNotif, ...(prev.notifications || [])],
           };
         });
-
-        // Auto-iniciar la siguiente parada si el rol es chofer
-        if (workspace.profile.rol === 'chofer') {
-          const driverOrders = workspace.orders.filter(o => o.chofer_id === workspace.profile.id);
-          const sorted = [...driverOrders].sort(
-            (a, b) => (Number(a.orden_ruta) || 0) - (Number(b.orden_ruta) || 0)
-          );
-          const nextPending = sorted.find(
-            o => o.id !== orderId && !(o.estado_id === 5 || o.estado_id === 6 || o.estado === 'realizado' || o.estado === 'entregado')
-          );
-          if (nextPending) {
-            await updateDeliveryState(nextPending.id, 4);
-          }
+      }
+      if (action === 'cancelled') {
+        await markOrderAsCancelled(orderId);
+        const found = workspace.orders.find(o => o.id === orderId);
+        if (found) {
+          updatedOrder = {
+            ...found,
+            estado_id: ORDER_STATUS.CANCELLED,
+            estado: 'cancelled',
+          };
         }
+
+        // Simular notificación local
+        setWorkspace((prev) => {
+          const isChofer = prev.profile.rol === 'chofer';
+          const newNotif = isChofer ? {
+            id: String(Date.now()),
+            titulo: 'Pedido cancelado',
+            mensaje: `Cancelaste el pedido #${orderId.slice(0, 8).toUpperCase()}.`,
+            tipo: 'error' as const,
+            leida: false,
+            created_at: new Date().toISOString(),
+          } : {
+            id: String(Date.now()),
+            titulo: 'Pedido Cancelado',
+            mensaje: `El chofer ${prev.profile.nombre} canceló la entrega del pedido #${orderId.slice(0, 8).toUpperCase()}.`,
+            tipo: 'error' as const,
+            leida: false,
+            created_at: new Date().toISOString(),
+          };
+          return {
+            ...prev,
+            notifications: [newNotif, ...(prev.notifications || [])],
+          };
+        });
       }
 
       if (updatedOrder) {

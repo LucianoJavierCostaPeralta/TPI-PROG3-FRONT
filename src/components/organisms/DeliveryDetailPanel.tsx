@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { Surface, Text, useTheme, type MD3Theme } from 'react-native-paper';
 import { InfoCard } from '../molecules/InfoCard';
 import { CTAButton, UserAvatar, TextInputField } from '../atoms';
@@ -12,6 +12,7 @@ import {
   formatOrderDate,
   getOrderField,
   getOrderProducts,
+  ORDER_STATUS,
 } from '../../types/workspace';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -44,6 +45,13 @@ export function DeliveryDetailPanel({
 
   const getBadgeConfig = (id: number | undefined, nameVal: unknown) => {
     const name = String(nameVal ?? '').toLowerCase();
+    if (id === 7 || ['7', 'cancelado', 'cancelled'].includes(name)) {
+      return {
+        label: 'Cancelada',
+        bg: '#FEE2E2',
+        text: '#B91C1C',
+      };
+    }
     if (id === 5 || id === 6 || ['5', '6', 'realizado', 'entregado', 'entregada', 'delivered', 'finalizado'].includes(name)) {
       return {
         label: 'Entregada',
@@ -169,17 +177,17 @@ export function DeliveryDetailPanel({
         {/* Sección de acciones para el Chofer */}
         {role === 'chofer' && (
           <View style={styles.driverActionsContainer}>
-            {(order.estado_id === 2 || order.estado_id === 3) && (
+            {order.estado_id === ORDER_STATUS.ASSIGNED && (
               <>
                 <CTAButton
                   variant="primary"
-                  onPress={() => onUpdateStatus?.(order.id, 'on_the_way')}
+                  onPress={() => onUpdateStatus?.(order.id, 'accept')}
                   style={styles.actionButton}
                   loading={updatingOrderId === order.id}
                   disabled={!!updatingOrderId}
-                  icon="truck-delivery"
+                  icon="play-outline"
                 >
-                  Comenzar entrega
+                  Iniciar entrega
                 </CTAButton>
 
                 <CTAButton
@@ -194,7 +202,55 @@ export function DeliveryDetailPanel({
               </>
             )}
 
-            {order.estado_id === 4 && (
+            {order.estado_id === ORDER_STATUS.ACCEPTED && (
+              <>
+                <CTAButton
+                  variant="primary"
+                  onPress={() => onUpdateStatus?.(order.id, 'on_the_way')}
+                  style={styles.actionButton}
+                  loading={updatingOrderId === order.id}
+                  disabled={!!updatingOrderId}
+                  icon="truck-delivery"
+                >
+                  Comenzar entrega
+                </CTAButton>
+
+                <CTAButton
+                  variant="destructive"
+                  onPress={() => {
+                    Alert.alert(
+                      'Cancelar entrega',
+                      '¿Estás seguro de que deseas cancelar esta entrega?',
+                      [
+                        { text: 'No, volver', style: 'cancel' },
+                        {
+                          text: 'Sí, cancelar',
+                          style: 'destructive',
+                          onPress: () => onUpdateStatus?.(order.id, 'cancelled'),
+                        },
+                      ]
+                    );
+                  }}
+                  style={styles.actionButton}
+                  disabled={!!updatingOrderId}
+                  icon="close"
+                >
+                  Cancelar entrega
+                </CTAButton>
+
+                <CTAButton
+                  variant="secondary"
+                  onPress={() => onViewOnMap?.(order)}
+                  style={styles.actionButton}
+                  disabled={!!updatingOrderId}
+                  icon="map-marker-outline"
+                >
+                  Ver en mapa
+                </CTAButton>
+              </>
+            )}
+
+            {order.estado_id === ORDER_STATUS.ON_THE_WAY && (
               <View style={styles.dniVerificationBox}>
                 <Text variant="titleMedium" style={styles.dniBoxTitle}>Confirmación de Entrega</Text>
                 <Text variant="bodySmall" style={styles.dniBoxSubtitle}>
@@ -234,6 +290,29 @@ export function DeliveryDetailPanel({
                   icon="check-circle-outline"
                 >
                   Finalizar entrega
+                </CTAButton>
+
+                <CTAButton
+                  variant="destructive"
+                  onPress={() => {
+                    Alert.alert(
+                      'Cancelar entrega',
+                      '¿Estás seguro de que deseas cancelar esta entrega?',
+                      [
+                        { text: 'No, volver', style: 'cancel' },
+                        {
+                          text: 'Sí, cancelar',
+                          style: 'destructive',
+                          onPress: () => onUpdateStatus?.(order.id, 'cancelled'),
+                        },
+                      ]
+                    );
+                  }}
+                  style={styles.actionButton}
+                  disabled={!!updatingOrderId}
+                  icon="close"
+                >
+                  Cancelar entrega
                 </CTAButton>
 
                 <CTAButton
