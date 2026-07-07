@@ -1,11 +1,13 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { StyleSheet, View, ScrollView, Pressable, TouchableOpacity, FlatList } from 'react-native';
+import React, { useRef } from 'react';
+import { StyleSheet, View, TouchableOpacity, FlatList } from 'react-native';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import { Text, Portal, Dialog, Button, IconButton, Surface } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { type AppWorkspace, getDeliveryCoordinates, normalizeOrderStatus, fetchStreetRoute, ORDER_STATUS } from '../../types/workspace';
 import { MarkerNode, UserAvatar } from '../atoms';
 import { RouteProgress } from '../molecules';
+import { useMapPanel } from '../../hooks/map/useMapPanel';
+import { MAP_INITIAL_REGION } from '../../utils/map/mapPanel';
+import { type AppWorkspace, normalizeOrderStatus } from '../../types/workspace';
 
 interface MapPanelProps {
   workspace: AppWorkspace;
@@ -13,216 +15,25 @@ interface MapPanelProps {
 }
 
 export function MapPanel({ workspace, initialFocusOrderId }: MapPanelProps) {
-  const role = workspace.profile.rol;
-  const isChofer = role === 'chofer';
-
   const mapRef = useRef<MapView>(null);
-  const [menuVisible, setMenuVisible] = useState(false);
+  const {
+    activeDriverName,
+    activeDriversOnMap,
+    completedOrders,
+    driverCoordinate,
+    mapData,
+    menuVisible,
+    selectedDriverId,
+    selectedMapOrder,
+    setMenuVisible,
+    setSelectedDriverId,
+    setSelectedMapOrderId,
+    streetCoordinates,
+    isChofer,
+  } = useMapPanel({ workspace, initialFocusOrderId });
 
-  // ID del chofer seleccionado (usado únicamente si el rol es administrador)
-  const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null);
-
-  // Estado para la ruta que sigue las calles reales
-  const [streetCoordinates, setStreetCoordinates] = useState<{ latitude: number; longitude: number }[]>([]);
-
-  // 1. Obtener choferes disponibles
   const drivers = workspace.drivers || [];
 
-  const [selectedMapOrderId, setSelectedMapOrderId] = useState<string | null>(null);
-
-  // 2. Filtrar y ordenar los pedidos para la visualización del mapa
-  const mapData = useMemo(() => {
-    let ordersToDisplay = workspace.orders || [];
-
-    // Filtrar pedidos cancelados para no mostrarlos en el mapa
-    ordersToDisplay = ordersToDisplay.filter(
-      (o) => o.estado_id !== ORDER_STATUS.CANCELLED && 
-             !['7', 'cancelado', 'cancelled'].includes(String(o.estado || '').toLowerCase())
-    );
-
-    // Si es chofer, solo ve sus pedidos
-    if (isChofer) {
-      ordersToDisplay = ordersToDisplay.filter(o => o.chofer_id === workspace.profile.id);
-    } else if (selectedDriverId) {
-      // Si es admin y seleccionó un chofer específico
-      ordersToDisplay = ordersToDisplay.filter(o => o.chofer_id === selectedDriverId);
-    }
-
-    // Ordenar de forma secuencial por orden_ruta
-    const sorted = [...ordersToDisplay].sort(
-      (a, b) => (Number(a.orden_ruta) || 0) - (Number(b.orden_ruta) || 0)
-    );
-
-    // Enriquecer cada pedido con coordenadas simuladas
-    return sorted.map((order, index) => {
-      const coords = getDeliveryCoordinates(order, index);
-      return {
-        ...order,
-        latitud: coords.latitude,
-        longitud: coords.longitude,
-      };
-    });
-  }, [workspace.orders, workspace.profile.id, isChofer, selectedDriverId]);
-
-  useEffect(() => {
-    if (initialFocusOrderId) {
-      setSelectedMapOrderId(initialFocusOrderId);
-    } else {
-      // Si es chofer y no hay un foco inicial, enfocar el pedido actualmente activo (aceptado o en camino)
-      const activeOrder = mapData.find(
-        (o) => o.estado_id === ORDER_STATUS.ACCEPTED || o.estado_id === ORDER_STATUS.ON_THE_WAY
-      );
-      if (activeOrder) {
-        setSelectedMapOrderId(activeOrder.id);
-      }
-    }
-  }, [initialFocusOrderId, mapData]);
-
-  const selectedMapOrder = useMemo(() => {
-    if (!selectedMapOrderId) return null;
-    return mapData.find(o => o.id === selectedMapOrderId) || null;
-  }, [selectedMapOrderId, mapData]);
-
-  // Centrar la cámara en el pedido enfocado (si hay uno)
-  useEffect(() => {
-    const focusId = initialFocusOrderId || selectedMapOrderId;
-    if (focusId && mapRef.current) {
-      const order = mapData.find(o => o.id === focusId);
-      if (order && order.latitud && order.longitud) {
-        const timer = setTimeout(() => {
-          mapRef.current?.animateToRegion({
-            latitude: Number(order.latitud),
-            longitude: Number(order.longitud),
-            latitudeDelta: 0.015,
-            longitudeDelta: 0.015,
-          }, 1000);
-        }, 300);
-        return () => clearTimeout(timer);
-      }
-    }
-  }, [initialFocusOrderId, selectedMapOrderId, mapData]);
-
-  // Coordenadas para la línea de la ruta
-  const routeCoordinates = useMemo(() => {
-    return mapData.map(o => ({
-      latitude: Number(o.latitud),
-      longitude: Number(o.longitud),
-    }));
-  }, [mapData]);
-
-  // Consultar la API de OSRM para trazar las calles reales
-  useEffect(() => {
-    let active = true;
-    if (routeCoordinates.length >= 2) {
-      fetchStreetRoute(routeCoordinates).then(points => {
-        if (!active) return;
-        if (points.length > 0) {
-          setStreetCoordinates(points);
-        } else {
-          // Fallback a líneas rectas por seguridad (sin internet / error API)
-          setStreetCoordinates(routeCoordinates);
-        }
-      });
-    } else {
-      setStreetCoordinates([]);
-    }
-    return () => {
-      active = false;
-    };
-  }, [routeCoordinates]);
-
-  // Separar pedidos completados vs pendientes
-  const completedOrders = useMemo(() => {
-    return mapData.filter(o => normalizeOrderStatus(o.estado) === 'realizado');
-  }, [mapData]);
-
-  const pendingOrders = useMemo(() => {
-    return mapData.filter(o => normalizeOrderStatus(o.estado) !== 'realizado');
-  }, [mapData]);
-
-  // Posición simulada del chofer: cerca de la primera parada pendiente
-  const driverCoordinate = useMemo(() => {
-    if (pendingOrders.length > 0) {
-      // Priorizar el pedido actualmente activo (aceptado o en camino)
-      const activeOrder = pendingOrders.find(
-        (o) => o.estado_id === ORDER_STATUS.ACCEPTED || o.estado_id === ORDER_STATUS.ON_THE_WAY
-      );
-      const firstPending = activeOrder || pendingOrders[0];
-      return {
-        latitude: Number(firstPending.latitud) - 0.0018,
-        longitude: Number(firstPending.longitud) - 0.0015,
-      };
-    }
-    // Si no hay pendientes, en la última completada
-    if (mapData.length > 0) {
-      const last = mapData[mapData.length - 1];
-      return {
-        latitude: Number(last.latitud),
-        longitude: Number(last.longitud),
-      };
-    }
-    return { latitude: -27.4511, longitude: -58.9866 };
-  }, [mapData, pendingOrders]);
-
-  // Obtener posiciones simuladas para los choferes en el mapa general (máximo 3)
-  const activeDriversOnMap = useMemo(() => {
-    if (isChofer || selectedDriverId) {
-      return [];
-    }
-    
-    const limit = 3;
-    const selectedDrivers = drivers.slice(0, limit);
-    
-    return selectedDrivers.map((driver) => {
-      const driverOrders = (workspace.orders || []).filter(o => o.chofer_id === driver.id);
-      const sorted = [...driverOrders].sort(
-        (a, b) => (Number(a.orden_ruta) || 0) - (Number(b.orden_ruta) || 0)
-      );
-      const pending = sorted.filter(o => normalizeOrderStatus(o.estado) !== 'realizado');
-      
-      let coordinate = { latitude: -27.4511, longitude: -58.9866 };
-      
-      if (pending.length > 0) {
-        const firstPending = pending[0];
-        const coords = getDeliveryCoordinates(firstPending, 0);
-        coordinate = {
-          latitude: coords.latitude - 0.0018,
-          longitude: coords.longitude - 0.0015,
-        };
-      } else if (sorted.length > 0) {
-        const last = sorted[sorted.length - 1];
-        const coords = getDeliveryCoordinates(last, 0);
-        coordinate = {
-          latitude: coords.latitude,
-          longitude: coords.longitude,
-        };
-      } else {
-        const indexOffset = drivers.indexOf(driver) * 0.005;
-        coordinate = {
-          latitude: -27.4511 + indexOffset,
-          longitude: -58.9866 - indexOffset,
-        };
-      }
-      
-      return {
-        id: driver.id,
-        nombre: driver.nombre,
-        coordinate,
-      };
-    });
-  }, [drivers, workspace.orders, isChofer, selectedDriverId]);
-
-  // Nombre del chofer activo
-  const activeDriverName = useMemo(() => {
-    if (isChofer) return workspace.profile.nombre;
-    if (selectedDriverId) {
-      const drv = drivers.find(d => d.id === selectedDriverId);
-      return drv ? drv.nombre : 'Chofer seleccionado';
-    }
-    return null;
-  }, [isChofer, selectedDriverId, workspace.profile.nombre, drivers]);
-
-  // Centrar cámara en el chofer
   const centerOnDriver = () => {
     if (mapRef.current && (isChofer || selectedDriverId) && mapData.length > 0) {
       mapRef.current.animateToRegion({
@@ -323,12 +134,7 @@ export function MapPanel({ workspace, initialFocusOrderId }: MapPanelProps) {
           provider={PROVIDER_GOOGLE}
           style={styles.map}
           onPress={() => setSelectedMapOrderId(null)}
-          initialRegion={{
-            latitude: -27.4511,
-            longitude: -58.9866,
-            latitudeDelta: 0.05,
-            longitudeDelta: 0.05,
-          }}
+          initialRegion={MAP_INITIAL_REGION}
         >
           {/* POLILÍNEA DE RUTA (Líneas que siguen calles reales) */}
           {(isChofer || selectedDriverId) && streetCoordinates.length > 1 && (
@@ -353,11 +159,7 @@ export function MapPanel({ workspace, initialFocusOrderId }: MapPanelProps) {
                 setSelectedMapOrderId(order.id);
               }}
             >
-              <MarkerNode
-                index={idx + 1}
-                status={normalizeOrderStatus(order.estado)}
-                showIconOnly={!isChofer && !selectedDriverId}
-              />
+              <MarkerNode index={idx + 1} status={normalizeOrderStatus(order.estado)} showIconOnly={!isChofer && !selectedDriverId} />
             </Marker>
           ))}
 
