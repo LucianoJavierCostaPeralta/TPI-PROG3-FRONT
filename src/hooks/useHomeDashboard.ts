@@ -1,229 +1,101 @@
-import { useCallback, useMemo, useState } from 'react';
-import { useFocusEffect } from 'expo-router';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Alert, BackHandler } from 'react-native';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import {
   acceptDelivery,
   assignDriver,
   createDelivery,
   createDriver,
+  deleteDriver,
   getApiErrorMessage,
   getProfile,
-  listAdminDeliveries,
-  listDriverDeliveries,
-  listDrivers,
   logout,
   updateDeliveryState,
-  type AuthUser,
-  type Delivery,
-  type Driver as ApiDriver,
 } from '../services/api';
+import { DNI_PATTERN, EMAIL_PATTERN, PHONE_PATTERN, isPastDate } from '../utils/validation';
 import {
-  DNI_PATTERN,
-  EMAIL_PATTERN,
-  PHONE_PATTERN,
-  isPastDate,
-  onlyDigits,
-} from '../utils/validation';
-import { type BottomTabMenuItem } from '../components/molecules';
+  deliveryToForm,
+  emptyWorkspace,
+  getTabs,
+  getTitle,
+  initialAdminNotifications,
+  initialChoferNotifications,
+  initialDeliveryForm,
+  initialDriverForm,
+  loadRoleData,
+  mapDelivery,
+  markOrderAsCancelled,
+  normalizeRole,
+} from '../utils/homeDashboard';
+import {
+  type AppNotification,
+  type AppWorkspace,
+  type DeliveryFilter,
+  type DeliveryForm,
+  type DeliveryOrder,
+  type Driver,
+  type DriverFilter,
+  type DriverForm,
+  type HomeScreenProps,
+  type HomeTabKey,
+  ORDER_STATUS,
+} from '../types/workspace';
 
-type UserRole = 'administrador' | 'asesor' | 'chofer';
+function createStatusNotification(
+  action: string,
+  orderId: string,
+  profile: AppWorkspace['profile'],
+): AppNotification | null {
+  const id = String(Date.now());
+  const shortOrderId = orderId.slice(0, 8).toUpperCase();
+  const isChofer = profile.rol === 'chofer';
 
-type Company = {
-  id: string;
-  nombre: string;
-  cuit: string | null;
-  email: string | null;
-  telefono: string | null;
-};
-
-type UserProfile = {
-  id: string;
-  empresa_id: string | null;
-  nombre: string;
-  email: string;
-  rol: UserRole;
-  telefono: string | null;
-  activo: boolean;
-  created_at?: string;
-};
-
-type Driver = {
-  id: string;
-  empresa_id: string;
-  usuario_id: string | null;
-  nombre: string;
-  email: string | null;
-  telefono: string | null;
-  documento: string | null;
-  vehiculo?: unknown;
-  vehicle?: unknown;
-  patente?: unknown;
-  zona?: unknown;
-  zone?: unknown;
-  activo: boolean;
-  created_at: string;
-  fecha_nacimiento?: string | null;
-};
-
-type DeliveryOrder = {
-  id: string;
-  empresa_id?: string | null;
-  chofer_id?: string | null;
-  estado?: string | null;
-  estado_id?: number;
-  cliente?: string | null;
-  cliente_dni?: string | null;
-  created_at?: string | null;
-  updated_at?: string | null;
-  referencia?: string | null;
-  producto?: string | null;
-  observaciones?: string | null;
-  [key: string]: unknown;
-};
-
-type AppWorkspace = {
-  profile: UserProfile;
-  company: Company | null;
-  drivers: Driver[];
-  orders: DeliveryOrder[];
-  admins: UserProfile[];
-};
-
-type HomeScreenProps = {
-  navigation?: {
-    reset: (state: { index: number; routes: Array<{ name: string }> }) => void;
-  };
-};
-
-type HomeTabKey = 'home' | 'deliveries' | 'drivers' | 'admins' | 'map';
-
-type DriverFilter = 'activos' | 'inactivos' | 'todos';
-type DeliveryFilter = 'todos' | 'pendiente' | 'en camino' | 'realizado';
-
-type DriverForm = {
-  nombre: string;
-  email: string;
-  telefono: string;
-  documento: string;
-  fechaNacimiento: string;
-};
-
-type DeliveryForm = {
-  cliente: string;
-  clienteDni: string;
-  destino: string;
-  referencia: string;
-  observaciones: string;
-  fecha: string;
-  productos: string;
-  choferId?: string | null;
-};
-
-const initialDriverForm: DriverForm = {
-  nombre: '',
-  email: '',
-  telefono: '',
-  documento: '',
-  fechaNacimiento: '',
-};
-
-const initialDeliveryForm: DeliveryForm = {
-  cliente: '',
-  clienteDni: '',
-  destino: '',
-  referencia: '',
-  observaciones: '',
-  fecha: '',
-  productos: '',
-};
-
-const emptyWorkspace: AppWorkspace = {
-  profile: {
-    id: 'local-admin-user',
-    empresa_id: 'local-company',
-    nombre: 'Administrador local',
-    email: 'admin@empresa.local',
-    rol: 'administrador',
-    telefono: null,
-    activo: true,
-  },
-  company: {
-    id: 'local-company',
-    nombre: 'Empresa local',
-    cuit: null,
-    email: 'admin@empresa.local',
-    telefono: null,
-  },
-  drivers: [],
-  orders: [],
-  admins: [],
-};
-
-function normalizeRole(role?: string): UserRole {
-  const normalized = role?.toLowerCase();
-  if (normalized === 'chofer' || normalized === 'asesor') return normalized;
-  return 'administrador';
-}
-
-function mapDriver(driver: ApiDriver): Driver {
-  return {
-    id: driver.id,
-    empresa_id: driver.empresa_id,
-    usuario_id: driver.id,
-    nombre: driver.nombre_completo,
-    email: driver.email,
-    telefono: driver.telefono,
-    documento: driver.dni,
-    activo: driver.activo,
-    created_at: driver.created_at,
-    fecha_nacimiento: driver.fecha_nacimiento,
-  };
-}
-
-function mapDelivery(delivery: Delivery): DeliveryOrder {
-  return {
-    ...delivery,
-    estado: delivery.estado?.nombre_estado ?? String(delivery.estado_id),
-    destino: delivery.direccion_destino,
-    productos: delivery.producto,
-  };
-}
-
-async function loadRoleData(_user: AuthUser, role: UserRole) {
-  if (role === 'chofer') {
-    return { drivers: [], orders: (await listDriverDeliveries()).map(mapDelivery) };
-  }
-  if (role === 'administrador') {
-    const [drivers, orders] = await Promise.all([listDrivers(), listAdminDeliveries()]);
-    return { drivers: drivers.map(mapDriver), orders: orders.map(mapDelivery) };
-  }
-  return { drivers: [], orders: [] };
-}
-
-function getTabs(role: AppWorkspace['profile']['rol']): Array<BottomTabMenuItem<HomeTabKey>> {
-  if (role === 'asesor') {
-    return [
-      { key: 'home', label: 'Home', icon: 'home-outline', activeIcon: 'home' },
-      { key: 'admins', label: 'Admins', icon: 'account-tie-outline', activeIcon: 'account-tie' },
-    ];
+  if (action === 'accept') {
+    return {
+      id,
+      titulo: isChofer ? 'Pedido aceptado' : 'Pedido Aceptado',
+      mensaje: isChofer
+        ? `Aceptaste realizar el pedido #${shortOrderId}.`
+        : `El chofer ${profile.nombre} aceptó realizar el pedido #${shortOrderId}.`,
+      tipo: 'success',
+      leida: false,
+      created_at: new Date().toISOString(),
+    };
   }
 
-  if (role === 'chofer') {
-    return [
-      { key: 'home', label: 'Home', icon: 'home-outline', activeIcon: 'home' },
-      { key: 'deliveries', label: 'Pedidos', icon: 'truck-outline', activeIcon: 'truck' },
-      { key: 'map', label: 'Mapa', icon: 'map-outline', activeIcon: 'map' },
-    ];
+  if (action === 'delivered') {
+    return {
+      id,
+      titulo: isChofer ? 'Entrega finalizada' : 'Entrega Finalizada',
+      mensaje: isChofer
+        ? `Entregaste el pedido #${shortOrderId} con éxito.`
+        : `El chofer ${profile.nombre} finalizó la entrega del pedido #${shortOrderId}.`,
+      tipo: 'success',
+      leida: false,
+      created_at: new Date().toISOString(),
+    };
   }
 
-  return [
-    { key: 'home', label: 'Home', icon: 'home-outline', activeIcon: 'home' },
-    { key: 'deliveries', label: 'Entregas', icon: 'truck-outline', activeIcon: 'truck' },
-    { key: 'drivers', label: 'Choferes', icon: 'account-group-outline', activeIcon: 'account-group' },
-    { key: 'map', label: 'Mapa', icon: 'map-outline', activeIcon: 'map' },
-  ];
+  if (action === 'cancelled') {
+    return {
+      id,
+      titulo: isChofer ? 'Pedido cancelado' : 'Pedido Cancelado',
+      mensaje: isChofer
+        ? `Cancelaste el pedido #${shortOrderId}.`
+        : `El chofer ${profile.nombre} canceló la entrega del pedido #${shortOrderId}.`,
+      tipo: 'error',
+      leida: false,
+      created_at: new Date().toISOString(),
+    };
+  }
+
+  return null;
 }
 
 export function useHomeDashboard({ navigation }: HomeScreenProps) {
+  const params = useLocalSearchParams<{ openDrawer?: string; activeTab?: string }>();
+  const router = useRouter();
+
   const [activeTab, setActiveTab] = useState<HomeTabKey>('home');
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [workspace, setWorkspace] = useState<AppWorkspace>(emptyWorkspace);
@@ -240,8 +112,21 @@ export function useHomeDashboard({ navigation }: HomeScreenProps) {
   const [error, setError] = useState('');
   const [driverForm, setDriverForm] = useState<DriverForm>(initialDriverForm);
   const [deliveryForm, setDeliveryForm] = useState<DeliveryForm>(initialDeliveryForm);
+  const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
+  const [selectedDelivery, setSelectedDelivery] = useState<DeliveryOrder | null>(null);
+  const [isEditingDelivery, setIsEditingDelivery] = useState(false);
 
   const tabs = useMemo(() => getTabs(workspace.profile.rol), [workspace.profile.rol]);
+
+  useEffect(() => {
+    if (params.openDrawer === 'true') {
+      setDrawerVisible(true);
+      if (params.activeTab) {
+        setActiveTab(params.activeTab as HomeTabKey);
+      }
+      router.setParams({ openDrawer: undefined, activeTab: undefined });
+    }
+  }, [params.openDrawer, params.activeTab, router]);
 
   const loadWorkspace = useCallback(async (showRefresh = false) => {
     if (showRefresh) {
@@ -250,11 +135,13 @@ export function useHomeDashboard({ navigation }: HomeScreenProps) {
       setLoading(true);
     }
     setError('');
+
     try {
       const user = await getProfile();
       const role = normalizeRole(user.rol?.nombre_rol);
       const roleData = await loadRoleData(user, role);
-      setWorkspace({
+
+      setWorkspace((prev) => ({
         ...emptyWorkspace,
         ...roleData,
         profile: {
@@ -273,7 +160,10 @@ export function useHomeDashboard({ navigation }: HomeScreenProps) {
           email: null,
           telefono: null,
         } : null,
-      });
+        notifications: prev.notifications.length > 0 && prev.profile.rol === role
+          ? prev.notifications
+          : (role === 'chofer' ? initialChoferNotifications : initialAdminNotifications),
+      }));
     } catch (requestError) {
       setError(getApiErrorMessage(requestError, 'No se pudo cargar el perfil.'));
     } finally {
@@ -285,18 +175,62 @@ export function useHomeDashboard({ navigation }: HomeScreenProps) {
   useFocusEffect(
     useCallback(() => {
       void loadWorkspace();
-    }, [loadWorkspace])
+
+      const handleBackPress = () => {
+        if (selectedDelivery) {
+          if (isEditingDelivery) {
+            setIsEditingDelivery(false);
+          } else {
+            setSelectedDelivery(null);
+          }
+          return true;
+        }
+        if (selectedDriver) {
+          setSelectedDriver(null);
+          return true;
+        }
+        if (showDeliveryForm) {
+          setShowDeliveryForm(false);
+          return true;
+        }
+        if (showDriverForm) {
+          setShowDriverForm(false);
+          return true;
+        }
+        if (activeTab !== 'home') {
+          setActiveTab('home');
+          return true;
+        }
+        return false;
+      };
+
+      const subscription = BackHandler.addEventListener('hardwareBackPress', handleBackPress);
+      return () => subscription.remove();
+    }, [activeTab, isEditingDelivery, loadWorkspace, selectedDelivery, selectedDriver, showDeliveryForm, showDriverForm]),
   );
 
-  const handleSignOut = useCallback(async () => {
-    try {
-      await logout();
-    } finally {
-      navigation?.reset({
-        index: 0,
-        routes: [{ name: 'LoginScreen' }],
-      });
-    }
+  const handleSignOut = useCallback(() => {
+    Alert.alert(
+      'Cerrar Sesión',
+      '¿Estás seguro de que deseas cerrar sesión?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Cerrar Sesión',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await logout();
+            } finally {
+              navigation?.reset({
+                index: 0,
+                routes: [{ name: 'LoginScreen' }],
+              });
+            }
+          },
+        },
+      ],
+    );
   }, [navigation]);
 
   const updateDriverField = useCallback((field: keyof DriverForm, value: string) => {
@@ -307,30 +241,36 @@ export function useHomeDashboard({ navigation }: HomeScreenProps) {
     setDeliveryForm((current) => ({ ...current, [field]: value }));
   }, []);
 
-  const handleCreateDriver = useCallback(async () => {
-    if (!driverForm.nombre.trim()) {
-      setError('Ingresá el nombre del chofer.');
-      return;
-    }
-
+  const validateDriverForm = useCallback(() => {
+    if (!driverForm.nombre.trim()) return 'Ingresá el nombre del chofer.';
     if (!/^[\p{L}\s]+$/u.test(driverForm.nombre.trim()) || driverForm.nombre.trim().length < 3) {
-      setError('El nombre debe tener al menos 3 letras y no puede contener números.');
-      return;
+      return 'El nombre debe tener al menos 3 letras y no puede contener números.';
     }
-    if (!DNI_PATTERN.test(driverForm.documento)) {
-      setError('El DNI debe tener exactamente 8 números.');
-      return;
-    }
-    if (!isPastDate(driverForm.fechaNacimiento)) {
-      setError('Seleccioná una fecha de nacimiento anterior a hoy.');
-      return;
-    }
-    if (!EMAIL_PATTERN.test(driverForm.email.trim())) {
-      setError('Ingresá un correo válido, por ejemplo example@example.com.');
-      return;
-    }
+    if (!DNI_PATTERN.test(driverForm.documento)) return 'El DNI debe tener exactamente 8 números.';
+    if (!isPastDate(driverForm.fechaNacimiento)) return 'Seleccioná una fecha de nacimiento anterior a hoy.';
+    if (!EMAIL_PATTERN.test(driverForm.email.trim())) return 'Ingresá un correo válido, por ejemplo example@example.com.';
     if (driverForm.telefono && !PHONE_PATTERN.test(driverForm.telefono)) {
-      setError('El teléfono debe contener entre 8 y 15 números.');
+      return 'El teléfono debe contener entre 8 y 15 números.';
+    }
+    return null;
+  }, [driverForm]);
+
+  const validateDeliveryForm = useCallback((requireProducts: boolean) => {
+    if (!deliveryForm.cliente.trim()) return 'Ingresá el cliente.';
+    if (!deliveryForm.destino.trim()) return 'Ingresá el destino.';
+    if (deliveryForm.cliente.trim().length < 2) return 'El nombre del cliente debe tener al menos 2 caracteres.';
+    if (!DNI_PATTERN.test(deliveryForm.clienteDni)) return 'El DNI del cliente debe tener exactamente 8 números.';
+    if (deliveryForm.destino.trim().length < 3) return 'El destino debe tener al menos 3 caracteres.';
+    if (requireProducts && deliveryForm.productos.trim().length < 2) {
+      return 'El producto debe tener al menos 2 caracteres.';
+    }
+    return null;
+  }, [deliveryForm]);
+
+  const handleCreateDriver = useCallback(async () => {
+    const validationError = validateDriverForm();
+    if (validationError) {
+      setError(validationError);
       return;
     }
 
@@ -353,32 +293,26 @@ export function useHomeDashboard({ navigation }: HomeScreenProps) {
     } finally {
       setSavingDriver(false);
     }
-  }, [driverForm, loadWorkspace]);
+  }, [driverForm, loadWorkspace, validateDriverForm]);
+
+  const handleDeleteDriver = useCallback(async (driverId: string) => {
+    setError('');
+    try {
+      await deleteDriver(driverId);
+      setWorkspace((current) => ({
+        ...current,
+        drivers: current.drivers.filter((driver) => driver.id !== driverId),
+      }));
+      Alert.alert('Éxito', 'El chofer ha sido eliminado correctamente.');
+    } catch (requestError) {
+      Alert.alert('Error', getApiErrorMessage(requestError, 'No se pudo eliminar el chofer.'));
+    }
+  }, []);
 
   const handleCreateDelivery = useCallback(async () => {
-    if (!deliveryForm.cliente.trim()) {
-      setError('Ingresá el cliente.');
-      return;
-    }
-
-    if (!deliveryForm.destino.trim()) {
-      setError('Ingresá el destino.');
-      return;
-    }
-    if (deliveryForm.cliente.trim().length < 2) {
-      setError('El nombre del cliente debe tener al menos 2 caracteres.');
-      return;
-    }
-    if (!DNI_PATTERN.test(deliveryForm.clienteDni)) {
-      setError('El DNI del cliente debe tener exactamente 8 números.');
-      return;
-    }
-    if (deliveryForm.destino.trim().length < 3) {
-      setError('El destino debe tener al menos 3 caracteres.');
-      return;
-    }
-    if (deliveryForm.productos.trim().length < 2) {
-      setError('El producto debe tener al menos 2 caracteres.');
+    const validationError = validateDeliveryForm(true);
+    if (validationError) {
+      setError(validationError);
       return;
     }
 
@@ -386,13 +320,16 @@ export function useHomeDashboard({ navigation }: HomeScreenProps) {
     setError('');
 
     try {
-      await createDelivery({
+      const newDelivery = await createDelivery({
         cliente: deliveryForm.cliente.trim(),
         cliente_dni: deliveryForm.clienteDni,
         producto: deliveryForm.productos.trim(),
         direccion_destino: deliveryForm.destino.trim(),
         referencia: deliveryForm.referencia.trim() || deliveryForm.observaciones.trim() || undefined,
       });
+      if (deliveryForm.choferId) {
+        await assignDriver(newDelivery.id, deliveryForm.choferId);
+      }
       setDeliveryForm(initialDeliveryForm);
       setShowDeliveryForm(false);
       await loadWorkspace(true);
@@ -401,7 +338,7 @@ export function useHomeDashboard({ navigation }: HomeScreenProps) {
     } finally {
       setSavingDelivery(false);
     }
-  }, [deliveryForm, loadWorkspace]);
+  }, [deliveryForm, loadWorkspace, validateDeliveryForm]);
 
   const handleAssignDriver = useCallback(async (orderId: string, driverId: string | null) => {
     setAssigningOrderId(orderId);
@@ -409,6 +346,7 @@ export function useHomeDashboard({ navigation }: HomeScreenProps) {
 
     try {
       await assignDriver(orderId, driverId);
+      setSelectedDelivery((current) => (current?.id === orderId ? { ...current, chofer_id: driverId } : current));
       await loadWorkspace(true);
     } catch (requestError) {
       setError(getApiErrorMessage(requestError, 'No se pudo asignar el chofer.'));
@@ -417,95 +355,240 @@ export function useHomeDashboard({ navigation }: HomeScreenProps) {
     }
   }, [loadWorkspace]);
 
+  const handleEditDelivery = useCallback(async () => {
+    if (!selectedDelivery) return;
+
+    const validationError = validateDeliveryForm(false);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    setSavingDelivery(true);
+    setError('');
+
+    try {
+      if (deliveryForm.choferId !== selectedDelivery.chofer_id) {
+        await assignDriver(selectedDelivery.id, deliveryForm.choferId || null);
+      }
+
+      const updatedOrder: DeliveryOrder = {
+        ...selectedDelivery,
+        cliente: deliveryForm.cliente.trim(),
+        cliente_dni: deliveryForm.clienteDni,
+        direccion_destino: deliveryForm.destino.trim(),
+        referencia: deliveryForm.referencia.trim(),
+        producto: deliveryForm.productos.trim(),
+        observaciones: deliveryForm.observaciones.trim(),
+        chofer_id: deliveryForm.choferId || null,
+        created_at: deliveryForm.fecha ? `${deliveryForm.fecha}T12:00:00.000000Z` : selectedDelivery.created_at,
+      };
+
+      setWorkspace((current) => ({
+        ...current,
+        orders: current.orders.map((order) => (order.id === selectedDelivery.id ? updatedOrder : order)),
+      }));
+      setSelectedDelivery(updatedOrder);
+      setIsEditingDelivery(false);
+      setDeliveryForm(initialDeliveryForm);
+      await loadWorkspace(true);
+      Alert.alert('Éxito', 'La entrega ha sido guardada correctamente.');
+    } catch {
+      setError('No se pudo guardar la edición.');
+    } finally {
+      setSavingDelivery(false);
+    }
+  }, [deliveryForm, loadWorkspace, selectedDelivery, validateDeliveryForm]);
+
   const handleUpdateOrderStatus = useCallback(async (orderId: string, action: string, clienteDni?: string) => {
+    if (workspace.profile.rol === 'chofer' && (action === 'accept' || action === 'on_the_way')) {
+      const activeOrder = workspace.orders.find(
+        (order) =>
+          (order.estado_id === ORDER_STATUS.ACCEPTED || order.estado_id === ORDER_STATUS.ON_THE_WAY) &&
+          String(order.id) !== String(orderId),
+      );
+      if (activeOrder) {
+        Alert.alert(
+          'Pedido en curso',
+          'Ya tienes un pedido activo. Debes completar o cancelar tu pedido actual antes de iniciar otro.',
+        );
+        return;
+      }
+    }
+
     setUpdatingOrderId(orderId);
     setError('');
 
     try {
-      if (action === 'accept') await acceptDelivery(orderId);
-      if (action === 'on_the_way') await updateDeliveryState(orderId, 4);
-      if (action === 'delivered') await updateDeliveryState(orderId, 5, clienteDni);
+      let updatedOrder: DeliveryOrder | null = null;
+
+      if (action === 'accept') {
+        updatedOrder = mapDelivery(await acceptDelivery(orderId));
+      }
+      if (action === 'on_the_way') {
+        updatedOrder = mapDelivery(await updateDeliveryState(orderId, ORDER_STATUS.ON_THE_WAY));
+      }
+      if (action === 'delivered') {
+        updatedOrder = mapDelivery(await updateDeliveryState(orderId, ORDER_STATUS.DELIVERED, clienteDni));
+      }
+      if (action === 'cancelled') {
+        await markOrderAsCancelled(orderId);
+        const found = workspace.orders.find((order) => order.id === orderId);
+        if (found) {
+          updatedOrder = { ...found, estado_id: ORDER_STATUS.CANCELLED, estado: 'cancelled' };
+        }
+      }
+
+      const notification = createStatusNotification(action, orderId, workspace.profile);
+      if (notification) {
+        setWorkspace((prev) => ({
+          ...prev,
+          notifications: [notification, ...(prev.notifications || [])],
+        }));
+      }
+      if (updatedOrder) {
+        setSelectedDelivery(updatedOrder);
+      }
       await loadWorkspace(true);
     } catch (requestError) {
       setError(getApiErrorMessage(requestError, 'No se pudo actualizar el estado.'));
     } finally {
       setUpdatingOrderId(null);
     }
-  }, [loadWorkspace]);
+  }, [loadWorkspace, workspace.orders, workspace.profile]);
+
+  const handleMarkAsRead = useCallback((id: string) => {
+    setWorkspace((prev) => ({
+      ...prev,
+      notifications: prev.notifications.map((notification) =>
+        notification.id === id ? { ...notification, leida: true } : notification,
+      ),
+    }));
+  }, []);
+
+  const handleMarkAllAsRead = useCallback(() => {
+    setWorkspace((prev) => ({
+      ...prev,
+      notifications: prev.notifications.map((notification) => ({ ...notification, leida: true })),
+    }));
+  }, []);
+
+  const startEditingDelivery = useCallback(() => {
+    if (!selectedDelivery) return;
+    setDeliveryForm(deliveryToForm(selectedDelivery));
+    setIsEditingDelivery(true);
+  }, [selectedDelivery]);
+
+  const cancelEditingDelivery = useCallback(() => {
+    setIsEditingDelivery(false);
+    setDeliveryForm(initialDeliveryForm);
+  }, []);
+
+  const cancelDeliveryForm = useCallback(() => {
+    setShowDeliveryForm(false);
+    setDeliveryForm(initialDeliveryForm);
+  }, []);
+
+  const toggleDeliveryForm = useCallback(() => {
+    if (!showDeliveryForm) {
+      setDeliveryForm(initialDeliveryForm);
+    }
+    setShowDeliveryForm((visible) => !visible);
+  }, [showDeliveryForm]);
 
   const subtitle = useMemo(() => {
-    if (workspace.profile.rol === 'asesor') {
-      return 'Panel de asesores.';
-    }
-
-    if (workspace.profile.rol === 'chofer') {
-      return 'Tus pedidos asignados.';
-    }
-
+    if (workspace.profile.rol === 'asesor') return 'Panel de asesores.';
+    if (workspace.profile.rol === 'chofer') return 'Tus pedidos asignados.';
     return workspace.company?.nombre ?? 'Gestioná tu empresa, choferes y pedidos.';
   }, [workspace.company?.nombre, workspace.profile.rol]);
 
-  const handleOpenMap = useCallback(() => setActiveTab('map'), []);
-  const handleOpenDriverForm = useCallback(() => {
-    setActiveTab('drivers');
-    setShowDriverForm(true);
-  }, []);
-  const handleOpenDeliveryForm = useCallback(() => {
-    setActiveTab('deliveries');
-    setShowDeliveryForm(true);
-  }, []);
+  const headerNav = useMemo(() => {
+    let title = getTitle(activeTab, workspace.profile.rol);
+    let headerSubtitle = subtitle;
+    let onBack: (() => void) | undefined;
+
+    if (activeTab === 'drivers') {
+      if (showDriverForm) {
+        title = 'Nuevo Chofer';
+        headerSubtitle = 'Registrar un conductor en la empresa';
+        onBack = () => setShowDriverForm(false);
+      } else if (selectedDriver) {
+        title = 'Detalle de Chofer';
+        headerSubtitle = 'Información de la cuenta';
+        onBack = () => setSelectedDriver(null);
+      }
+    } else if (activeTab === 'deliveries') {
+      if (showDeliveryForm) {
+        title = 'Nueva Entrega';
+        headerSubtitle = 'Crear un nuevo pedido';
+        onBack = () => setShowDeliveryForm(false);
+      } else if (selectedDelivery) {
+        if (isEditingDelivery) {
+          title = 'Editar entrega';
+          headerSubtitle = 'Modificar datos del pedido';
+          onBack = () => setIsEditingDelivery(false);
+        } else {
+          title = 'Detalle entrega';
+          headerSubtitle = `Pedido #${selectedDelivery.id.slice(0, 8).toUpperCase()}`;
+          onBack = () => setSelectedDelivery(null);
+        }
+      }
+    } else if (activeTab === 'notifications') {
+      title = 'Notificaciones';
+      headerSubtitle = 'Alertas del sistema';
+      onBack = () => setActiveTab('home');
+    }
+
+    return { title, subtitle: headerSubtitle, onBack };
+  }, [activeTab, isEditingDelivery, selectedDelivery, selectedDriver, showDeliveryForm, showDriverForm, subtitle, workspace.profile.rol]);
 
   return {
     activeTab,
-    setActiveTab,
+    assigningOrderId,
+    cancelDeliveryForm,
+    cancelEditingDelivery,
+    deliveryFilter,
+    deliveryForm,
     drawerVisible,
-    setDrawerVisible,
-    workspace,
+    driverFilter,
+    driverForm,
+    error,
+    handleAssignDriver,
+    handleCreateDelivery,
+    handleCreateDriver,
+    handleDeleteDriver,
+    handleEditDelivery,
+    handleMarkAllAsRead,
+    handleMarkAsRead,
+    handleSignOut,
+    handleUpdateOrderStatus,
+    headerNav,
+    isEditingDelivery,
+    loadWorkspace,
     loading,
     refreshing,
-    savingDriver,
     savingDelivery,
-    showDriverForm,
+    savingDriver,
+    selectedDelivery,
+    selectedDriver,
+    setActiveTab,
+    setDeliveryFilter,
+    setDrawerVisible,
+    setDriverFilter,
+    setIsEditingDelivery,
+    setSelectedDelivery,
+    setSelectedDriver,
+    setShowDeliveryForm,
     setShowDriverForm,
     showDeliveryForm,
-    setShowDeliveryForm,
-    driverFilter,
-    setDriverFilter,
-    deliveryFilter,
-    setDeliveryFilter,
-    assigningOrderId,
-    updatingOrderId,
-    error,
-    setError,
-    driverForm,
-    deliveryForm,
-    loadWorkspace,
-    handleSignOut,
-    updateDriverField,
-    updateDeliveryField,
-    handleCreateDriver,
-    handleCreateDelivery,
-    handleAssignDriver,
-    handleUpdateOrderStatus,
-    handleOpenMap,
-    handleOpenDriverForm,
-    handleOpenDeliveryForm,
-    subtitle,
+    showDriverForm,
+    startEditingDelivery,
     tabs,
+    toggleDeliveryForm,
+    unreadCount: workspace.notifications.filter((notification) => !notification.leida).length,
+    updateDeliveryField,
+    updateDriverField,
+    updatingOrderId,
+    workspace,
   };
 }
-
-export type {
-  AppWorkspace,
-  Company,
-  DeliveryFilter,
-  DeliveryForm,
-  DeliveryOrder,
-  Driver,
-  DriverFilter,
-  DriverForm,
-  HomeScreenProps,
-  HomeTabKey,
-  UserProfile,
-  UserRole,
-};

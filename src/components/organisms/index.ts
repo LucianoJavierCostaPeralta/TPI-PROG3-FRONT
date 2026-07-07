@@ -12,3 +12,4 @@ export { DeliveryDetailPanel } from './DeliveryDetailPanel';
 export { DeliveryEditPanel } from './DeliveryEditPanel';
 export { NotificationsPanel } from './NotificationsPanel';
 
+export { HomeDashboardContent } from './HomeDashboardContent';
