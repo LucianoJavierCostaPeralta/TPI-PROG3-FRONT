@@ -14,6 +14,18 @@ export const commonColors = {
   blackAlpha20: 'rgba(0, 0, 0, 0.2)',
 };
 
+export const AVATAR_COLORS = [
+  '#4285F4',
+  '#EA4335',
+  '#FBBC05',
+  '#34A853',
+  '#9C27B0',
+  '#009688',
+  '#FF5722',
+  '#673AB7',
+  '#3F51B5',
+] as const;
+
 export const neutralColors = {
   neutral900: '#0B1220',
   neutral800: '#1E293B',

@@ -1,6 +1,6 @@
 import { Image, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useTheme, type MD3Theme } from 'react-native-paper';
-import { palette } from '../../styles/theme';
+import { AVATAR_COLORS, commonColors } from '../../constants/colors';
 
 type UserAvatarProps = {
   name: string;
@@ -23,28 +23,17 @@ export function UserAvatar({ name, size = 40, style, imageUri }: UserAvatarProps
 
   // Paleta de colores vibrantes y sólidos inspirada en Google
   const getBackgroundColor = () => {
-    if (!name || !name.trim()) return palette.googleBlue;
+    if (!name || !name.trim()) return AVATAR_COLORS[0];
     let hash = 0;
     for (let i = 0; i < name.length; i++) {
       hash = name.charCodeAt(i) + ((hash << 5) - hash);
     }
-    const googleColors = [
-      palette.googleBlue,
-      palette.googleRed,
-      palette.googleYellow,
-      palette.googleGreen,
-      palette.avatarPurple,
-      palette.avatarTeal,
-      palette.avatarOrange,
-      palette.avatarDeepPurple,
-      palette.avatarIndigo,
-    ];
-    return googleColors[Math.abs(hash) % googleColors.length];
+    return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
   };
 
   const initials = getInitials(name);
   const bgColor = getBackgroundColor();
-  const textColor = palette.white;
+  const textColor = commonColors.white;
 
   if (imageUri) {
     return (
