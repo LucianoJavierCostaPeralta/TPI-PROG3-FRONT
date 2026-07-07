@@ -3,7 +3,7 @@ import { StyleSheet, View, BackHandler } from 'react-native';
 import { Text, useTheme, type MD3Theme, Surface } from 'react-native-paper';
 import { ScreenLayout } from '../components/templates/ScreenLayout';
 import { spacing, radii } from '../styles/theme';
-import { useStaticData } from '../hooks/useStaticData';
+import { getLegalContent } from '../constants/legal';
 
 type LegalScreenProps = {
   titulo: string;
@@ -14,7 +14,6 @@ type LegalScreenProps = {
 export function LegalScreen({ titulo, contenido, onBack }: LegalScreenProps) {
   const theme = useTheme<MD3Theme>();
   const styles = createStyles(theme);
-  const { getLegalContent } = useStaticData();
 
   useEffect(() => {
     const handleBack = () => {

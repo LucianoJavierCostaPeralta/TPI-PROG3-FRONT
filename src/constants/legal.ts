@@ -1,6 +1,4 @@
-import { useCallback, useMemo } from 'react';
-
-const LEGAL_TEXTS = {
+export const LEGAL_TEXTS = {
   privacidad: `En ZoneScore, nos comprometemos a proteger su privacidad. Esta Política de Privacidad describe cómo recopilamos, usamos y protegemos su información personal.
 
 1. Recopilación de Información: Recopilamos información necesaria para la operación del servicio logístico, como nombres de usuario, correos electrónicos, números de teléfono, detalles de vehículos e historial de entregas.
@@ -17,29 +15,20 @@ const LEGAL_TEXTS = {
 5. Modificaciones: Nos reservamos el derecho de modificar estos términos en cualquier momento. El uso continuado de la app implica la aceptación de los nuevos términos.`,
 } as const;
 
-export const useStaticData = () => {
-  const legalContentByTitle = useMemo(
-    () => [
-      { match: ['privacidad'], content: LEGAL_TEXTS.privacidad },
-      { match: ['terminos', 'términos'], content: LEGAL_TEXTS.terminos },
-    ],
-    [],
-  );
+export const getLegalContent = (titulo: string, contenido?: string) => {
+  if (contenido?.trim()) {
+    return contenido;
+  }
 
-  const getLegalContent = useCallback((titulo: string, contenido?: string) => {
-    if (contenido?.trim()) {
-      return contenido;
-    }
+  const normalizedTitle = titulo.toLowerCase();
 
-    const normalizedTitle = titulo.toLowerCase();
-    const entry = legalContentByTitle.find((item) =>
-      item.match.some((pattern) => normalizedTitle.includes(pattern)),
-    );
+  if (normalizedTitle.includes('privacidad')) {
+    return LEGAL_TEXTS.privacidad;
+  }
 
-    return entry?.content ?? LEGAL_TEXTS.terminos;
-  }, [legalContentByTitle]);
+  if (normalizedTitle.includes('terminos') || normalizedTitle.includes('términos')) {
+    return LEGAL_TEXTS.terminos;
+  }
 
-  return {
-    getLegalContent,
-  };
+  return LEGAL_TEXTS.terminos;
 };
