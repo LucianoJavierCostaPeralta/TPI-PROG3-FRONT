@@ -6,25 +6,20 @@ const COMPLETED_STATUSES = ['realizado', 'entregado', 'finalizado', 'delivered']
 const ASSIGNED_STATUSES = ['2', '3', 'assigned', 'accepted', 'por aceptar', 'aceptado', 'asignado'];
 const ON_THE_WAY_STATUSES = ['4', 'on_the_way', 'en camino'];
 
-export function getStatusText(status: unknown) {
-  return String(status ?? '').toLowerCase();
-}
+export const getStatusText = (status: unknown) => String(status ?? '').toLowerCase();
 
-export function isCancelledOrder(order: DeliveryOrder) {
-  return order.estado_id === ORDER_STATUS.CANCELLED || CANCELLED_STATUSES.includes(getStatusText(order.estado));
-}
+export const isCancelledOrder = (order: DeliveryOrder) =>
+  order.estado_id === ORDER_STATUS.CANCELLED || CANCELLED_STATUSES.includes(getStatusText(order.estado));
 
-export function isCompletedOrder(order: DeliveryOrder) {
-  return order.estado_id === ORDER_STATUS.DELIVERED ||
-    order.estado_id === ORDER_STATUS.FINISHED ||
-    COMPLETED_STATUSES.includes(getStatusText(order.estado));
-}
+export const isCompletedOrder = (order: DeliveryOrder) =>
+  order.estado_id === ORDER_STATUS.DELIVERED ||
+  order.estado_id === ORDER_STATUS.FINISHED ||
+  COMPLETED_STATUSES.includes(getStatusText(order.estado));
 
-export function isActiveOrder(order: DeliveryOrder) {
-  return order.estado_id === ORDER_STATUS.ACCEPTED || order.estado_id === ORDER_STATUS.ON_THE_WAY;
-}
+export const isActiveOrder = (order: DeliveryOrder) =>
+  order.estado_id === ORDER_STATUS.ACCEPTED || order.estado_id === ORDER_STATUS.ON_THE_WAY;
 
-export function getDeliveryStatusBadge(statusId?: number, statusText?: string | null) {
+export const getDeliveryStatusBadge = (statusId?: number, statusText?: string | null) => {
   const id = statusId ?? ORDER_STATUS.PENDING;
   const text = getStatusText(statusText ?? 'pendiente');
 
@@ -38,4 +33,4 @@ export function getDeliveryStatusBadge(statusId?: number, statusText?: string | 
     return { label: 'En camino', color: '#15803D', bg: '#DCFCE7', dotColor: '#15803D' };
   }
   return { label: 'Pendiente', color: palette.neutral600, bg: palette.neutral200, dotColor: palette.neutral600 };
-}
+};

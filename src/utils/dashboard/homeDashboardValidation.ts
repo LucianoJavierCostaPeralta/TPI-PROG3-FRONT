@@ -1,7 +1,7 @@
 import { type DeliveryForm, type DriverForm } from '../../types/workspace';
 import { DNI_PATTERN, EMAIL_PATTERN, PHONE_PATTERN, isPastDate } from '../validation';
 
-export function validateDriverForm(driverForm: DriverForm) {
+export const validateDriverForm = (driverForm: DriverForm) => {
   if (!driverForm.nombre.trim()) return 'Ingresá el nombre del chofer.';
   if (!/^[\p{L}\s]+$/u.test(driverForm.nombre.trim()) || driverForm.nombre.trim().length < 3) {
     return 'El nombre debe tener al menos 3 letras y no puede contener números.';
@@ -15,7 +15,7 @@ export function validateDriverForm(driverForm: DriverForm) {
   return null;
 }
 
-export function validateDeliveryForm(deliveryForm: DeliveryForm, requireProducts: boolean) {
+export const validateDeliveryForm = (deliveryForm: DeliveryForm, requireProducts: boolean) => {
   if (!deliveryForm.cliente.trim()) return 'Ingresá el cliente.';
   if (!deliveryForm.destino.trim()) return 'Ingresá el destino.';
   if (deliveryForm.cliente.trim().length < 2) return 'El nombre del cliente debe tener al menos 2 caracteres.';
@@ -25,4 +25,4 @@ export function validateDeliveryForm(deliveryForm: DeliveryForm, requireProducts
     return 'El producto debe tener al menos 2 caracteres.';
   }
   return null;
-}
+};

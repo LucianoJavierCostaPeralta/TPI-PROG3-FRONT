@@ -20,7 +20,7 @@ type UseDashboardRouteEffectsParams = {
   showDriverForm: boolean;
 };
 
-export function useDashboardRouteEffects({
+export const useDashboardRouteEffects = ({
   activeTab,
   isEditingDelivery,
   loadWorkspace,
@@ -35,7 +35,7 @@ export function useDashboardRouteEffects({
   setShowDriverForm,
   showDeliveryForm,
   showDriverForm,
-}: UseDashboardRouteEffectsParams) {
+}: UseDashboardRouteEffectsParams) => {
   const params = useLocalSearchParams<{ openDrawer?: string; activeTab?: string }>();
   const router = useRouter();
 
@@ -80,4 +80,4 @@ export function useDashboardRouteEffects({
       return () => subscription.remove();
     }, [activeTab, isEditingDelivery, loadWorkspace, selectedDelivery, selectedDriver, showDeliveryForm, showDriverForm]),
   );
-}
+};

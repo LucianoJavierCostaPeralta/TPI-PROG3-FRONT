@@ -20,7 +20,7 @@ type UseDeliveryActionsParams = {
   showDeliveryForm: boolean;
 };
 
-export function useDeliveryActions({
+export const useDeliveryActions = ({
   deliveryForm,
   loadWorkspace,
   selectedDelivery,
@@ -33,7 +33,7 @@ export function useDeliveryActions({
   setShowDeliveryForm,
   setWorkspace,
   showDeliveryForm,
-}: UseDeliveryActionsParams) {
+}: UseDeliveryActionsParams) => {
   const updateDeliveryField = useCallback((field: keyof DeliveryForm, value: string) => {
     setDeliveryForm((current) => ({ ...current, [field]: value }));
   }, [setDeliveryForm]);
@@ -162,4 +162,4 @@ export function useDeliveryActions({
     toggleDeliveryForm,
     updateDeliveryField,
   };
-}
+};

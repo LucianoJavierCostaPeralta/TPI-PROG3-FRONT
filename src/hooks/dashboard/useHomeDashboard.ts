@@ -10,7 +10,7 @@ import { useWorkspaceData } from '../workspace/useWorkspaceData';
 import { getTabs } from '../../utils/dashboard/homeDashboard';
 import { type HomeScreenProps } from '../../types/workspace';
 
-export function useHomeDashboard({ navigation }: HomeScreenProps) {
+export const useHomeDashboard = ({ navigation }: HomeScreenProps) => {
   const state = useDashboardState();
   const workspaceState = useWorkspaceData();
   const { workspace, loadWorkspace, setError, setWorkspace } = workspaceState;
@@ -96,4 +96,4 @@ export function useHomeDashboard({ navigation }: HomeScreenProps) {
     headerNav,
     tabs,
   };
-}
+};

@@ -10,7 +10,7 @@ import {
   type HomeTabKey,
 } from '../../types/workspace';
 
-export function useDashboardState() {
+export const useDashboardState = () => {
   const [activeTab, setActiveTab] = useState<HomeTabKey>('home');
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [savingDriver, setSavingDriver] = useState(false);
@@ -59,4 +59,4 @@ export function useDashboardState() {
     showDriverForm,
     updatingOrderId,
   };
-}
+};

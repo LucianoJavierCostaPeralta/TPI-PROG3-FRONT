@@ -15,7 +15,7 @@ type UseDriverActionsParams = {
   setWorkspace: React.Dispatch<React.SetStateAction<AppWorkspace>>;
 };
 
-export function useDriverActions({
+export const useDriverActions = ({
   driverForm,
   loadWorkspace,
   setDriverForm,
@@ -23,7 +23,7 @@ export function useDriverActions({
   setSavingDriver,
   setShowDriverForm,
   setWorkspace,
-}: UseDriverActionsParams) {
+}: UseDriverActionsParams) => {
   const updateDriverField = useCallback((field: keyof DriverForm, value: string) => {
     setDriverForm((current) => ({ ...current, [field]: value }));
   }, [setDriverForm]);
@@ -75,4 +75,4 @@ export function useDriverActions({
     handleDeleteDriver,
     updateDriverField,
   };
-}
+};

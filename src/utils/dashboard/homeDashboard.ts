@@ -109,13 +109,13 @@ export const emptyWorkspace: AppWorkspace = {
 
 const CANCELLED_ORDERS_KEY = 'zonescore:cancelled_orders';
 
-export function normalizeRole(role?: string): UserRole {
+export const normalizeRole = (role?: string): UserRole => {
   const normalized = role?.toLowerCase();
   if (normalized === 'chofer' || normalized === 'asesor') return normalized;
   return 'administrador';
 }
 
-export function mapDriver(driver: ApiDriver) {
+export const mapDriver = (driver: ApiDriver) => {
   return {
     id: driver.id,
     empresa_id: driver.empresa_id,
@@ -130,7 +130,7 @@ export function mapDriver(driver: ApiDriver) {
   };
 }
 
-export function mapDelivery(delivery: Delivery): DeliveryOrder {
+export const mapDelivery = (delivery: Delivery): DeliveryOrder => {
   return {
     ...delivery,
     id: String(delivery.id),
@@ -140,7 +140,7 @@ export function mapDelivery(delivery: Delivery): DeliveryOrder {
   };
 }
 
-export async function getCancelledOrderIds(): Promise<string[]> {
+export const getCancelledOrderIds = async (): Promise<string[]> => {
   try {
     const stored = await AsyncStorage.getItem(CANCELLED_ORDERS_KEY);
     return stored ? JSON.parse(stored) : [];
@@ -149,7 +149,7 @@ export async function getCancelledOrderIds(): Promise<string[]> {
   }
 }
 
-export async function markOrderAsCancelled(orderId: string): Promise<void> {
+export const markOrderAsCancelled = async (orderId: string): Promise<void> => {
   try {
     const current = await getCancelledOrderIds();
     if (!current.includes(orderId)) {
@@ -161,7 +161,7 @@ export async function markOrderAsCancelled(orderId: string): Promise<void> {
   }
 }
 
-function applyCancelledState(order: DeliveryOrder, cancelledIds: string[]) {
+const applyCancelledState = (order: DeliveryOrder, cancelledIds: string[]) => {
   if (!cancelledIds.includes(order.id)) return order;
   return {
     ...order,
@@ -170,7 +170,7 @@ function applyCancelledState(order: DeliveryOrder, cancelledIds: string[]) {
   };
 }
 
-export async function loadRoleData(_user: AuthUser, role: UserRole) {
+export const loadRoleData = async (_user: AuthUser, role: UserRole) => {
   const cancelledIds = await getCancelledOrderIds();
 
   if (role === 'chofer') {
@@ -192,7 +192,7 @@ export async function loadRoleData(_user: AuthUser, role: UserRole) {
   return { drivers: [], orders: [] };
 }
 
-export function getTabs(role: AppWorkspace['profile']['rol']): Array<BottomTabMenuItem<HomeTabKey>> {
+export const getTabs = (role: AppWorkspace['profile']['rol']): Array<BottomTabMenuItem<HomeTabKey>> => {
   if (role === 'asesor') {
     return [
       { key: 'home', label: 'Home', icon: 'home-outline', activeIcon: 'home' },
@@ -216,7 +216,7 @@ export function getTabs(role: AppWorkspace['profile']['rol']): Array<BottomTabMe
   ];
 }
 
-export function getTitle(activeTab: HomeTabKey, role: AppWorkspace['profile']['rol']) {
+export const getTitle = (activeTab: HomeTabKey, role: AppWorkspace['profile']['rol']) => {
   const labels: Record<HomeTabKey, string> = {
     home: role === 'asesor' ? 'Asesor' : role === 'chofer' ? 'Chofer' : 'Empresa',
     deliveries: role === 'chofer' ? 'Mis pedidos' : 'Entregas',
@@ -229,7 +229,7 @@ export function getTitle(activeTab: HomeTabKey, role: AppWorkspace['profile']['r
   return labels[activeTab];
 }
 
-export function deliveryToForm(delivery: DeliveryOrder): DeliveryForm {
+export const deliveryToForm = (delivery: DeliveryOrder): DeliveryForm => {
   return {
     cliente: delivery.cliente || '',
     clienteDni: delivery.cliente_dni || '',
@@ -240,4 +240,4 @@ export function deliveryToForm(delivery: DeliveryOrder): DeliveryForm {
     observaciones: delivery.observaciones || '',
     choferId: delivery.chofer_id || null,
   };
-}
+};

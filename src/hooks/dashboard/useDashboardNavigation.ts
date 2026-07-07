@@ -20,8 +20,8 @@ type UseDashboardNavigationParams = {
   workspace: AppWorkspace;
 };
 
-export function useDashboardNavigation(params: UseDashboardNavigationParams) {
+export const useDashboardNavigation = (params: UseDashboardNavigationParams) => {
   useDashboardRouteEffects(params);
   const headerNav = useDashboardHeaderNav(params);
   return { headerNav };
-}
+};

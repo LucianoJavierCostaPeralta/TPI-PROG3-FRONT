@@ -1,10 +1,10 @@
 import { type AppNotification, type AppWorkspace } from '../../types/workspace';
 
-export function createStatusNotification(
+export const createStatusNotification = (
   action: string,
   orderId: string,
   profile: AppWorkspace['profile'],
-): AppNotification | null {
+): AppNotification | null => {
   const id = String(Date.now());
   const shortOrderId = orderId.slice(0, 8).toUpperCase();
   const isChofer = profile.rol === 'chofer';
@@ -49,4 +49,4 @@ export function createStatusNotification(
   }
 
   return null;
-}
+};

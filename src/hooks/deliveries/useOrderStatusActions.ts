@@ -14,14 +14,14 @@ type UseOrderStatusActionsParams = {
   workspace: AppWorkspace;
 };
 
-export function useOrderStatusActions({
+export const useOrderStatusActions = ({
   loadWorkspace,
   setError,
   setSelectedDelivery,
   setUpdatingOrderId,
   setWorkspace,
   workspace,
-}: UseOrderStatusActionsParams) {
+}: UseOrderStatusActionsParams) => {
   const handleUpdateOrderStatus = useCallback(async (orderId: string, action: string, clienteDni?: string) => {
     if (workspace.profile.rol === 'chofer' && (action === 'accept' || action === 'on_the_way')) {
       const activeOrder = workspace.orders.find(
@@ -80,4 +80,4 @@ export function useOrderStatusActions({
   }, [loadWorkspace, setError, setSelectedDelivery, setUpdatingOrderId, setWorkspace, workspace.orders, workspace.profile]);
 
   return { handleUpdateOrderStatus };
-}
+};

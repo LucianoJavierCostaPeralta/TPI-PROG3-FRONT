@@ -18,7 +18,7 @@ type UseDashboardHeaderNavParams = {
   workspace: AppWorkspace;
 };
 
-export function useDashboardHeaderNav({
+export const useDashboardHeaderNav = ({
   activeTab,
   isEditingDelivery,
   selectedDelivery,
@@ -32,7 +32,7 @@ export function useDashboardHeaderNav({
   showDeliveryForm,
   showDriverForm,
   workspace,
-}: UseDashboardHeaderNavParams) {
+}: UseDashboardHeaderNavParams) => {
   const subtitle = useMemo(() => {
     if (workspace.profile.rol === 'asesor') return 'Panel de asesores.';
     if (workspace.profile.rol === 'chofer') return 'Tus pedidos asignados.';
@@ -72,4 +72,4 @@ export function useDashboardHeaderNav({
 
     return { title, subtitle: headerSubtitle, onBack };
   }, [activeTab, isEditingDelivery, selectedDelivery, selectedDriver, showDeliveryForm, showDriverForm, subtitle, workspace.profile.rol]);
-}
+};

@@ -9,7 +9,7 @@ import {
 } from '../../utils/dashboard/homeDashboard';
 import { type AppWorkspace } from '../../types/workspace';
 
-export function useWorkspaceData() {
+export const useWorkspaceData = () => {
   const [workspace, setWorkspace] = useState<AppWorkspace>(emptyWorkspace);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -87,4 +87,4 @@ export function useWorkspaceData() {
     unreadCount: workspace.notifications.filter((notification) => !notification.leida).length,
     workspace,
   };
-}
+};
