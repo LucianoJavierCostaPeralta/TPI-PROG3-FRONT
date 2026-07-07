@@ -40,7 +40,7 @@ export function DeliveryOrderCard({ order, index, onPress }: DeliveryOrderCardPr
         </View>
 
         <View style={styles.rightContent}>
-          <MaterialCommunityIcons name="chevron-right" size={24} color="#7C7C7C" />
+          <MaterialCommunityIcons name="chevron-right" size={24} color={theme.colors.onSurfaceVariant} />
         </View>
       </Surface>
     </TouchableOpacity>

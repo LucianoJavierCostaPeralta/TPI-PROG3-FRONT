@@ -30,10 +30,9 @@ export function ScreenLayout({
 }: ScreenLayoutProps) {
   const theme = useTheme<MD3Theme>();
   const styles = createStyles(theme);
-  const iconColor = theme.dark ? '#FFFFFF' : theme.colors.onPrimary;
+  const iconColor = theme.colors.onPrimary;
 
   const handleDefaultBellPress = () => {
-    // Manejo por defecto de las notificaciones
     console.log('Notificaciones presionadas');
   };
 
@@ -41,17 +40,16 @@ export function ScreenLayout({
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <StatusBar style="light" backgroundColor={theme.colors.primary} />
       <View style={styles.layout}>
-        {/* Header estandarizado con minHeight 56 */}
         <Appbar.Header mode="center-aligned" elevated={false} style={styles.header} statusBarHeight={0}>
           <Appbar.BackAction color={iconColor} onPress={onBack} disabled={disabledBack} size={24} />
-          
+
           <Appbar.Content
             title={title}
             subtitle={subtitle}
             titleStyle={styles.title}
             subtitleStyle={styles.subtitle}
           />
-          
+
           <Appbar.Action
             icon="bell-outline"
             size={24}
@@ -60,7 +58,6 @@ export function ScreenLayout({
           />
         </Appbar.Header>
 
-        {/* Contenido principal de la pantalla */}
         {scrollable ? (
           <ScrollView
             contentContainerStyle={[styles.scrollContent, contentContainerStyle]}
@@ -74,7 +71,6 @@ export function ScreenLayout({
           </View>
         )}
 
-        {/* Footer estático opcional en la parte inferior */}
         {footer ? <View style={styles.footer}>{footer}</View> : null}
       </View>
     </SafeAreaView>
@@ -100,13 +96,14 @@ const createStyles = (theme: MD3Theme) =>
       shadowOpacity: 0,
     },
     title: {
-      color: theme.dark ? '#FFFFFF' : theme.colors.onPrimary,
+      color: theme.colors.onPrimary,
       fontSize: 20,
       fontWeight: '800',
       letterSpacing: 0.5,
     },
     subtitle: {
-      color: theme.dark ? 'rgba(255, 255, 255, 0.75)' : 'rgba(255, 255, 255, 0.85)',
+      color: theme.colors.onPrimary,
+      opacity: 0.8,
       fontSize: 12,
     },
     scrollContent: {

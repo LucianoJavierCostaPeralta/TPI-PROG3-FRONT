@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Text } from 'react-native-paper';
+import { Text, useTheme, type MD3Theme } from 'react-native-paper';
 
 interface RouteProgressProps {
   completed: number;
@@ -8,7 +8,9 @@ interface RouteProgressProps {
 }
 
 export function RouteProgress({ completed, total }: RouteProgressProps) {
+  const theme = useTheme<MD3Theme>();
   const percentage = total > 0 ? (completed / total) * 100 : 0;
+  const styles = createStyles(theme);
 
   return (
     <View style={styles.container}>
@@ -27,37 +29,38 @@ export function RouteProgress({ completed, total }: RouteProgressProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  title: {
-    fontWeight: 'bold',
-    color: '#1C1B1F',
-  },
-  subtitle: {
-    color: '#7C7C7C',
-    fontSize: 13,
-  },
-  progressBarBackground: {
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#E0E0E0',
-    overflow: 'hidden',
-  },
-  progressBarFill: {
-    height: '100%',
-    borderRadius: 4,
-    backgroundColor: '#2196F3',
-  },
-});
+const createStyles = (theme: MD3Theme) =>
+  StyleSheet.create({
+    container: {
+      paddingVertical: 14,
+      paddingHorizontal: 20,
+      backgroundColor: theme.colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.outline,
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 8,
+    },
+    title: {
+      fontWeight: 'bold',
+      color: theme.colors.onSurface,
+    },
+    subtitle: {
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 13,
+    },
+    progressBarBackground: {
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: theme.colors.outline,
+      overflow: 'hidden',
+    },
+    progressBarFill: {
+      height: '100%',
+      borderRadius: 4,
+      backgroundColor: theme.colors.primary,
+    },
+  });

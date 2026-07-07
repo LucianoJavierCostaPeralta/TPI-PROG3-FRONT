@@ -20,7 +20,7 @@ export function AppTopBar({
 }: AppTopBarProps) {
   const theme = useTheme<MD3Theme>();
   const styles = createStyles(theme);
-  const iconColor = '#FFFFFF'; // Forzar blanco puro para mantener diseño premium en la barra azul
+  const iconColor = theme.colors.onPrimary;
 
   return (
     <Appbar.Header mode="center-aligned" elevated={false} style={styles.header} statusBarHeight={0}>
@@ -34,21 +34,17 @@ export function AppTopBar({
 
       <View style={styles.bellWrapper}>
         <Appbar.Action
-          icon={bellActive ? "bell" : "bell-outline"}
+          icon={bellActive ? 'bell' : 'bell-outline'}
           size={24}
           iconColor={iconColor}
           onPress={onBellPress}
           style={styles.action}
         />
-        {!bellActive && unreadCount > 0 && (
-          <Badge
-            visible={true}
-            size={16}
-            style={styles.badge}
-          >
+        {!bellActive && unreadCount > 0 ? (
+          <Badge visible size={16} style={styles.badge}>
             {unreadCount}
           </Badge>
-        )}
+        ) : null}
       </View>
     </Appbar.Header>
   );
@@ -70,7 +66,7 @@ const createStyles = (theme: MD3Theme) =>
       marginHorizontal: 0,
     },
     title: {
-      color: theme.dark ? '#FFFFFF' : theme.colors.onPrimary,
+      color: theme.colors.onPrimary,
       fontSize: 20,
       fontWeight: '800',
       letterSpacing: 0.5,
@@ -82,8 +78,8 @@ const createStyles = (theme: MD3Theme) =>
       position: 'absolute',
       top: 2,
       right: 2,
-      backgroundColor: '#EF4444', // Rojo brillante premium
-      color: '#FFFFFF',
+      backgroundColor: theme.colors.error,
+      color: theme.colors.onError,
       fontWeight: '800',
     },
   });

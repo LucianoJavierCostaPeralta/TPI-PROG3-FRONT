@@ -1,11 +1,10 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { useTheme, type MD3Theme } from 'react-native-paper';
-import { MaterialCommunityIcons } from '@expo/vector-icons'; // <-- Importamos los íconos de Expo
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { spacing, typography } from '../../styles/theme';
 
 type InfoCardProps = {
-  // Aseguramos que 'icon' reciba un nombre válido de la librería
-  icon: keyof typeof MaterialCommunityIcons.glyphMap; 
+  icon: keyof typeof MaterialCommunityIcons.glyphMap;
   title: string;
   description: string;
 };
@@ -17,12 +16,7 @@ export function InfoCard({ icon, title, description }: InfoCardProps) {
   return (
     <View style={styles.container}>
       <View style={styles.iconContainer}>
-        {/* Renderizamos el componente de Ícono en lugar de Text */}
-        <MaterialCommunityIcons 
-          name={icon} 
-          size={24} 
-          color={theme.colors.primary} 
-        />
+        <MaterialCommunityIcons name={icon} size={24} color={theme.colors.primary} />
       </View>
       <View style={styles.content}>
         <Text style={styles.title}>{title}</Text>
@@ -43,7 +37,7 @@ const createStyles = (theme: MD3Theme) =>
       width: 48,
       height: 48,
       borderRadius: 24,
-      backgroundColor: '#EDF2FC',
+      backgroundColor: theme.colors.primaryContainer,
       justifyContent: 'center',
       alignItems: 'center',
     },
@@ -59,7 +53,7 @@ const createStyles = (theme: MD3Theme) =>
     },
     description: {
       ...typography.bodyMd,
-      color: '#5F6368',
+      color: theme.colors.onSurfaceVariant,
       fontWeight: '400',
     },
   });
