@@ -93,41 +93,41 @@ export function DriverDetailPanel({ driver, orders, onBack, onDelete }: DriverDe
           
           <View style={styles.statsGrid}>
             {/* Tarjeta 1: Completadas */}
-            <Surface style={[styles.statCard, { backgroundColor: '#DCFCE7', borderColor: '#166534' }]} elevation={1}>
+            <Surface style={[styles.statCard, { backgroundColor: theme.colors.secondaryContainer, borderColor: theme.colors.secondary }]} elevation={1}>
               <View style={styles.statCardHeader}>
-                <MaterialCommunityIcons name="checkbox-marked-circle-outline" size={24} color="#166534" />
-                <Text style={[styles.statValue, { color: '#166534' }]}>{completedDeliveries}</Text>
+                <MaterialCommunityIcons name="checkbox-marked-circle-outline" size={24} color={theme.colors.secondary} />
+                <Text style={[styles.statValue, { color: theme.colors.secondary }]}>{completedDeliveries}</Text>
               </View>
-              <Text style={[styles.statLabel, { color: '#166534' }]}>Entregadas</Text>
+              <Text style={[styles.statLabel, { color: theme.colors.secondary }]}>Entregadas</Text>
             </Surface>
 
             {/* Tarjeta 2: En Camino */}
-            <Surface style={[styles.statCard, { backgroundColor: '#E0F2FE', borderColor: '#075985' }]} elevation={1}>
+            <Surface style={[styles.statCard, { backgroundColor: theme.colors.primaryContainer, borderColor: theme.colors.primary }]} elevation={1}>
               <View style={styles.statCardHeader}>
-                <MaterialCommunityIcons name="truck-delivery-outline" size={24} color="#075985" />
-                <Text style={[styles.statValue, { color: '#075985' }]}>{inProgressDeliveries}</Text>
+                <MaterialCommunityIcons name="truck-delivery-outline" size={24} color={theme.colors.primary} />
+                <Text style={[styles.statValue, { color: theme.colors.primary }]}>{inProgressDeliveries}</Text>
               </View>
-              <Text style={[styles.statLabel, { color: '#075985' }]}>En camino</Text>
+              <Text style={[styles.statLabel, { color: theme.colors.primary }]}>En camino</Text>
             </Surface>
           </View>
 
           <View style={[styles.statsGrid, { marginTop: spacing.md }]}>
             {/* Tarjeta 3: Pendientes */}
-            <Surface style={[styles.statCard, { backgroundColor: '#FEF3C7', borderColor: '#9A3412' }]} elevation={1}>
+            <Surface style={[styles.statCard, { backgroundColor: theme.colors.tertiaryContainer, borderColor: theme.colors.tertiary }]} elevation={1}>
               <View style={styles.statCardHeader}>
-                <MaterialCommunityIcons name="clock-outline" size={24} color="#9A3412" />
-                <Text style={[styles.statValue, { color: '#9A3412' }]}>{pendingDeliveries}</Text>
+                <MaterialCommunityIcons name="clock-outline" size={24} color={theme.colors.tertiary} />
+                <Text style={[styles.statValue, { color: theme.colors.tertiary }]}>{pendingDeliveries}</Text>
               </View>
-              <Text style={[styles.statLabel, { color: '#9A3412' }]}>Pendientes</Text>
+              <Text style={[styles.statLabel, { color: theme.colors.tertiary }]}>Pendientes</Text>
             </Surface>
 
             {/* Tarjeta 4: Total */}
-            <Surface style={[styles.statCard, { backgroundColor: '#F1F5F9', borderColor: '#475569' }]} elevation={1}>
+            <Surface style={[styles.statCard, { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.outline }]} elevation={1}>
               <View style={styles.statCardHeader}>
-                <MaterialCommunityIcons name="clipboard-list-outline" size={24} color="#475569" />
-                <Text style={[styles.statValue, { color: '#475569' }]}>{totalDeliveries}</Text>
+                <MaterialCommunityIcons name="clipboard-list-outline" size={24} color={theme.colors.onSurfaceVariant} />
+                <Text style={[styles.statValue, { color: theme.colors.onSurfaceVariant }]}>{totalDeliveries}</Text>
               </View>
-              <Text style={[styles.statLabel, { color: '#475569' }]}>Total Asignadas</Text>
+              <Text style={[styles.statLabel, { color: theme.colors.onSurfaceVariant }]}>Total Asignadas</Text>
             </Surface>
           </View>
         </View>

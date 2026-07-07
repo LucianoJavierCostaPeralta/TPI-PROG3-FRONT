@@ -48,42 +48,42 @@ export function DeliveryDetailPanel({
     if (id === 7 || ['7', 'cancelado', 'cancelled'].includes(name)) {
       return {
         label: 'Cancelada',
-        bg: '#FEE2E2',
-        text: '#B91C1C',
+        bg: theme.colors.errorContainer,
+        text: theme.colors.error,
       };
     }
     if (id === 5 || id === 6 || ['5', '6', 'realizado', 'entregado', 'entregada', 'delivered', 'finalizado'].includes(name)) {
       return {
         label: 'Entregada',
-        bg: palette.successLightBg,
-        text: palette.successDark,
+        bg: theme.colors.secondaryContainer,
+        text: theme.colors.secondary,
       };
     }
     if (id === 4 || ['4', 'en camino', 'en_camino', 'encamino', 'on the way', 'on_the_way'].includes(name)) {
       return {
         label: 'En camino',
-        bg: palette.infoLightBg,
-        text: palette.secondary,
+        bg: theme.colors.primaryContainer,
+        text: theme.colors.primary,
       };
     }
     if (id === 3 || ['3', 'aceptado', 'accepted'].includes(name)) {
       return {
         label: 'Aceptado',
-        bg: '#E0F2FE',
-        text: '#0369A1',
+        bg: theme.colors.primaryContainer,
+        text: theme.colors.primary,
       };
     }
     if (id === 2 || ['2', 'asignado', 'assigned'].includes(name)) {
       return {
         label: 'Por aceptar',
-        bg: '#FEE2E2',
-        text: '#B91C1C',
+        bg: theme.colors.errorContainer,
+        text: theme.colors.error,
       };
     }
     return {
       label: 'Pendiente',
-      bg: palette.pendingLightBg,
-      text: palette.warning,
+      bg: theme.colors.tertiaryContainer,
+      text: theme.colors.tertiary,
     };
   };
 
@@ -330,7 +330,7 @@ export function DeliveryDetailPanel({
             {(order.estado_id === 5 || order.estado_id === 6) && (
               <View style={styles.completedBox}>
                 <Surface style={styles.completedCard} elevation={0}>
-                  <MaterialCommunityIcons name="check-circle" size={32} color={palette.successDark} />
+                  <MaterialCommunityIcons name="check-circle" size={32} color={theme.colors.secondary} />
                   <Text variant="titleMedium" style={styles.completedText}>¡Entrega completada!</Text>
                 </Surface>
                 
@@ -377,25 +377,25 @@ const createStyles = (theme: MD3Theme) =>
       borderRadius: 14,
     },
     statusBadgePending: {
-      backgroundColor: palette.pendingLightBg,
+      backgroundColor: theme.colors.tertiaryContainer,
     },
     statusBadgeOnWay: {
-      backgroundColor: palette.infoLightBg,
+      backgroundColor: theme.colors.primaryContainer,
     },
     statusBadgeDelivered: {
-      backgroundColor: palette.successLightBg,
+      backgroundColor: theme.colors.secondaryContainer,
     },
     statusText: {
       fontWeight: '800',
     },
     statusTextPending: {
-      color: palette.warning,
+      color: theme.colors.tertiary,
     },
     statusTextOnWay: {
-      color: palette.secondary,
+      color: theme.colors.primary,
     },
     statusTextDelivered: {
-      color: palette.successDark,
+      color: theme.colors.secondary,
     },
     section: {
       borderRadius: radii.md,
@@ -461,7 +461,7 @@ const createStyles = (theme: MD3Theme) =>
       justifyContent: 'center',
       padding: spacing.md,
       borderRadius: radii.md,
-      backgroundColor: palette.successLightBg,
+      backgroundColor: theme.colors.secondaryContainer,
       borderWidth: 1,
       borderColor: palette.successDark,
       gap: spacing.sm,
@@ -469,6 +469,6 @@ const createStyles = (theme: MD3Theme) =>
     },
     completedText: {
       fontWeight: '800',
-      color: palette.successDark,
+      color: theme.colors.secondary,
     },
   });
