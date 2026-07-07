@@ -1,4 +1,4 @@
-import { palette } from '../../styles/theme';
+import { ORDER_STATUS_COLORS } from '../../constants/colors';
 import { type DeliveryOrder, ORDER_STATUS } from '../../types/workspace';
 
 const CANCELLED_STATUSES = ['7', 'cancelado', 'cancelled'];
@@ -24,13 +24,13 @@ export const getDeliveryStatusBadge = (statusId?: number, statusText?: string | 
   const text = getStatusText(statusText ?? 'pendiente');
 
   if (id === ORDER_STATUS.CANCELLED || CANCELLED_STATUSES.includes(text)) {
-    return { label: 'Cancelada', color: '#B91C1C', bg: '#FEE2E2', dotColor: '#B91C1C' };
+    return { label: 'Cancelada', ...ORDER_STATUS_COLORS.cancelled, bg: ORDER_STATUS_COLORS.cancelled.backgroundColor };
   }
   if (id === ORDER_STATUS.ASSIGNED || id === ORDER_STATUS.ACCEPTED || ASSIGNED_STATUSES.includes(text)) {
-    return { label: 'Asignado', color: '#0369A1', bg: '#E0F2FE', dotColor: '#0369A1' };
+    return { label: 'Asignado', ...ORDER_STATUS_COLORS.assigned, bg: ORDER_STATUS_COLORS.assigned.backgroundColor };
   }
   if (id === ORDER_STATUS.ON_THE_WAY || ON_THE_WAY_STATUSES.includes(text)) {
-    return { label: 'En camino', color: '#15803D', bg: '#DCFCE7', dotColor: '#15803D' };
+    return { label: 'En camino', ...ORDER_STATUS_COLORS.onWay, bg: ORDER_STATUS_COLORS.onWay.backgroundColor };
   }
-  return { label: 'Pendiente', color: palette.neutral600, bg: palette.neutral200, dotColor: palette.neutral600 };
+  return { label: 'Pendiente', ...ORDER_STATUS_COLORS.pending, bg: ORDER_STATUS_COLORS.pending.backgroundColor };
 };

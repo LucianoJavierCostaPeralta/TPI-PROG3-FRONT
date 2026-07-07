@@ -14,18 +14,6 @@ export const commonColors = {
   blackAlpha20: 'rgba(0, 0, 0, 0.2)',
 };
 
-export const AVATAR_COLORS = [
-  '#4285F4',
-  '#EA4335',
-  '#FBBC05',
-  '#34A853',
-  '#9C27B0',
-  '#009688',
-  '#FF5722',
-  '#673AB7',
-  '#3F51B5',
-] as const;
-
 export const neutralColors = {
   neutral900: '#0B1220',
   neutral800: '#1E293B',
@@ -38,6 +26,64 @@ export const neutralColors = {
   neutral100: '#F1F5F9',
   neutral50: '#F8FAFC',
 };
+
+export const AVATAR_COLORS = [
+  '#4285F4',
+  '#EA4335',
+  '#FBBC05',
+  '#34A853',
+  '#9C27B0',
+  '#009688',
+  '#FF5722',
+  '#673AB7',
+  '#3F51B5',
+] as const;
+
+export const ORDER_STATUS_COLORS = {
+  cancelled: {
+    color: commonColors.error,
+    backgroundColor: '#FEE2E2',
+    dotColor: commonColors.error,
+  },
+  assigned: {
+    color: '#0369A1',
+    backgroundColor: '#E0F2FE',
+    dotColor: '#0369A1',
+  },
+  onWay: {
+    color: commonColors.secondary,
+    backgroundColor: '#DCFCE7',
+    dotColor: commonColors.secondary,
+  },
+  pending: {
+    color: neutralColors.neutral600,
+    backgroundColor: neutralColors.neutral200,
+    dotColor: neutralColors.neutral600,
+  },
+} as const;
+
+export const DELIVERY_BADGE_COLORS = {
+  cancelled: {
+    text: commonColors.error,
+    backgroundColor: '#FEE2E2',
+  },
+  delivered: {
+    text: commonColors.success,
+    backgroundColor: '#DCFCE7',
+  },
+  onWay: {
+    text: commonColors.secondary,
+    backgroundColor: '#DBEAFE',
+  },
+  assigned: {
+    text: '#0369A1',
+    backgroundColor: '#E0F2FE',
+  },
+  pending: {
+    text: commonColors.warning,
+    backgroundColor: '#FEF3C7',
+  },
+} as const;
 
 export const lightTheme = {
   ...commonColors,

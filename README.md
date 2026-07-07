@@ -2,6 +2,10 @@
 
 Aplicación de gestión logística desarrollada con React Native y Expo. Permite registrar empresas, administrar choferes, crear y asignar entregas, y seguir el avance de cada envío desde la aplicación móvil o web.
 
+## Documentación interna
+
+- [Guía de incorporación para nuevos desarrolladores](docs/ONBOARDING.md)
+
 ## Funcionalidades
 
 - Registro de empresas y administradores.

@@ -1,4 +1,4 @@
-import { palette } from '../../styles/theme';
+import { DELIVERY_BADGE_COLORS } from '../../constants/colors';
 import { ORDER_STATUS } from '../../types/workspace';
 
 export type DeliveryBadgeConfig = {
@@ -17,46 +17,46 @@ export function getDeliveryBadgeConfig(id: number | undefined, nameVal: unknown)
   if (id === ORDER_STATUS.CANCELLED || ['7', 'cancelado', 'cancelled'].includes(name)) {
     return {
       label: 'Cancelada',
-      bg: '#FEE2E2',
-      text: '#B91C1C',
+      bg: DELIVERY_BADGE_COLORS.cancelled.backgroundColor,
+      text: DELIVERY_BADGE_COLORS.cancelled.text,
     };
   }
 
   if (id === 5 || id === 6 || ['5', '6', 'realizado', 'entregado', 'entregada', 'delivered', 'finalizado'].includes(name)) {
     return {
       label: 'Entregada',
-      bg: palette.successLightBg,
-      text: palette.successDark,
+      bg: DELIVERY_BADGE_COLORS.delivered.backgroundColor,
+      text: DELIVERY_BADGE_COLORS.delivered.text,
     };
   }
 
   if (id === 4 || ['4', 'en camino', 'en_camino', 'encamino', 'on the way', 'on_the_way'].includes(name)) {
     return {
       label: 'En camino',
-      bg: palette.infoLightBg,
-      text: palette.secondary,
+      bg: DELIVERY_BADGE_COLORS.onWay.backgroundColor,
+      text: DELIVERY_BADGE_COLORS.onWay.text,
     };
   }
 
   if (id === 3 || ['3', 'aceptado', 'accepted'].includes(name)) {
     return {
       label: 'Asignado',
-      bg: '#E0F2FE',
-      text: '#0369A1',
+      bg: DELIVERY_BADGE_COLORS.assigned.backgroundColor,
+      text: DELIVERY_BADGE_COLORS.assigned.text,
     };
   }
 
   if (id === 2 || ['2', 'asignado', 'assigned'].includes(name)) {
     return {
       label: 'Asignado',
-      bg: '#E0F2FE',
-      text: '#0369A1',
+      bg: DELIVERY_BADGE_COLORS.assigned.backgroundColor,
+      text: DELIVERY_BADGE_COLORS.assigned.text,
     };
   }
 
   return {
     label: 'Pendiente',
-    bg: palette.pendingLightBg,
-    text: palette.warning,
+    bg: DELIVERY_BADGE_COLORS.pending.backgroundColor,
+    text: DELIVERY_BADGE_COLORS.pending.text,
   };
 }
