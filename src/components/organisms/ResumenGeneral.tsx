@@ -1,13 +1,14 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { View, StyleSheet } from 'react-native';
 import { Surface, Text, useTheme, type MD3Theme } from 'react-native-paper';
-import { palette, radii, spacing, typography } from '../../styles/theme';
+import { radii, spacing, typography } from '../../styles/theme';
 
 type ResumenMetric = {
   label: string;
   value: string | number;
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
   accent: string;
+  accentContainer: string;
 };
 
 type ResumenGeneralProps = {
@@ -16,20 +17,21 @@ type ResumenGeneralProps = {
   metrics?: ResumenMetric[];
 };
 
-const defaultMetrics: ResumenMetric[] = [
-  { label: 'Entregas hoy', value: 24, icon: 'truck-fast-outline', accent: palette.primaryBlue },
-  { label: 'En camino', value: 8, icon: 'map-marker-path', accent: '#4F8EF7' },
-  { label: 'Pendientes', value: 13, icon: 'clock-outline', accent: '#5FC8FF' },
-  { label: 'Retrasadas', value: 3, icon: 'alert-circle-outline', accent: '#FF6B6B' },
+const buildDefaultMetrics = (theme: MD3Theme): ResumenMetric[] => [
+  { label: 'Entregas hoy', value: 24, icon: 'truck-fast-outline', accent: theme.colors.primary, accentContainer: theme.colors.primaryContainer },
+  { label: 'En camino', value: 8, icon: 'map-marker-path', accent: theme.colors.primary, accentContainer: theme.colors.primaryContainer },
+  { label: 'Pendientes', value: 13, icon: 'clock-outline', accent: theme.colors.tertiary, accentContainer: theme.colors.tertiaryContainer },
+  { label: 'Retrasadas', value: 3, icon: 'alert-circle-outline', accent: theme.colors.error, accentContainer: theme.colors.errorContainer },
 ];
 
 export function ResumenGeneral({
   title = 'Resumen general',
   subtitle = 'Seguimiento rápido del día',
-  metrics = defaultMetrics,
+  metrics,
 }: ResumenGeneralProps) {
   const theme = useTheme<MD3Theme>();
   const styles = createStyles(theme);
+  const items = metrics ?? buildDefaultMetrics(theme);
 
   return (
     <Surface style={styles.container} elevation={1}>
@@ -46,9 +48,9 @@ export function ResumenGeneral({
       </View>
 
       <View style={styles.grid}>
-        {metrics.map((item) => (
+        {items.map((item) => (
           <View key={item.label} style={styles.card}>
-            <View style={[styles.iconWrap, { backgroundColor: `${item.accent}16` }]}> 
+            <View style={[styles.iconWrap, { backgroundColor: item.accentContainer }]}> 
               <MaterialCommunityIcons name={item.icon} size={20} color={item.accent} />
             </View>
             <Text style={styles.value}>{item.value}</Text>
@@ -65,7 +67,7 @@ const createStyles = (theme: MD3Theme) =>
     container: {
       padding: spacing.lg,
       borderRadius: radii.lg,
-      backgroundColor: palette.darkGray,
+      backgroundColor: theme.colors.surface,
       gap: spacing.lg,
     },
     header: {
@@ -79,7 +81,7 @@ const createStyles = (theme: MD3Theme) =>
       gap: spacing.xs,
     },
     title: {
-      color: theme.colors.onPrimary,
+      color: theme.colors.onSurface,
       fontFamily: 'Inter-SemiBold',
       fontWeight: '600',
     },
@@ -91,7 +93,7 @@ const createStyles = (theme: MD3Theme) =>
       width: spacing.md,
       height: spacing.md,
       borderRadius: radii.pill,
-      backgroundColor: palette.primaryBlue,
+      backgroundColor: theme.colors.primary,
     },
     grid: {
       flexDirection: 'row',
@@ -106,7 +108,7 @@ const createStyles = (theme: MD3Theme) =>
       padding: spacing.md,
       gap: spacing.xs,
       borderWidth: 1,
-      borderColor: `${palette.primaryBlue}33`,
+      borderColor: theme.colors.outline,
     },
     iconWrap: {
       width: spacing.xxl,
@@ -120,7 +122,7 @@ const createStyles = (theme: MD3Theme) =>
       fontSize: 24,
       lineHeight: 30,
       fontFamily: 'Inter-SemiBold',
-      color: palette.darkGray,
+      color: theme.colors.onSurface,
       fontWeight: '600',
     },
     label: {
