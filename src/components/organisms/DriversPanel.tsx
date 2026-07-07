@@ -1,8 +1,7 @@
-import { useState } from 'react';
-import { StyleSheet, View, ScrollView, Platform, FlatList, TouchableOpacity } from 'react-native';
-import { Text, IconButton, Surface, useTheme, type MD3Theme, TextInput as PaperTextInput } from 'react-native-paper';
-import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import { StyleSheet, View, ScrollView, FlatList, TouchableOpacity } from 'react-native';
+import { Text, IconButton, Surface, useTheme, type MD3Theme } from 'react-native-paper';
 import { CTAButton, TextInputField, UserAvatar, EmptyState } from '../atoms';
+import { DateField, SectionCard } from '../molecules';
 import { radii, spacing, palette } from '../../styles/theme';
 import { DriverDetailPanel } from './DriverDetailPanel';
 import {
@@ -10,9 +9,6 @@ import {
   type DriverForm,
   type DriverFilter,
   type DeliveryOrder,
-  parseDeliveryFormDate,
-  formatDateForInput,
-  formatDateForDisplay,
 } from '../../types/workspace';
 
 
@@ -102,20 +98,6 @@ export function DriversPanel({
 }) {
   const theme = useTheme<MD3Theme>();
   const styles = createStyles(theme);
-  const [birthDatePickerVisible, setBirthDatePickerVisible] = useState(false);
-
-  const selectedBirthDate = form.fechaNacimiento
-    ? parseDeliveryFormDate(form.fechaNacimiento)
-    : new Date(1990, 0, 1);
-
-  const handleBirthDateChange = (_event: DateTimePickerEvent, date?: Date) => {
-    if (Platform.OS === 'android') {
-      setBirthDatePickerVisible(false);
-    }
-    if (date) {
-      onChange('fechaNacimiento', formatDateForInput(date));
-    }
-  };
 
   const filteredDrivers = drivers.filter((driver) => {
     if (filter === 'activos') return driver.activo;
@@ -157,8 +139,7 @@ export function DriversPanel({
 
       {canCreate && showForm ? (
         <ScrollView contentContainerStyle={styles.formScroll}>
-          <Surface style={styles.formCard} elevation={1}>
-
+          <SectionCard style={styles.formCard}>
             <View style={styles.formContent}>
               <TextInputField
                 label="Nombre y Apellido"
@@ -181,55 +162,26 @@ export function DriversPanel({
                 label="Email"
                 placeholder="Ej: juan@email.com"
                 value={form.email}
-                onChangeText={(value) => onChange('email', value.trim())}
+                onChangeText={(value: string) => onChange('email', value.trim())}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 disabled={saving}
                 icon="email-outline"
               />
-              <TextInputField
+              <DateField
                 label="Fecha de nacimiento"
                 placeholder="Seleccionar fecha"
-                value={formatDateForDisplay(form.fechaNacimiento)}
-                onPressIn={() => {
-                  if (!saving) setBirthDatePickerVisible(true);
-                }}
-                editable={false}
-                showSoftInputOnFocus={false}
+                value={form.fechaNacimiento}
+                onChange={(value: string) => onChange('fechaNacimiento', value)}
                 disabled={saving}
                 icon="calendar-outline"
-                right={
-                  <PaperTextInput.Icon
-                    icon="calendar-month-outline"
-                    onPress={() => setBirthDatePickerVisible(true)}
-                    disabled={saving}
-                  />
-                }
+                maximumDate={new Date(Date.now() - 86_400_000)}
               />
-              {birthDatePickerVisible ? (
-                <DateTimePicker
-                  value={selectedBirthDate}
-                  mode="date"
-                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                  maximumDate={new Date(Date.now() - 86_400_000)}
-                  onChange={handleBirthDateChange}
-                />
-              ) : null}
-              {Platform.OS === 'ios' && birthDatePickerVisible ? (
-                <CTAButton
-                  compact
-                  variant="secondary"
-                  onPress={() => setBirthDatePickerVisible(false)}
-                  style={styles.datePickerDoneButton}
-                >
-                  Listo
-                </CTAButton>
-              ) : null}
               <TextInputField
                 label="Teléfono"
                 placeholder="Ej: 5491112345678"
                 value={form.telefono}
-                onChangeText={(value) => onChange('telefono', onlyDigits(value, 15))}
+                onChangeText={(value: string) => onChange('telefono', onlyDigits(value, 15))}
                 keyboardType="phone-pad"
                 disabled={saving}
                 icon="phone-outline"
@@ -246,7 +198,7 @@ export function DriversPanel({
                 {saving ? 'Guardando...' : 'Guardar'}
               </CTAButton>
             </View>
-          </Surface>
+          </SectionCard>
         </ScrollView>
       ) : (
         <FlatList
@@ -286,9 +238,6 @@ const createStyles = (theme: MD3Theme) =>
       paddingTop: 16,
       paddingBottom: 96,
     },
-    panel: {
-      gap: 14,
-    },
     filterBarWrapper: {
       backgroundColor: theme.colors.surfaceVariant,
       paddingVertical: 12,
@@ -309,9 +258,9 @@ const createStyles = (theme: MD3Theme) =>
       textAlign: 'center',
     },
     formCard: {
-      padding: 16,
-      borderRadius: radii.md,
-      backgroundColor: theme.colors.surface,
+      padding: 0,
+      borderWidth: 0,
+      backgroundColor: 'transparent',
     },
     orderHeader: {
       flexDirection: 'row',
@@ -327,11 +276,6 @@ const createStyles = (theme: MD3Theme) =>
     },
     formContent: {
       gap: spacing.sm,
-    },
-    datePickerDoneButton: {
-      alignSelf: 'flex-end',
-      borderRadius: radii.md,
-      marginBottom: 8,
     },
     mutedText: {
       color: theme.colors.onSurfaceVariant,

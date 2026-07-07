@@ -9,3 +9,5 @@ export { RegisterFooter } from './RegisterFooter';
 export { VehicleSelector, type FleetSize } from './VehicleSelector';
 export { RouteProgress } from './RouteProgress';
 export { NextStopCard } from './NextStopCard';
+export { DateField } from './DateField';
+export { SectionCard } from './SectionCard';

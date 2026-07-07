@@ -1,13 +1,11 @@
-import { ActivityIndicator, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Surface, Text, useTheme, type MD3Theme, IconButton } from 'react-native-paper';
 import { ScreenLayout } from './ScreenLayout';
 import { CTAButton, TextInputField, UserAvatar } from '../atoms';
+import { DateField, SectionCard } from '../molecules';
 import { dimensions, radii, spacing } from '../../styles/theme';
-import {
-  formatProfileDateForDisplay,
-  getRoleLabel,
-} from '../../utils/profile/editProfile';
+import { getRoleLabel } from '../../utils/profile/editProfile';
 import type { AuthUser } from '../../services/api';
 import type { EditProfileFormErrors, EditProfileFormFields } from '../../utils/profile/editProfile';
 
@@ -18,17 +16,13 @@ export type EditarPerfilTemplateProps = {
   isChofer: boolean;
   loading: boolean;
   saving: boolean;
-  selectedDate: Date;
   selectedImageUri: string | null;
   user: AuthUser | null;
-  datePickerVisible: boolean;
   onBack: () => void;
   onCancel: () => void;
-  onDateChange: (event: unknown, date?: Date) => void;
   onLoadProfile: () => void;
   onPickImage: () => void;
   onSave: () => void;
-  onSetDatePickerVisible: (visible: boolean) => void;
   onChangeField: (field: keyof EditProfileFormFields, value: string) => void;
 };
 
@@ -39,17 +33,13 @@ export function EditarPerfilTemplate({
   isChofer,
   loading,
   saving,
-  selectedDate,
   selectedImageUri,
   user,
-  datePickerVisible,
   onBack,
   onCancel,
-  onDateChange,
   onLoadProfile,
   onPickImage,
   onSave,
-  onSetDatePickerVisible,
   onChangeField,
 }: EditarPerfilTemplateProps) {
   const theme = useTheme<MD3Theme>();
@@ -80,9 +70,7 @@ export function EditarPerfilTemplate({
             </Surface>
           ) : null}
 
-          <Surface style={styles.section} elevation={1}>
-            <Text variant="titleMedium" style={styles.sectionTitle}>Campos Editables</Text>
-
+          <SectionCard title="Campos Editables" style={styles.section}>
             <View style={styles.avatarWrapper}>
               <UserAvatar
                 name={form.nombre_completo || user.nombre_completo}
@@ -106,7 +94,7 @@ export function EditarPerfilTemplate({
                 label="Nombre completo"
                 placeholder="Ingresá tu nombre completo"
                 value={form.nombre_completo}
-                onChangeText={(v) => onChangeField('nombre_completo', v)}
+                onChangeText={(v: string) => onChangeField('nombre_completo', v)}
                 disabled={saving}
                 error={formErrors.nombre_completo}
                 icon="account-outline"
@@ -121,7 +109,7 @@ export function EditarPerfilTemplate({
                 autoCapitalize="none"
                 autoCorrect={false}
                 value={form.email}
-                onChangeText={(v) => onChangeField('email', v)}
+                onChangeText={(v: string) => onChangeField('email', v)}
                 disabled={saving}
                 error={formErrors.email}
                 icon="email-outline"
@@ -134,7 +122,7 @@ export function EditarPerfilTemplate({
                 placeholder="1134567890"
                 keyboardType="phone-pad"
                 value={form.telefono}
-                onChangeText={(v) => onChangeField('telefono', v.replace(/\D/g, '').slice(0, 15))}
+                onChangeText={(v: string) => onChangeField('telefono', v.replace(/\D/g, '').slice(0, 15))}
                 disabled={saving}
                 error={formErrors.telefono}
                 icon="phone-outline"
@@ -143,59 +131,22 @@ export function EditarPerfilTemplate({
               />
 
               {isChofer && (
-                <>
-                  <View style={styles.datePickerContainer}>
-                    <TextInputField
-                      label="Fecha de nacimiento"
-                      placeholder="DD/MM/YYYY"
-                      value={formatProfileDateForDisplay(form.fecha_nacimiento)}
-                      editable={false}
-                      pointerEvents="none"
-                      error={formErrors.fecha_nacimiento}
-                      icon="calendar-range"
-                      style={styles.inputField}
-                      outlineStyle={styles.inputOutline}
-                      right={
-                        <IconButton
-                          icon="calendar"
-                          size={20}
-                          style={styles.calendarIcon}
-                          onPress={() => !saving && onSetDatePickerVisible(true)}
-                        />
-                      }
-                    />
-                  </View>
-
-                  {datePickerVisible ? (
-                    <DateTimePicker
-                      value={selectedDate}
-                      mode="date"
-                      display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                      maximumDate={new Date()}
-                      onChange={onDateChange}
-                    />
-                  ) : null}
-
-                  {Platform.OS === 'ios' && datePickerVisible ? (
-                    <CTAButton
-                      compact
-                      variant="secondary"
-                      onPress={() => onSetDatePickerVisible(false)}
-                      style={styles.datePickerDoneButton}
-                    >
-                      Listo
-                    </CTAButton>
-                  ) : null}
-                </>
+                <DateField
+                  label="Fecha de nacimiento"
+                  placeholder="DD/MM/YYYY"
+                  value={form.fecha_nacimiento}
+                  onChange={(value: string) => onChangeField('fecha_nacimiento', value)}
+                  disabled={saving}
+                  error={formErrors.fecha_nacimiento}
+                  icon="calendar-range"
+                  maximumDate={new Date()}
+                />
               )}
             </View>
-          </Surface>
+          </SectionCard>
 
-          <Surface style={[styles.section, styles.readOnlySection]} elevation={1}>
-            <Text variant="titleMedium" style={styles.sectionTitle}>Datos del Sistema (Solo lectura)</Text>
-
-            <View style={styles.formContent}>
-              {isChofer && (
+          <SectionCard title="Datos del Sistema (Solo lectura)" style={[styles.section, styles.readOnlySection]}>
+            {isChofer && (
                 <TextInputField
                   label="DNI"
                   value={user.dni || 'No especificado'}
@@ -205,9 +156,9 @@ export function EditarPerfilTemplate({
                   style={styles.inputField}
                   outlineStyle={styles.inputOutline}
                 />
-              )}
+            )}
 
-              <TextInputField
+            <TextInputField
                 label="Rol"
                 value={getRoleLabel(user.rol?.nombre_rol)}
                 editable={false}
@@ -217,8 +168,8 @@ export function EditarPerfilTemplate({
                 outlineStyle={styles.inputOutline}
               />
 
-              <TextInputField
-                label="Estado de la cuenta"
+            <TextInputField
+              label="Estado de la cuenta"
                 value={user.activo ? 'Activo' : 'Inactivo'}
                 editable={false}
                 disabled
@@ -226,8 +177,7 @@ export function EditarPerfilTemplate({
                 style={styles.inputField}
                 outlineStyle={styles.inputOutline}
               />
-            </View>
-          </Surface>
+          </SectionCard>
 
           <View style={styles.actionsContainer}>
             <CTAButton
@@ -282,11 +232,6 @@ const createStyles = (theme: MD3Theme) =>
       textAlign: 'center',
     },
     section: {
-      borderRadius: radii.md,
-      padding: spacing.lg,
-      backgroundColor: theme.colors.surface,
-      borderWidth: 1,
-      borderColor: theme.colors.outline,
       marginBottom: spacing.md,
     },
     readOnlySection: {
@@ -298,19 +243,6 @@ const createStyles = (theme: MD3Theme) =>
       fontWeight: '700',
       marginBottom: spacing.md,
       fontFamily: 'Inter-SemiBold',
-    },
-    datePickerContainer: {
-      position: 'relative',
-    },
-    calendarIcon: {
-      margin: 0,
-      position: 'absolute',
-      right: 0,
-      top: 4,
-    },
-    datePickerDoneButton: {
-      marginTop: spacing.sm,
-      alignSelf: 'stretch',
     },
     actionsContainer: {
       marginTop: spacing.xl,

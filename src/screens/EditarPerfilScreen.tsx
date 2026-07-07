@@ -17,17 +17,13 @@ export function EditarPerfilScreen({ onBack, onSaveSuccess }: EditarPerfilScreen
       isChofer={profile.isChofer}
       loading={profile.loading}
       saving={profile.saving}
-      selectedDate={profile.selectedDate}
       selectedImageUri={profile.selectedImageUri}
       user={profile.user}
-      datePickerVisible={profile.datePickerVisible}
       onBack={onBack}
       onCancel={onBack}
-      onDateChange={profile.handleDateChange}
       onLoadProfile={profile.loadProfileData}
       onPickImage={profile.pickImage}
       onSave={profile.handleSave}
-      onSetDatePickerVisible={profile.setDatePickerVisible}
       onChangeField={profile.handleInputChange}
     />
   );
