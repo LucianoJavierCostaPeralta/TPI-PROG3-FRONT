@@ -2,7 +2,6 @@ import { View, TouchableOpacity } from 'react-native';
 import { Text, Surface, useTheme, type MD3Theme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { type DeliveryOrder, type HomeTabKey } from '../../../types/workspace';
-import { palette } from '../../../styles/theme';
 import { getDeliveryStatusBadge } from '../../../utils/orders/orderStatus';
 import { createStyles } from './HomePanel.styles';
 
@@ -34,7 +33,7 @@ export function FollowingStopCard({ order }: FollowingStopCardProps) {
           </View>
           <Text style={styles.followingStopClient}>Cliente: {String(order.cliente || '')}</Text>
         </View>
-        <MaterialCommunityIcons name="chevron-right" size={20} color={palette.neutral400} />
+        <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.outline} />
       </View>
     </Surface>
   );

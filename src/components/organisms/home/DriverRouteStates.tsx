@@ -2,7 +2,6 @@ import { View } from 'react-native';
 import { Text, Surface, useTheme, type MD3Theme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { type DeliveryFilter, type HomeTabKey } from '../../../types/workspace';
-import { palette } from '../../../styles/theme';
 import { CTAButton } from '../../atoms';
 import { Metric } from './HomeDashboardWidgets';
 import { createStyles } from './HomePanel.styles';
@@ -19,7 +18,7 @@ export function EmptyRouteState({ message, setActiveTab }: EmptyRouteStateProps)
   return (
     <View style={styles.panel}>
       <Surface style={styles.completedStateCard} elevation={1}>
-        <MaterialCommunityIcons name="truck-delivery-outline" size={64} color={palette.neutral400} />
+        <MaterialCommunityIcons name="truck-delivery-outline" size={64} color={theme.colors.onSurfaceVariant} />
         <Text variant="headlineSmall" style={styles.completedTitleText}>Sin entregas asignadas</Text>
         <Text variant="bodyMedium" style={styles.completedSubtitleText}>{message}</Text>
         <CTAButton variant="primary" onPress={() => setActiveTab('deliveries')} icon="calendar-text-outline">
@@ -43,7 +42,7 @@ export function CompletedRouteState({ deliveredCount, setActiveTab, setDeliveryF
   return (
     <View style={styles.panel}>
       <Surface style={styles.completedStateCard} elevation={1}>
-        <MaterialCommunityIcons name="check-circle-outline" size={64} color={palette.successDark} />
+        <MaterialCommunityIcons name="check-circle-outline" size={64} color={theme.colors.secondary} />
         <Text variant="headlineSmall" style={styles.completedTitleText}>¡Ruta completada!</Text>
         <Text variant="bodyMedium" style={styles.completedSubtitleText}>
           Completaste las {deliveredCount} entregas asignadas para el día de hoy.
