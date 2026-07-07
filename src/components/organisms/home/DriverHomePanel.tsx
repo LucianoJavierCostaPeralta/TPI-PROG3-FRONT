@@ -3,7 +3,7 @@ import { View, TouchableOpacity, Linking, Platform, Alert } from 'react-native';
 import { Text, Surface, useTheme, type MD3Theme, TextInput } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { type AppWorkspace, type DeliveryFilter, type HomeTabKey, ORDER_STATUS } from '../../../types/workspace';
-import { palette, spacing } from '../../../styles/theme';
+import { spacing } from '../../../styles/theme';
 import { CTAButton } from '../../atoms';
 import { createStyles } from './HomePanel.styles';
 import { EmptyRouteState, CompletedRouteState } from './DriverRouteStates';
@@ -184,7 +184,7 @@ return (
           </View>
         ) : nextStopOrder.estado_id === ORDER_STATUS.ON_THE_WAY || nextStopOrder.estado?.toLowerCase() === 'on_the_way' ? (
           <View style={styles.deliveryProgressForm}>
-            <Text style={{ fontSize: 13, fontWeight: '500', color: palette.neutral600, marginBottom: 2 }}>
+            <Text style={{ fontSize: 13, fontWeight: '500', color: theme.colors.onSurfaceVariant, marginBottom: 2 }}>
               DNI del Cliente (8 dígitos)
             </Text>
             <TextInput
@@ -195,8 +195,8 @@ return (
               keyboardType="numeric"
               maxLength={8}
               style={styles.dniInputHome}
-              activeOutlineColor="#2196F3"
-              left={<TextInput.Icon icon="account-box-outline" color={palette.neutral400} />}
+              activeOutlineColor={theme.colors.primary}
+              left={<TextInput.Icon icon="account-box-outline" color={theme.colors.onSurfaceVariant} />}
             />
             <View style={[styles.btnRow, { marginTop: spacing.xs }]}>
               <CTAButton
@@ -218,7 +218,7 @@ return (
                 style={styles.navigationIconButtonCircular}
                 onPress={handleNavigate}
               >
-                <MaterialCommunityIcons name="navigation-variant" size={24} color="#1D4ED8" style={{ transform: [{ rotate: '45deg' }] }} />
+                <MaterialCommunityIcons name="navigation-variant" size={24} color={theme.colors.primary} style={{ transform: [{ rotate: '45deg' }] }} />
               </TouchableOpacity>
             </View>
             <View style={[styles.btnRow, { marginTop: spacing.xs }]}>
@@ -253,17 +253,17 @@ return (
       
       <View style={styles.statsContainerRow}>
         <View style={styles.statBox}>
-          <MaterialCommunityIcons name="flag-outline" size={22} color="#1D4ED8" />
+          <MaterialCommunityIcons name="flag-outline" size={22} color={theme.colors.primary} />
           <Text style={styles.statLabel}>Parada</Text>
           <Text style={styles.statValue}>{currentStopIndex} de {totalStops}</Text>
         </View>
         <View style={[styles.statBox, styles.statBorder]}>
-          <MaterialCommunityIcons name="package-variant-closed" size={22} color="#1D4ED8" />
+          <MaterialCommunityIcons name="package-variant-closed" size={22} color={theme.colors.primary} />
           <Text style={styles.statLabel}>Entregas Hoy</Text>
           <Text style={styles.statValue}>{totalStops}</Text>
         </View>
         <View style={[styles.statBox, styles.statBorder]}>
-          <MaterialCommunityIcons name="map-marker-distance" size={22} color="#1D4ED8" />
+          <MaterialCommunityIcons name="map-marker-distance" size={22} color={theme.colors.primary} />
           <Text style={styles.statLabel}>Distancia Total</Text>
           <Text style={styles.statValue}>{distanceSim} km</Text>
         </View>

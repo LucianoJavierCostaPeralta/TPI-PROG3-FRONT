@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { View, StyleSheet } from 'react-native';
 import { Surface, Text, useTheme, type MD3Theme } from 'react-native-paper';
-import { palette, radii, spacing, typography } from '../../styles/theme';
+import { radii, spacing, typography } from '../../styles/theme';
 
 type AlertaItem = {
   id: string;
@@ -32,7 +32,7 @@ export function AlertasActivas() {
         {mockAlertas.map((alerta) => (
           <View key={alerta.id} style={styles.item}>
             <View style={styles.iconWrap}>
-              <MaterialCommunityIcons name="alert-circle-outline" size={18} color="#FBBF24" />
+              <MaterialCommunityIcons name="alert-circle-outline" size={18} color={theme.colors.tertiary} />
             </View>
             <View style={styles.content}>
               <Text style={styles.itemTitle}>{alerta.titulo}</Text>
@@ -50,9 +50,9 @@ const createStyles = (theme: MD3Theme) =>
     container: {
       padding: spacing.lg,
       borderRadius: radii.lg,
-      backgroundColor: `${palette.darkGray}E6`,
+      backgroundColor: theme.colors.surfaceVariant,
       borderWidth: 1,
-      borderColor: `${palette.primaryBlue}33`,
+      borderColor: theme.colors.outline,
       gap: spacing.md,
     },
     header: {
@@ -70,13 +70,13 @@ const createStyles = (theme: MD3Theme) =>
       minWidth: 24,
       height: 24,
       borderRadius: radii.pill,
-      backgroundColor: `${palette.primaryBlue}1A`,
+      backgroundColor: theme.colors.primaryContainer,
       alignItems: 'center',
       justifyContent: 'center',
       paddingHorizontal: spacing.sm,
     },
     badgeText: {
-      color: palette.primaryBlue,
+      color: theme.colors.primary,
       fontFamily: 'Inter-SemiBold',
       fontSize: 12,
       fontWeight: '600',
@@ -91,9 +91,9 @@ const createStyles = (theme: MD3Theme) =>
       paddingVertical: spacing.sm,
       paddingHorizontal: spacing.md,
       borderRadius: radii.md,
-      backgroundColor: `${theme.colors.surface}12`,
+      backgroundColor: theme.colors.surfaceVariant,
       borderWidth: 1,
-      borderColor: `${theme.colors.surfaceVariant}55`,
+      borderColor: theme.colors.outline,
     },
     iconWrap: {
       width: 32,
@@ -101,7 +101,7 @@ const createStyles = (theme: MD3Theme) =>
       borderRadius: radii.pill,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: `${'#FBBF24'}20`,
+      backgroundColor: theme.colors.tertiaryContainer,
     },
     content: {
       flex: 1,

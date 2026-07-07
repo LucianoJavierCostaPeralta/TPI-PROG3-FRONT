@@ -141,7 +141,7 @@ export function DeliveryEditPanel({
                     icon="close-circle-outline"
                     onPress={() => onChange('choferId', '')}
                     disabled={saving}
-                    color={palette.error}
+                    color={theme.colors.error}
                   />
                 ) : (
                   <PaperTextInput.Icon
@@ -219,7 +219,7 @@ export function DeliveryEditPanel({
                       <Text variant="titleSmall" style={styles.dialogName}>{driver.nombre}</Text>
                       <Text variant="bodySmall" style={styles.dialogSub}>{driver.activo ? 'Activo' : 'Inactivo'}</Text>
                     </View>
-                    <MaterialCommunityIcons name="chevron-right" size={20} color="#CCCCCC" />
+                    <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.outline} />
                   </TouchableOpacity>
                 )}
               />
@@ -272,9 +272,9 @@ const createStyles = (theme: MD3Theme) =>
       alignItems: 'center',
       padding: 12,
       borderRadius: radii.md,
-      backgroundColor: palette.successLightBg,
+      backgroundColor: theme.colors.secondaryContainer,
       borderWidth: 1,
-      borderColor: palette.success,
+      borderColor: theme.colors.secondary,
     },
     unassignedCard: {
       flexDirection: 'row',

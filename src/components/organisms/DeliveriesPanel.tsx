@@ -180,7 +180,7 @@ export function DeliveriesPanel({
                           icon="close-circle-outline"
                           onPress={() => onChange('choferId', '')}
                           disabled={saving}
-                          color={palette.error}
+                          color={theme.colors.error}
                         />
                       ) : (
                         <PaperTextInput.Icon
@@ -264,7 +264,7 @@ export function DeliveriesPanel({
                       <Text variant="titleSmall" style={styles.dialogName}>{driver.nombre}</Text>
                       <Text variant="bodySmall" style={styles.dialogSub}>{driver.activo ? 'Activo' : 'Inactivo'}</Text>
                     </View>
-                    <MaterialCommunityIcons name="chevron-right" size={20} color="#CCCCCC" />
+                    <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.outline} />
                   </TouchableOpacity>
                 )}
               />
@@ -375,22 +375,22 @@ const createStyles = (theme: MD3Theme) =>
       fontWeight: '800',
     },
     badgePending: {
-      backgroundColor: palette.pendingLightBg,
+      backgroundColor: theme.colors.tertiaryContainer,
     },
     badgeOnWay: {
-      backgroundColor: palette.infoLightBg,
+      backgroundColor: theme.colors.primaryContainer,
     },
     badgeDelivered: {
-      backgroundColor: palette.successLightBg,
+      backgroundColor: theme.colors.secondaryContainer,
     },
     badgeTextPending: {
-      color: palette.warning,
+      color: theme.colors.tertiary,
     },
     badgeTextOnWay: {
-      color: palette.secondary,
+      color: theme.colors.primary,
     },
     badgeTextDelivered: {
-      color: palette.successDark,
+      color: theme.colors.secondary,
     },
     cardAddress: {
       color: theme.colors.onSurface,
@@ -418,9 +418,9 @@ const createStyles = (theme: MD3Theme) =>
       alignItems: 'center',
       padding: 12,
       borderRadius: radii.md,
-      backgroundColor: palette.successLightBg,
+      backgroundColor: theme.colors.secondaryContainer,
       borderWidth: 1,
-      borderColor: palette.success,
+      borderColor: theme.colors.secondary,
     },
     unassignedCard: {
       flexDirection: 'row',
