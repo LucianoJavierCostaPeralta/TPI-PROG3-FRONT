@@ -1,9 +1,10 @@
-import { useEffect, useRef } from "react";
-import { Animated, StyleSheet, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context"; // nuevo: respeta safe area en splash
-import { StatusBar } from "expo-status-bar";
-import { palette, spacing, dimensions, radii } from "../../styles/theme";
-import LogoZoneScore from "../../assets/logo-zonescore.svg";
+import { useEffect, useRef } from 'react';
+import { Animated, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
+import { useTheme, type MD3Theme } from 'react-native-paper';
+import { spacing, dimensions, radii } from '../../styles/theme';
+import LogoZoneScore from '../../assets/logo-zonescore.svg';
 
 type SplashTemplateProps = {
   onAnimationComplete: () => void;
@@ -11,7 +12,8 @@ type SplashTemplateProps = {
 
 export function SplashTemplate({ onAnimationComplete }: SplashTemplateProps) {
   const insets = useSafeAreaInsets();
-  const styles = createStyles();
+  const theme = useTheme<MD3Theme>();
+  const styles = createStyles(theme);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const spinAnim = useRef(new Animated.Value(0)).current;
@@ -40,7 +42,7 @@ export function SplashTemplate({ onAnimationComplete }: SplashTemplateProps) {
 
   const spinInterpolate = spinAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ["0deg", "360deg"],
+    outputRange: ['0deg', '360deg'],
   });
 
   const animatedSpinStyle = {
@@ -48,9 +50,8 @@ export function SplashTemplate({ onAnimationComplete }: SplashTemplateProps) {
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
-      <StatusBar style="light" backgroundColor={palette.primaryBlue} translucent />
-      {/* nuevo: padding seguro superior e inferior para evitar recortes en notch y gesture bar */}
+    <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}> 
+      <StatusBar style="light" backgroundColor={theme.colors.primary} translucent />
 
       <View style={styles.content}>
         <Animated.View
@@ -87,70 +88,64 @@ export function SplashTemplate({ onAnimationComplete }: SplashTemplateProps) {
   );
 }
 
-const createStyles = () =>
+const createStyles = (theme: MD3Theme) =>
   StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: palette.primaryBlue,
-      justifyContent: "center",
-      alignItems: "center",
+      backgroundColor: theme.colors.primary,
+      justifyContent: 'center',
+      alignItems: 'center',
     },
-
     content: {
-      alignItems: "center",
-      justifyContent: "center",
+      alignItems: 'center',
+      justifyContent: 'center',
     },
-
     logoContainer: {
       marginBottom: dimensions.splash.logoBottomMargin,
-      alignItems: "center",
+      alignItems: 'center',
     },
-
     logoText: {
-      color: palette.white,
+      color: theme.colors.onPrimary,
       fontSize: dimensions.splash.logoTextSize,
-      fontWeight: "900",
+      fontWeight: '900',
       letterSpacing: 2,
-      textAlign: "center",
+      textAlign: 'center',
     },
-
     logoSubtitle: {
-      color: palette.whiteAlpha80,
+      color: theme.colors.onPrimary,
+      opacity: 0.8,
       fontSize: dimensions.splash.logoSubtitleSize,
-      fontWeight: "500",
+      fontWeight: '500',
       letterSpacing: 1,
       marginTop: spacing.sm,
     },
-
     spinnerContainer: {
       width: dimensions.spinner.container,
       height: dimensions.spinner.container,
       marginBottom: dimensions.splash.spinnerBottomMargin,
-      alignItems: "center",
-      justifyContent: "center",
+      alignItems: 'center',
+      justifyContent: 'center',
     },
-
     spinner: {
       width: dimensions.spinner.inner,
       height: dimensions.spinner.inner,
       borderRadius: dimensions.spinner.inner / 2,
       borderWidth: 4,
-      borderColor: palette.whiteAlpha30,
-      borderTopColor: palette.white,
-      borderRightColor: palette.white,
+      borderColor: theme.colors.onPrimary + '4D',
+      borderTopColor: theme.colors.onPrimary,
+      borderRightColor: theme.colors.onPrimary,
     },
-
     loadingText: {
-      color: palette.whiteAlpha90,
+      color: theme.colors.onPrimary,
+      opacity: 0.9,
       fontSize: 16,
-      fontWeight: "500",
+      fontWeight: '500',
       letterSpacing: 0.5,
     },
-
     brandRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
       gap: dimensions.splash.brandRowGap,
     },
   });

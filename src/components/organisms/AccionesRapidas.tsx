@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { View, StyleSheet, Pressable } from 'react-native';
 import { Surface, Text, useTheme, type MD3Theme } from 'react-native-paper';
-import { palette, radii, spacing } from '../../styles/theme';
+import { radii, spacing } from '../../styles/theme';
 
 type AccionesRapidasProps = {
   verMapa: () => void;
@@ -33,7 +33,7 @@ export function AccionesRapidas({ verMapa, crearChofer, crearEntrega }: Acciones
         {actions.map((action) => (
           <Pressable key={action.key} style={styles.card} onPress={action.onPress}>
             <View style={styles.iconWrap}>
-              <MaterialCommunityIcons name={action.icon} size={18} color={palette.primaryBlue} />
+              <MaterialCommunityIcons name={action.icon} size={18} color={theme.colors.primary} />
             </View>
             <Text style={styles.label}>{action.label}</Text>
           </Pressable>
@@ -48,9 +48,9 @@ const createStyles = (theme: MD3Theme) =>
     container: {
       padding: spacing.lg,
       borderRadius: radii.lg,
-      backgroundColor: `${palette.darkGray}E6`,
+      backgroundColor: theme.colors.surfaceVariant,
       borderWidth: 1,
-      borderColor: `${palette.primaryBlue}33`,
+      borderColor: theme.colors.outline,
       gap: spacing.md,
     },
     title: {
@@ -69,9 +69,9 @@ const createStyles = (theme: MD3Theme) =>
       minWidth: 140,
       padding: spacing.md,
       borderRadius: radii.md,
-      backgroundColor: `${theme.colors.surface}12`,
+      backgroundColor: theme.colors.surfaceVariant,
       borderWidth: 1,
-      borderColor: `${theme.colors.surfaceVariant}55`,
+      borderColor: theme.colors.outline,
       alignItems: 'flex-start',
       gap: spacing.sm,
     },
@@ -79,7 +79,7 @@ const createStyles = (theme: MD3Theme) =>
       width: 36,
       height: 36,
       borderRadius: radii.md,
-      backgroundColor: `${palette.primaryBlue}1A`,
+      backgroundColor: theme.colors.primaryContainer,
       alignItems: 'center',
       justifyContent: 'center',
     },

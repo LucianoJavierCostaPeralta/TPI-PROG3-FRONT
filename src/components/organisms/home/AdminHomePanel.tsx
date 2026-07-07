@@ -1,7 +1,6 @@
 import { View, TouchableOpacity } from 'react-native';
 import { Text, IconButton, Surface, useTheme, type MD3Theme } from 'react-native-paper';
 import { type AppWorkspace, type HomeTabKey } from '../../../types/workspace';
-import { palette } from '../../../styles/theme';
 import { createStyles } from './HomePanel.styles';
 import { DonutChart, LegendItem, QuickActionButton } from './HomeDashboardWidgets';
 
@@ -21,7 +20,6 @@ export function AdminHomePanel({
   const theme = useTheme<MD3Theme>();
   const styles = createStyles(theme);
 
-// Lógica de cálculo de estadísticas para administrador
 const totalOrders = workspace.orders.length;
 
 const countDeliveredToday = workspace.orders.filter(order => {
@@ -43,12 +41,12 @@ const countDelivered = workspace.orders.filter(order => order.estado_id === 5 ||
 const countOthers = totalOrders - (countOnWay + countPending + countCancelled + countDelivered);
 
 const segments = [
-  { percentage: totalOrders > 0 ? countDelivered / totalOrders : 0, color: palette.success }, // Entregadas (Green)
-  { percentage: totalOrders > 0 ? countOnWay / totalOrders : 0, color: palette.secondary },    // En camino (Blue)
-  { percentage: totalOrders > 0 ? countPending / totalOrders : 0, color: palette.warning },  // Pendientes (Orange)
-  { percentage: totalOrders > 0 ? countCancelled / totalOrders : 0, color: palette.error }, // Canceladas (Red)
-  { percentage: totalOrders > 0 ? countOthers / totalOrders : 0, color: palette.neutral500 },   // Otros (Gray)
-].filter(s => s.percentage > 0);
+  { percentage: totalOrders > 0 ? countDelivered / totalOrders : 0, color: theme.colors.secondary },
+  { percentage: totalOrders > 0 ? countOnWay / totalOrders : 0, color: theme.colors.primary },
+  { percentage: totalOrders > 0 ? countPending / totalOrders : 0, color: theme.colors.tertiary },
+  { percentage: totalOrders > 0 ? countCancelled / totalOrders : 0, color: theme.colors.error },
+  { percentage: totalOrders > 0 ? countOthers / totalOrders : 0, color: theme.colors.onSurfaceVariant },
+].filter((s) => s.percentage > 0);
 
 // Obtener las notificaciones no leídas reales
 const getRelativeTime = (dateStr: string) => {
@@ -83,15 +81,15 @@ return (
       <View style={styles.kpiGrid}>
         <View style={styles.kpiRow}>
           <Surface style={styles.kpiCard} elevation={1}>
-            <View style={[styles.kpiIconContainer, { backgroundColor: palette.successLight }]}>
-              <IconButton icon="check-circle-outline" iconColor={palette.success} size={24} style={styles.kpiIcon} />
+            <View style={[styles.kpiIconContainer, { backgroundColor: theme.colors.secondaryContainer }]}>
+              <IconButton icon="check-circle-outline" iconColor={theme.colors.secondary} size={24} style={styles.kpiIcon} />
             </View>
             <Text variant="headlineMedium" style={styles.kpiValue}>{countDeliveredToday}</Text>
             <Text variant="bodySmall" style={styles.kpiLabel}>Completadas hoy</Text>
           </Surface>
           <Surface style={styles.kpiCard} elevation={1}>
-            <View style={[styles.kpiIconContainer, { backgroundColor: palette.infoLight }]}>
-              <IconButton icon="truck-delivery-outline" iconColor={palette.secondary} size={24} style={styles.kpiIcon} />
+            <View style={[styles.kpiIconContainer, { backgroundColor: theme.colors.primaryContainer }]}>
+              <IconButton icon="truck-delivery-outline" iconColor={theme.colors.primary} size={24} style={styles.kpiIcon} />
             </View>
             <Text variant="headlineMedium" style={styles.kpiValue}>{countOnWay}</Text>
             <Text variant="bodySmall" style={styles.kpiLabel}>En camino</Text>
@@ -99,15 +97,15 @@ return (
         </View>
         <View style={styles.kpiRow}>
           <Surface style={styles.kpiCard} elevation={1}>
-            <View style={[styles.kpiIconContainer, { backgroundColor: palette.warningLight }]}>
-              <IconButton icon="clock-outline" iconColor={palette.warning} size={24} style={styles.kpiIcon} />
+            <View style={[styles.kpiIconContainer, { backgroundColor: theme.colors.tertiaryContainer }]}>
+              <IconButton icon="clock-outline" iconColor={theme.colors.tertiary} size={24} style={styles.kpiIcon} />
             </View>
             <Text variant="headlineMedium" style={styles.kpiValue}>{countPending}</Text>
             <Text variant="bodySmall" style={styles.kpiLabel}>Pendientes</Text>
           </Surface>
           <Surface style={styles.kpiCard} elevation={1}>
-            <View style={[styles.kpiIconContainer, { backgroundColor: palette.errorLight }]}>
-              <IconButton icon="close-circle-outline" iconColor={palette.error} size={24} style={styles.kpiIcon} />
+            <View style={[styles.kpiIconContainer, { backgroundColor: theme.colors.errorContainer }]}>
+              <IconButton icon="close-circle-outline" iconColor={theme.colors.error} size={24} style={styles.kpiIcon} />
             </View>
             <Text variant="headlineMedium" style={styles.kpiValue}>{countCancelled}</Text>
             <Text variant="bodySmall" style={styles.kpiLabel}>Canceladas</Text>
@@ -123,12 +121,12 @@ return (
         <DonutChart segments={segments} total={totalOrders} />
         
         <View style={styles.legendContainer}>
-          <LegendItem label="Entregadas" count={countDelivered} percentage={totalOrders > 0 ? Math.round((countDelivered / totalOrders) * 100) : 0} color={palette.success} />
-          <LegendItem label="En camino" count={countOnWay} percentage={totalOrders > 0 ? Math.round((countOnWay / totalOrders) * 100) : 0} color={palette.secondary} />
-          <LegendItem label="Pendientes" count={countPending} percentage={totalOrders > 0 ? Math.round((countPending / totalOrders) * 100) : 0} color={palette.warning} />
-          <LegendItem label="Canceladas" count={countCancelled} percentage={totalOrders > 0 ? Math.round((countCancelled / totalOrders) * 100) : 0} color={palette.error} />
+          <LegendItem label="Entregadas" count={countDelivered} percentage={totalOrders > 0 ? Math.round((countDelivered / totalOrders) * 100) : 0} color={theme.colors.secondary} />
+          <LegendItem label="En camino" count={countOnWay} percentage={totalOrders > 0 ? Math.round((countOnWay / totalOrders) * 100) : 0} color={theme.colors.primary} />
+          <LegendItem label="Pendientes" count={countPending} percentage={totalOrders > 0 ? Math.round((countPending / totalOrders) * 100) : 0} color={theme.colors.tertiary} />
+          <LegendItem label="Canceladas" count={countCancelled} percentage={totalOrders > 0 ? Math.round((countCancelled / totalOrders) * 100) : 0} color={theme.colors.error} />
           {countOthers > 0 && (
-            <LegendItem label="Otros" count={countOthers} percentage={totalOrders > 0 ? Math.round((countOthers / totalOrders) * 100) : 0} color={palette.neutral500} />
+            <LegendItem label="Otros" count={countOthers} percentage={totalOrders > 0 ? Math.round((countOthers / totalOrders) * 100) : 0} color={theme.colors.onSurfaceVariant} />
           )}
         </View>
       </Surface>
@@ -147,7 +145,7 @@ return (
       
       {activeAlerts.length === 0 ? (
         <Surface style={styles.alertCardEmpty} elevation={1}>
-          <IconButton icon="check-circle-outline" iconColor={palette.success} size={24} />
+          <IconButton icon="check-circle-outline" iconColor={theme.colors.secondary} size={24} />
           <Text variant="bodyMedium" style={styles.alertEmptyText}>Sin alertas activas</Text>
           <Text variant="bodySmall" style={styles.mutedText}>Todos los pedidos y choferes al día.</Text>
         </Surface>
@@ -157,7 +155,7 @@ return (
             <Surface style={styles.alertCard} elevation={1}>
               <IconButton 
                 icon={alert.type === 'error' ? 'alert-circle-outline' : alert.type === 'warning' ? 'alert-outline' : alert.type === 'success' ? 'check-circle-outline' : 'information-outline'} 
-                iconColor={alert.type === 'error' ? palette.error : alert.type === 'warning' ? palette.warning : alert.type === 'success' ? palette.success : palette.secondary} 
+                iconColor={alert.type === 'error' ? theme.colors.error : alert.type === 'warning' ? theme.colors.tertiary : alert.type === 'success' ? theme.colors.secondary : theme.colors.primary} 
                 size={22} 
                 style={styles.alertIcon} 
               />
@@ -166,7 +164,7 @@ return (
                 <Text variant="bodySmall" style={styles.mutedText}>{alert.subtitle}</Text>
                 <Text variant="labelSmall" style={styles.alertTimeText}>{alert.time}</Text>
               </View>
-              <IconButton icon="chevron-right" size={20} iconColor={palette.neutral400} />
+              <IconButton icon="chevron-right" size={20} iconColor={theme.colors.outline} />
             </Surface>
           </TouchableOpacity>
         ))
@@ -181,7 +179,7 @@ return (
           <QuickActionButton 
             label="Nueva entrega" 
             icon="plus-circle-outline" 
-            color={palette.secondary} 
+            color={theme.colors.primary} 
             onPress={() => {
               setActiveTab('deliveries');
               setShowDeliveryForm(true);
@@ -190,7 +188,7 @@ return (
           <QuickActionButton 
             label="Agregar chofer" 
             icon="account-plus-outline" 
-            color={palette.success} 
+            color={theme.colors.secondary} 
             onPress={() => {
               setActiveTab('drivers');
               setShowDriverForm(true);

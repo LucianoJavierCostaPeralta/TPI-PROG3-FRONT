@@ -463,7 +463,7 @@ const createStyles = (theme: MD3Theme) =>
       borderRadius: radii.md,
       backgroundColor: theme.colors.secondaryContainer,
       borderWidth: 1,
-      borderColor: palette.successDark,
+      borderColor: theme.colors.secondary,
       gap: spacing.sm,
       marginBottom: spacing.sm,
     },

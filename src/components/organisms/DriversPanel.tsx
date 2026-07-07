@@ -2,7 +2,7 @@ import { StyleSheet, View, ScrollView, FlatList, TouchableOpacity } from 'react-
 import { Text, IconButton, Surface, useTheme, type MD3Theme } from 'react-native-paper';
 import { CTAButton, TextInputField, UserAvatar, EmptyState } from '../atoms';
 import { DateField, SectionCard } from '../molecules';
-import { radii, spacing, palette } from '../../styles/theme';
+import { radii, spacing } from '../../styles/theme';
 import { DriverDetailPanel } from './DriverDetailPanel';
 import {
   type Driver,
@@ -310,13 +310,13 @@ const createStyles = (theme: MD3Theme) =>
       borderRadius: 10,
     },
     statusBadgeActive: {
-      backgroundColor: palette.successLightBg,
+      backgroundColor: theme.colors.secondaryContainer,
     },
     statusBadgeInactive: {
       backgroundColor: theme.colors.surfaceVariant,
     },
     statusBadgeTextActive: {
-      color: palette.successDark,
+      color: theme.colors.secondary,
       fontWeight: '700',
     },
     statusBadgeTextInactive: {

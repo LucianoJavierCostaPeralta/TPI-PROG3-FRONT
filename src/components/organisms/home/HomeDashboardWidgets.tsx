@@ -1,7 +1,6 @@
 import { View, TouchableOpacity } from 'react-native';
 import Svg, { Circle, G } from 'react-native-svg';
 import { Text, IconButton, Surface, useTheme, type MD3Theme } from 'react-native-paper';
-import { palette } from '../../../styles/theme';
 import { createStyles } from './HomePanel.styles';
 
 export type PieChartSegment = {
@@ -27,7 +26,7 @@ export function DonutChart({ segments, total }: { segments: PieChartSegment[]; t
             cy="60"
             r={radius}
             fill="transparent"
-            stroke={palette.neutral200}
+            stroke={theme.colors.outline}
             strokeWidth={strokeWidth}
           />
           {segments.map((segment, index) => {
