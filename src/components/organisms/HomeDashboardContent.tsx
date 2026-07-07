@@ -8,7 +8,7 @@ import { DriversPanel } from './DriversPanel';
 import { HomePanel } from './HomePanel';
 import { MapPanel } from './MapPanel';
 import { NotificationsPanel } from './NotificationsPanel';
-import { type useHomeDashboard } from '../../hooks/useHomeDashboard';
+import { type useHomeDashboard } from '../../hooks/dashboard/useHomeDashboard';
 
 type HomeDashboardContentProps = ReturnType<typeof useHomeDashboard>;
 

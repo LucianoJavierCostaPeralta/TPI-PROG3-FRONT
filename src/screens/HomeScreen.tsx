@@ -1,6 +1,6 @@
 import { HomeDashboardContent } from '../components/organisms';
 import { HomeTemplate } from '../components/templates';
-import { useHomeDashboard } from '../hooks/useHomeDashboard';
+import { useHomeDashboard } from '../hooks/dashboard/useHomeDashboard';
 import { type HomeScreenProps } from '../types/workspace';
 
 export function HomeScreen({ navigation }: HomeScreenProps) {
