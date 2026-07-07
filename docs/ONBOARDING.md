@@ -332,6 +332,46 @@ Los tipos centrales están en `src/types/workspace.ts`.
 - Revisa notificaciones.
 - Edita su perfil.
 
+### CRUD de choferes
+
+1. El administrador abre el panel de choferes desde el home.
+2. El formulario usa `DriverForm` con nombre, email, teléfono, DNI y fecha de nacimiento.
+3. Antes de enviar, `validateDriverForm()` obliga a completar nombre, documento, email, teléfono y fecha.
+4. `handleCreateDriver()` normaliza los campos y llama a `createDriver()`.
+5. `createDriver()` hace `POST /admin/choferes`.
+6. El backend crea el usuario chofer con contraseña inicial fija `123456`.
+7. Si la creación sale bien, se limpia el formulario, se cierra el panel y se recarga el workspace.
+8. Si ocurre un error, se muestra `getApiErrorMessage()` en pantalla.
+9. Para borrar un chofer, `handleDeleteDriver()` llama a `DELETE /admin/choferes/:id`.
+10. Si el backend responde bien, el chofer se quita del estado local y se muestra un alert de éxito.
+
+### CRUD de entregas
+
+1. El administrador abre el panel de entregas.
+2. `DeliveryForm` junta cliente, DNI, productos, destino, referencia, observaciones, fecha y chofer opcional.
+3. `validateDeliveryForm()` revisa los campos obligatorios antes de enviar.
+4. `handleCreateDelivery()` llama a `createDelivery()` con los datos normalizados.
+5. `createDelivery()` hace `POST /admin/entregas`.
+6. Si se eligió un chofer en el formulario, después de crear la entrega se llama a `assignDriver()`.
+7. `assignDriver()` hace `PATCH /admin/entregas/:id/assign`.
+8. Luego se resetea el formulario, se cierra el panel y se recarga el workspace.
+9. Para editar una entrega, `startEditingDelivery()` precarga el formulario con `deliveryToForm()`.
+10. `handleEditDelivery()` valida otra vez, compara el chofer actual con el nuevo y, si cambió, vuelve a asignarlo.
+11. La edición actualiza el pedido en memoria, cierra el modo edición, reinicia el formulario y fuerza una recarga del workspace.
+12. El cambio de chofer también puede hacerse sin editar toda la entrega, desde el selector del panel o desde el detalle.
+
+### Flujo de estado de una entrega
+
+1. El chofer recibe una entrega asignada o acepta una existente.
+2. `handleUpdateOrderStatus()` bloquea iniciar una nueva entrega si ya tiene una activa en `accepted` o `on the way`.
+3. `acceptDelivery()` llama a `PATCH /chofer/entregas/:id/accept`.
+4. `updateDeliveryState()` llama a `PATCH /chofer/entregas/:id/state`.
+5. Para pasar a "en camino", se envía `estado_id = 4`.
+6. Para finalizar, se envía `estado_id = 5` y puede ir `cliente_dni` para validar la entrega.
+7. Para cancelar desde la UI local, se marca la orden como cancelada en AsyncStorage y en el estado del workspace.
+8. Cada cambio de estado puede generar una notificación local con `createStatusNotification()`.
+9. Después de cada acción, la app recarga el workspace para reflejar el nuevo estado desde backend.
+
 ### Chofer
 
 - Ve su recorrido y la próxima parada.
