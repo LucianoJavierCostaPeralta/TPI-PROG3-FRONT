@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { OSRM_BASE_URL } from '../constants/osrm';
 
 export type RouteCoordinate = {
   latitude: number;
@@ -9,7 +10,7 @@ export async function fetchStreetRoute(coordinates: RouteCoordinate[]) {
   if (coordinates.length < 2) return [];
 
   const coordsQuery = coordinates.map((c) => String(c.longitude) + ',' + String(c.latitude)).join(';');
-  const url = 'https://router.project-osrm.org/route/v1/driving/' + coordsQuery + '?overview=full&geometries=geojson';
+  const url = `${OSRM_BASE_URL}/${coordsQuery}?overview=full&geometries=geojson`;
 
   try {
     const { data } = await axios.get(url, { timeout: 8000 });
