@@ -4,6 +4,7 @@ import { Surface, Text, TextInput as PaperTextInput, Portal, Dialog, Button, use
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { CTAButton, TextInputField, UserAvatar } from '../atoms';
 import { spacing, radii, palette } from '../../styles/theme';
+import { onlyDigits } from '../../utils/orders/deliveryStatus';
 import {
   type Driver,
   type DeliveryForm,
@@ -66,7 +67,7 @@ export function DeliveryEditPanel({
               label="DNI del cliente"
               placeholder="12345678"
               value={form.clienteDni}
-              onChangeText={(value) => onChange('clienteDni', value.replace(/\D/g, '').slice(0, 8))}
+              onChangeText={(value) => onChange('clienteDni', onlyDigits(value, 8))}
               keyboardType="number-pad"
               disabled={saving}
               icon="card-account-details-outline"

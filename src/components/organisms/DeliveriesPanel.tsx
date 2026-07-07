@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { StyleSheet, View, ScrollView, Platform, ActivityIndicator, FlatList, TouchableOpacity } from 'react-native';
-import { Text, IconButton, Surface, useTheme, type MD3Theme, Divider, TextInput as PaperTextInput, Portal, Dialog, Button } from 'react-native-paper';
+import { StyleSheet, View, ScrollView, Platform, FlatList, TouchableOpacity } from 'react-native';
+import { Text, IconButton, Surface, useTheme, type MD3Theme, TextInput as PaperTextInput, Portal, Dialog, Button } from 'react-native-paper';
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { CTAButton, TextInputField, EmptyState, UserAvatar } from '../atoms';
+import { DeliveryFilters } from './DeliveryFilters';
+import { DeliveryOrderCard } from './DeliveryOrderCard';
 import { radii, spacing, palette } from '../../styles/theme';
 import {
   type Driver,
@@ -14,39 +16,8 @@ import {
   formatDateForInput,
   formatDateForDisplay,
   normalizeOrderStatus,
-  getBackendStatusLabel,
-  getOrderTitle,
-  getOrderField,
-  getOrderDestination,
-  getOrderProducts,
-  getAssignedDriverName,
-  formatOrderDate,
-  ORDER_STATUS,
 } from '../../types/workspace';
-
-// Helper input sanitization
-const onlyDigits = (value: string, maxLength: number) => {
-  return value.replace(/\D/g, '').slice(0, maxLength);
-};
-
-
-
-function FilterChip({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
-  const theme = useTheme<MD3Theme>();
-  const styles = createStyles(theme);
-
-  return (
-    <CTAButton
-      compact
-      variant={active ? 'primary' : 'secondary'}
-      onPress={onPress}
-      style={styles.filterChip}
-      labelStyle={styles.filterChipLabel}
-    >
-      {label}
-    </CTAButton>
-  );
-}
+import { onlyDigits } from '../../utils/orders/deliveryStatus';
 
 export function DeliveriesPanel({
   role,
@@ -108,91 +79,6 @@ export function DeliveriesPanel({
     return normalizeOrderStatus(order.estado) === filter;
   });
 
-  const renderOrderCard = ({ item: order, index: idx }: { item: DeliveryOrder; index: number }) => {
-    const currentStatus = normalizeOrderStatus(order.estado_id ?? order.estado);
-    const orderPedId = `#PED-${String(idx + 1).padStart(4, '0')}`;
-
-    const getBadgeConfig = (id: number | undefined, nameVal: unknown) => {
-      const name = String(nameVal ?? '').toLowerCase();
-
-      if (id === ORDER_STATUS.CANCELLED || ['7', 'cancelado', 'cancelled'].includes(name)) {
-        return {
-          label: 'Cancelada',
-          bg: '#FEE2E2',
-          text: '#B91C1C',
-        };
-      }
-      if (id === 5 || id === 6 || ['5', '6', 'realizado', 'entregado', 'entregada', 'delivered', 'finalizado'].includes(name)) {
-        return {
-          label: 'Entregada',
-          bg: palette.successLightBg,
-          text: palette.successDark,
-        };
-      }
-      if (id === 4 || ['4', 'en camino', 'en_camino', 'encamino', 'on the way', 'on_the_way'].includes(name)) {
-        return {
-          label: 'En camino',
-          bg: palette.infoLightBg,
-          text: palette.secondary,
-        };
-      }
-      if (id === 3 || ['3', 'aceptado', 'accepted'].includes(name)) {
-        return {
-          label: 'Asignado',
-          bg: '#E0F2FE',
-          text: '#0369A1',
-        };
-      }
-      if (id === 2 || ['2', 'asignado', 'assigned'].includes(name)) {
-        return {
-          label: 'Asignado',
-          bg: '#E0F2FE',
-          text: '#0369A1',
-        };
-      }
-      return {
-        label: 'Pendiente',
-        bg: palette.pendingLightBg,
-        text: palette.warning,
-      };
-    };
-
-    const badgeConfig = getBadgeConfig(order.estado_id, order.estado);
-
-    return (
-      <TouchableOpacity
-        key={order.id}
-        activeOpacity={0.7}
-        onPress={() => setSelectedDelivery(order)}
-      >
-        <Surface style={styles.cleanOrderCard} elevation={1}>
-          <View style={styles.cardLeftContent}>
-            <View style={styles.cardHeaderRow}>
-              <Text variant="titleMedium" style={styles.cardPedId}>{orderPedId}</Text>
-              <View style={[styles.cleanBadge, { backgroundColor: badgeConfig.bg }]}>
-                <Text variant="labelSmall" style={[styles.cleanBadgeText, { color: badgeConfig.text }]}>
-                  {badgeConfig.label}
-                </Text>
-              </View>
-            </View>
-            
-            <Text variant="bodyMedium" style={styles.cardAddress} numberOfLines={2}>
-              {getOrderDestination(order) || 'Dirección no especificada'}
-            </Text>
-            
-            <Text variant="bodySmall" style={styles.cardDate}>
-              {formatOrderDate(order)}
-            </Text>
-          </View>
-          
-          <View style={styles.cardRightContent}>
-            <MaterialCommunityIcons name="chevron-right" size={24} color="#7C7C7C" />
-          </View>
-        </Surface>
-      </TouchableOpacity>
-    );
-  };
-
   if (orders.length === 0 && role === 'chofer') {
     return <EmptyState text="No tenes pedidos asignados." />;
   }
@@ -200,18 +86,7 @@ export function DeliveriesPanel({
   return (
     <View style={styles.container}>
       {!showForm && (
-        <View style={styles.filterBarWrapper}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.filterRow}
-          >
-            <FilterChip label="Todos" active={filter === 'todos'} onPress={() => onFilterChange('todos')} />
-            <FilterChip label="Pendientes" active={filter === 'pendiente'} onPress={() => onFilterChange('pendiente')} />
-            <FilterChip label="En camino" active={filter === 'en camino'} onPress={() => onFilterChange('en camino')} />
-            <FilterChip label="Realizados" active={filter === 'realizado'} onPress={() => onFilterChange('realizado')} />
-          </ScrollView>
-        </View>
+        <DeliveryFilters filter={filter} onFilterChange={onFilterChange} />
       )}
 
       {role === 'administrador' && showForm ? (
@@ -352,7 +227,9 @@ export function DeliveriesPanel({
         <FlatList
           data={filteredOrders}
           keyExtractor={(item) => item.id}
-          renderItem={renderOrderCard}
+          renderItem={({ item, index }) => (
+            <DeliveryOrderCard order={item} index={index} onPress={setSelectedDelivery} />
+          )}
           ListEmptyComponent={
             <EmptyState text={orders.length === 0 ? 'No hay pedidos asociados a esta empresa.' : 'No hay entregas para este filtro.'} />
           }
@@ -429,20 +306,6 @@ const createStyles = (theme: MD3Theme) =>
       backgroundColor: theme.colors.surfaceVariant,
       paddingVertical: 12,
       marginBottom: 8,
-    },
-    filterRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-      paddingHorizontal: 16,
-    },
-    filterChip: {
-      minWidth: 100,
-      borderRadius: radii.md,
-    },
-    filterChipLabel: {
-      fontSize: 12,
-      textAlign: 'center',
     },
     formCard: {
       padding: 16,
