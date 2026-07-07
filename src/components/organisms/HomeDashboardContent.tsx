@@ -1,4 +1,5 @@
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { useCallback } from 'react';
 import { ActivityIndicator, FAB, Text, useTheme, type MD3Theme } from 'react-native-paper';
 import { AdminsPanel } from './AdminsPanel';
 import { DeliveriesPanel } from './DeliveriesPanel';
@@ -15,6 +16,8 @@ type HomeDashboardContentProps = ReturnType<typeof useHomeDashboard>;
 export function HomeDashboardContent(props: HomeDashboardContentProps) {
   const theme = useTheme<MD3Theme>();
   const styles = createStyles(theme);
+  const refreshWorkspace = useCallback(() => void props.loadWorkspace(true), [props.loadWorkspace]);
+  const isAdmin = props.workspace.profile.rol === 'administrador';
 
   if (props.loading) {
     return (
@@ -33,7 +36,7 @@ export function HomeDashboardContent(props: HomeDashboardContentProps) {
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           refreshControl={
-            <RefreshControl refreshing={props.refreshing} onRefresh={() => void props.loadWorkspace(true)} />
+            <RefreshControl refreshing={props.refreshing} onRefresh={refreshWorkspace} />
           }
         >
           <HomePanel
@@ -52,7 +55,7 @@ export function HomeDashboardContent(props: HomeDashboardContentProps) {
         <AdminsPanel
           admins={props.workspace.admins}
           refreshing={props.refreshing}
-          onRefresh={() => void props.loadWorkspace(true)}
+          onRefresh={refreshWorkspace}
         />
       ) : null}
 
@@ -64,14 +67,14 @@ export function HomeDashboardContent(props: HomeDashboardContentProps) {
           saving={props.savingDriver}
           showForm={props.showDriverForm}
           filter={props.driverFilter}
-          canCreate={props.workspace.profile.rol === 'administrador'}
+          canCreate={isAdmin}
           onFilterChange={props.setDriverFilter}
           onChange={props.updateDriverField}
           onSubmit={props.handleCreateDriver}
           onCancel={() => props.setShowDriverForm(false)}
           onDelete={props.handleDeleteDriver}
           refreshing={props.refreshing}
-          onRefresh={() => void props.loadWorkspace(true)}
+          onRefresh={refreshWorkspace}
           selectedDriver={props.selectedDriver}
           setSelectedDriver={props.setSelectedDriver}
         />
@@ -115,7 +118,7 @@ export function HomeDashboardContent(props: HomeDashboardContentProps) {
             onAssign={props.handleAssignDriver}
             onUpdateStatus={props.handleUpdateOrderStatus}
             refreshing={props.refreshing}
-            onRefresh={() => void props.loadWorkspace(true)}
+            onRefresh={refreshWorkspace}
             setSelectedDelivery={props.setSelectedDelivery}
           />
         )
@@ -133,7 +136,7 @@ export function HomeDashboardContent(props: HomeDashboardContentProps) {
         />
       ) : null}
 
-      {props.workspace.profile.rol === 'administrador' && props.activeTab === 'drivers' ? (
+      {isAdmin && props.activeTab === 'drivers' ? (
         <FAB
           icon={props.showDriverForm ? 'close' : 'plus'}
           style={styles.fab}
@@ -141,7 +144,7 @@ export function HomeDashboardContent(props: HomeDashboardContentProps) {
         />
       ) : null}
 
-      {props.workspace.profile.rol === 'administrador' && props.activeTab === 'deliveries' ? (
+      {isAdmin && props.activeTab === 'deliveries' ? (
         <FAB
           icon={props.showDeliveryForm ? 'close' : 'plus'}
           style={styles.fab}
