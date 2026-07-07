@@ -269,12 +269,59 @@ Los tipos centrales están en `src/types/workspace.ts`.
 
 ## 10. Flujos principales
 
-### Auth
+### Arranque de la app
 
-1. `login` guarda token en AsyncStorage.
-2. `index.tsx` intenta restaurar la sesión con `hasStoredSession()` + `getProfile()`.
-3. Si el token falla, se limpia con `clearSession()`.
-4. `logout()` revoca la sesión en backend y borra el token local.
+1. `src/app/index.tsx` muestra el splash inicial.
+2. Cuando termina la animación, se llama a `hasStoredSession()`.
+3. Si no hay token guardado, la app va a `/onboarding1`.
+4. Si hay token, se llama a `getProfile()` para validar que la sesión siga viva.
+5. Si el perfil responde bien, la app reemplaza la ruta por `/home`.
+6. Si el backend rechaza el token, se ejecuta `clearSession()` y se vuelve a onboarding.
+
+### Onboarding
+
+1. `onboarding1` presenta el valor de la gestión de entregas.
+2. `onboarding2` refuerza rutas optimizadas y monitoreo de conductores.
+3. Desde la primera pantalla se puede saltar directo a `/login`.
+4. Desde la segunda pantalla se avanza a `/login` con `router.replace`, sin dejar el onboarding en el historial.
+
+### Login
+
+1. El usuario entra a `/login`.
+2. `LoginForm` controla correo y contraseña en estado local.
+3. Antes de enviar, valida que ambos campos existan y que el correo tenga formato válido.
+4. `LoginScreen` normaliza el email con `trim().toLowerCase()`.
+5. `login(email, password)` llama a `POST /login`.
+6. Si la respuesta es correcta, la API devuelve `user` y `token`.
+7. El token se guarda en AsyncStorage con la clave `zonescore:auth-token`.
+8. El navegador se redirige a `HomeScreen` con `navigation.reset`, para que el login no quede en el stack.
+9. Si el backend responde con error, `getApiErrorMessage()` transforma el mensaje para mostrarlo en pantalla.
+10. Si el usuario toca "Olvidé mi contraseña", la misma pantalla habilita el formulario de recuperación sin salir del login.
+
+### Recuperación de contraseña
+
+1. El usuario abre el formulario de recuperación desde `LoginForm`.
+2. La app valida que el correo no esté vacío y que sea un email válido.
+3. `recoverPassword(email)` llama a `POST /recuperar-password`.
+4. Si el backend responde bien, se muestra un `Alert` con el mensaje devuelto.
+5. Luego se limpia el formulario y se oculta el bloque de recuperación.
+
+### Register
+
+1. El usuario entra a `/register` desde la pantalla de login.
+2. `RegisterContent` administra el formulario con React Hook Form + Zod.
+3. Se validan nombre de empresa, CUIT, email, contraseña, teléfono, tamaño de flota y aceptación de términos.
+4. Al enviar, `RegisterScreen` normaliza los campos y llama a `register()`.
+5. `register()` hace `POST /registro` y recibe `user` + `token`.
+6. El token se persiste en AsyncStorage igual que en login.
+7. La navegación se resetea hacia `HomeScreen`, por lo que la empresa queda logueada al terminar el alta.
+8. Si hay error de validación o del backend, se muestra en la misma vista.
+
+### Logout
+
+1. `logout()` intenta avisar al backend con `POST /logout`.
+2. Tanto si el backend responde bien como si falla, el token local se borra.
+3. La sesión queda inválida en el dispositivo y la próxima apertura vuelve a validar desde `index.tsx`.
 
 ### Administrador
 
