@@ -1,8 +1,8 @@
 import { useCallback } from 'react';
 import { Alert } from 'react-native';
 import { acceptDelivery, getApiErrorMessage, updateDeliveryState } from '../../services/api';
-import { mapDelivery, markOrderAsCancelled } from '../../utils/homeDashboard';
-import { createStatusNotification } from '../../utils/homeDashboardNotifications';
+import { mapDelivery, markOrderAsCancelled } from '../../utils/dashboard/homeDashboard';
+import { createStatusNotification } from '../../utils/dashboard/homeDashboardNotifications';
 import { type AppWorkspace, type DeliveryOrder, ORDER_STATUS } from '../../types/workspace';
 
 type UseOrderStatusActionsParams = {

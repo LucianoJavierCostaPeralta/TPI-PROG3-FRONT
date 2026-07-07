@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { type BottomTabMenuItem } from '../components/molecules';
+import { type BottomTabMenuItem } from '../../components/molecules';
 import {
   listAdminDeliveries,
   listDriverDeliveries,
@@ -7,7 +7,7 @@ import {
   type AuthUser,
   type Delivery,
   type Driver as ApiDriver,
-} from '../services/api';
+} from '../../services/api';
 import {
   type AppNotification,
   type AppWorkspace,
@@ -17,7 +17,7 @@ import {
   type HomeTabKey,
   type UserRole,
   ORDER_STATUS,
-} from '../types/workspace';
+} from '../../types/workspace';
 
 export const initialDriverForm: DriverForm = {
   nombre: '',

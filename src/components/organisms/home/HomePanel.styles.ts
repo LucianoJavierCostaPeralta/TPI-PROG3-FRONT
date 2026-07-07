@@ -1,0 +1,521 @@
+import { StyleSheet } from 'react-native';
+import { type MD3Theme } from 'react-native-paper';
+import { radii, spacing, palette } from '../../../styles/theme';
+
+export const createStyles = (theme: MD3Theme) =>
+  StyleSheet.create({
+    panel: {
+      gap: 14,
+    },
+    summaryCard: {
+      padding: 16,
+      borderRadius: radii.md,
+      backgroundColor: theme.colors.surface,
+      gap: 4,
+    },
+    cardTitle: {
+      color: theme.colors.onSurface,
+      fontWeight: '700',
+    },
+    primaryText: {
+      color: theme.colors.onSurface,
+      fontWeight: '700',
+    },
+    mutedText: {
+      color: theme.colors.onSurfaceVariant,
+    },
+    metricsRow: {
+      flexDirection: 'row',
+      gap: 10,
+    },
+    metricCard: {
+      flex: 1,
+      padding: 14,
+      borderRadius: radii.md,
+      backgroundColor: theme.colors.surface,
+    },
+    dashboardSection: {
+      gap: 10,
+      marginTop: 6,
+    },
+    sectionHeaderRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 2,
+    },
+    sectionHeader: {
+      fontWeight: '800',
+      color: theme.colors.onSurface,
+      fontSize: 16,
+    },
+    kpiGrid: {
+      gap: 10,
+    },
+    kpiRow: {
+      flexDirection: 'row',
+      gap: 10,
+    },
+    kpiCard: {
+      flex: 1,
+      padding: 16,
+      borderRadius: radii.md,
+      backgroundColor: theme.colors.surface,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 4,
+    },
+    kpiIconContainer: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 4,
+    },
+    kpiIcon: {
+      margin: 0,
+    },
+    kpiValue: {
+      fontWeight: '800',
+      color: theme.colors.onSurface,
+      lineHeight: 28,
+    },
+    kpiLabel: {
+      color: theme.colors.onSurfaceVariant,
+      fontWeight: '500',
+    },
+    chartCard: {
+      padding: 16,
+      borderRadius: radii.md,
+      backgroundColor: theme.colors.surface,
+      alignItems: 'center',
+      gap: 16,
+    },
+    chartContainer: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      position: 'relative',
+      marginVertical: 10,
+    },
+    chartCenterText: {
+      position: 'absolute',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    legendContainer: {
+      width: '100%',
+      gap: 10,
+      borderTopWidth: 1,
+      borderColor: theme.colors.outline,
+      paddingTop: 16,
+    },
+    legendItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      width: '100%',
+    },
+    legendDot: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+    },
+    legendLabel: {
+      flex: 1,
+      color: theme.colors.onSurface,
+    },
+    alertCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 10,
+      borderRadius: radii.md,
+      backgroundColor: theme.colors.surface,
+      gap: 8,
+    },
+    alertCardEmpty: {
+      alignItems: 'center',
+      padding: 20,
+      borderRadius: radii.md,
+      backgroundColor: theme.colors.surface,
+      gap: 4,
+    },
+    alertIcon: {
+      margin: 0,
+    },
+    alertContent: {
+      flex: 1,
+      gap: 1,
+    },
+    actionsGrid: {
+      gap: 10,
+    },
+    actionsRow: {
+      flexDirection: 'row',
+      gap: 10,
+    },
+    actionCard: {
+      flex: 1,
+      borderRadius: radii.md,
+      backgroundColor: theme.colors.surface,
+      overflow: 'hidden',
+    },
+    actionCardTouchableOpacity: {
+      padding: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    chartCenterValue: {
+      fontWeight: '800',
+      textAlign: 'center',
+      lineHeight: 28,
+    },
+    chartCenterLabel: {
+      color: palette.neutral600,
+      textAlign: 'center',
+      fontSize: 10,
+    },
+    legendItemLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      flex: 1,
+    },
+    legendItemRight: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    legendItemCount: {
+      fontWeight: '700',
+    },
+    legendItemPercentage: {
+      color: palette.neutral600,
+    },
+    actionButtonIcon: {
+      margin: 0,
+    },
+    actionButtonText: {
+      fontWeight: '700',
+      color: theme.colors.onSurface,
+      marginTop: 4,
+    },
+    alertLinkText: {
+      color: palette.secondary,
+      fontWeight: '700',
+    },
+    alertEmptyText: {
+      color: palette.success,
+      fontWeight: '700',
+    },
+    alertTitleText: {
+      fontWeight: '700',
+      color: theme.colors.onSurface,
+    },
+    alertTimeText: {
+      color: palette.neutral500,
+      marginTop: 2,
+    },
+    driverContainer: {
+      flex: 1,
+      padding: spacing.md,
+      gap: spacing.lg,
+    },
+    nextStopCard: {
+      borderRadius: radii.lg,
+      padding: spacing.lg,
+      backgroundColor: theme.colors.surface,
+      borderWidth: 1,
+      borderColor: theme.colors.outline,
+      position: 'relative',
+    },
+    nextStopHeaderRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    nextStopLabel: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: theme.colors.onSurfaceVariant,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+      marginBottom: spacing.xs,
+    },
+    nextStopAddressRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: spacing.md,
+      marginVertical: spacing.sm,
+    },
+    nextStopAddressContainer: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: spacing.xs,
+    },
+    nextStopAddressText: {
+      fontWeight: '900',
+      color: theme.colors.onSurface,
+      fontSize: 20,
+      lineHeight: 26,
+    },
+    nextStopSubtitle: {
+      fontSize: 14,
+      color: theme.colors.onSurfaceVariant,
+      marginLeft: spacing.lg,
+      marginTop: -spacing.xs,
+    },
+    navigationIconButton: {
+      backgroundColor: '#E0E7FF',
+      borderRadius: radii.pill,
+      margin: 0,
+    },
+    metricsDivider: {
+      height: 1,
+      backgroundColor: theme.colors.outline,
+      marginVertical: spacing.md,
+      opacity: 0.5,
+    },
+    statsContainerRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    statBox: {
+      flex: 1,
+      alignItems: 'center',
+    },
+    statBorder: {
+      borderLeftWidth: 1,
+      borderColor: '#E5E7EB',
+    },
+    statValue: {
+      fontWeight: '900',
+      color: theme.colors.onSurface,
+      fontSize: 16,
+      marginBottom: 2,
+    },
+    statLabel: {
+      fontSize: 10,
+      color: theme.colors.onSurfaceVariant,
+      textTransform: 'uppercase',
+      fontWeight: '600',
+    },
+    etaText: {
+      fontWeight: '900',
+      color: theme.colors.onSurface,
+      fontSize: 16,
+    },
+    etaSubText: {
+      fontSize: 10,
+      color: theme.colors.onSurfaceVariant,
+      fontWeight: '600',
+    },
+    remainingStopsContainer: {
+      borderRadius: radii.lg,
+      padding: spacing.lg,
+      backgroundColor: theme.colors.surface,
+      borderWidth: 1,
+      borderColor: theme.colors.outline,
+      gap: spacing.md,
+    },
+    remainingTitle: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: theme.colors.onSurfaceVariant,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+      marginBottom: spacing.xs,
+    },
+    remainingList: {
+      gap: spacing.sm,
+    },
+    remainingItemRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: spacing.sm,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.surfaceVariant,
+    },
+    remainingItemLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      flex: 1,
+    },
+    circleBadge: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: theme.colors.outline,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.colors.surface,
+    },
+    circleBadgeText: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: theme.colors.onSurfaceVariant,
+    },
+    remainingAddressText: {
+      fontSize: 14,
+      color: theme.colors.onSurface,
+      fontWeight: '500',
+      flex: 1,
+    },
+    remainingTimeText: {
+      fontSize: 12,
+      color: theme.colors.onSurfaceVariant,
+      fontWeight: '500',
+    },
+    viewAllButton: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingTop: spacing.xs,
+    },
+    viewAllText: {
+      fontWeight: '700',
+      color: theme.colors.primary,
+      fontSize: 14,
+    },
+    navigateBottomButton: {
+      marginVertical: spacing.sm,
+    },
+    completedStateCard: {
+      borderRadius: radii.lg,
+      padding: spacing.xl,
+      backgroundColor: theme.colors.surface,
+      borderWidth: 1,
+      borderColor: theme.colors.outline,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.md,
+    },
+    completedTitleText: {
+      fontWeight: '900',
+      color: theme.colors.onSurface,
+      textAlign: 'center',
+    },
+    completedSubtitleText: {
+      color: theme.colors.onSurfaceVariant,
+      textAlign: 'center',
+      marginBottom: spacing.md,
+    },
+    statusBadge: {
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: radii.sm,
+      alignSelf: 'flex-start',
+    },
+    statusBadgeText: {
+      fontSize: 12,
+      fontWeight: '700',
+    },
+    currentStopActionBox: {
+      marginTop: spacing.xs,
+      marginBottom: spacing.xs,
+    },
+    btnRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      width: '100%',
+    },
+    deliveryProgressForm: {
+      gap: spacing.sm,
+      width: '100%',
+    },
+    dniInputHome: {
+      backgroundColor: '#FFFFFF',
+      height: 48,
+      fontSize: 14,
+    },
+    statusDot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      marginRight: 6,
+    },
+    navigationIconButtonCircular: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: '#EFF6FF',
+    },
+    followingStopCard: {
+      borderRadius: radii.lg,
+      padding: spacing.md,
+      backgroundColor: theme.colors.surface,
+      borderWidth: 1,
+      borderColor: theme.colors.outlineVariant,
+      marginTop: spacing.md,
+    },
+    followingStopHeader: {
+      marginBottom: spacing.xs,
+    },
+    followingStopTitle: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: '#1D4ED8',
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+    },
+    followingStopBodyRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    followingStopLeftCircle: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: '#EFF6FF',
+    },
+    followingStopMiddle: {
+      flex: 1,
+    },
+    followingStopAddressRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: spacing.sm,
+    },
+    followingStopAddress: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: theme.colors.onSurface,
+      flex: 1,
+    },
+    statusBadgeSmall: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: radii.sm,
+    },
+    statusBadgeTextSmall: {
+      fontSize: 10,
+      fontWeight: '700',
+      color: '#15803D',
+    },
+    greenDot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: '#15803D',
+      marginRight: 4,
+    },
+    followingStopClient: {
+      fontSize: 12,
+      color: theme.colors.onSurfaceVariant,
+      marginTop: 2,
+    },
+  });

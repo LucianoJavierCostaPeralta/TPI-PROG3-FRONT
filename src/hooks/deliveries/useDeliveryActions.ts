@@ -1,8 +1,8 @@
 import { useCallback } from 'react';
 import { Alert } from 'react-native';
 import { assignDriver, createDelivery, getApiErrorMessage } from '../../services/api';
-import { deliveryToForm, initialDeliveryForm } from '../../utils/homeDashboard';
-import { validateDeliveryForm } from '../../utils/homeDashboardValidation';
+import { deliveryToForm, initialDeliveryForm } from '../../utils/dashboard/homeDashboard';
+import { validateDeliveryForm } from '../../utils/dashboard/homeDashboardValidation';
 import { type AppWorkspace, type DeliveryForm, type DeliveryOrder } from '../../types/workspace';
 
 type UseDeliveryActionsParams = {

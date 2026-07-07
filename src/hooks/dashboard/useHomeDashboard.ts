@@ -7,7 +7,7 @@ import { useDeliveryActions } from '../deliveries/useDeliveryActions';
 import { useDriverActions } from '../drivers/useDriverActions';
 import { useOrderStatusActions } from '../deliveries/useOrderStatusActions';
 import { useWorkspaceData } from '../workspace/useWorkspaceData';
-import { getTabs } from '../../utils/homeDashboard';
+import { getTabs } from '../../utils/dashboard/homeDashboard';
 import { type HomeScreenProps } from '../../types/workspace';
 
 export function useHomeDashboard({ navigation }: HomeScreenProps) {

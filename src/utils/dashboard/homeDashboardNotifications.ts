@@ -1,4 +1,4 @@
-import { type AppNotification, type AppWorkspace } from '../types/workspace';
+import { type AppNotification, type AppWorkspace } from '../../types/workspace';
 
 export function createStatusNotification(
   action: string,

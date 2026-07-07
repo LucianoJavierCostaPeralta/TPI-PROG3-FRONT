@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { getTitle } from '../../utils/homeDashboard';
+import { getTitle } from '../../utils/dashboard/homeDashboard';
 import { type AppWorkspace, type DeliveryOrder, type Driver, type HomeTabKey } from '../../types/workspace';
 
 type UseDashboardHeaderNavParams = {

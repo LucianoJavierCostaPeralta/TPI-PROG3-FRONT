@@ -1,8 +1,8 @@
 import { useCallback } from 'react';
 import { Alert } from 'react-native';
 import { createDriver, deleteDriver, getApiErrorMessage } from '../../services/api';
-import { initialDriverForm } from '../../utils/homeDashboard';
-import { validateDriverForm } from '../../utils/homeDashboardValidation';
+import { initialDriverForm } from '../../utils/dashboard/homeDashboard';
+import { validateDriverForm } from '../../utils/dashboard/homeDashboardValidation';
 import { type AppWorkspace, type DriverForm } from '../../types/workspace';
 
 type UseDriverActionsParams = {

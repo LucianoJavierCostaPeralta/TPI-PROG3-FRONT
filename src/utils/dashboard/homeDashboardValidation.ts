@@ -1,5 +1,5 @@
-import { type DeliveryForm, type DriverForm } from '../types/workspace';
-import { DNI_PATTERN, EMAIL_PATTERN, PHONE_PATTERN, isPastDate } from './validation';
+import { type DeliveryForm, type DriverForm } from '../../types/workspace';
+import { DNI_PATTERN, EMAIL_PATTERN, PHONE_PATTERN, isPastDate } from '../validation';
 
 export function validateDriverForm(driverForm: DriverForm) {
   if (!driverForm.nombre.trim()) return 'Ingresá el nombre del chofer.';

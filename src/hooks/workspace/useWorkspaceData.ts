@@ -6,7 +6,7 @@ import {
   initialChoferNotifications,
   loadRoleData,
   normalizeRole,
-} from '../../utils/homeDashboard';
+} from '../../utils/dashboard/homeDashboard';
 import { type AppWorkspace } from '../../types/workspace';
 
 export function useWorkspaceData() {
