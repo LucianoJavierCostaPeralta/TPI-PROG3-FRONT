@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native';
 import { type MD3Theme } from 'react-native-paper';
-import { radii, spacing, palette } from '../../../styles/theme';
+import { radii, spacing } from '../../../styles/theme';
 
 export const createStyles = (theme: MD3Theme) =>
   StyleSheet.create({
@@ -171,7 +171,7 @@ export const createStyles = (theme: MD3Theme) =>
       lineHeight: 28,
     },
     chartCenterLabel: {
-      color: palette.neutral600,
+      color: theme.colors.onSurfaceVariant,
       textAlign: 'center',
       fontSize: 10,
     },
@@ -190,7 +190,7 @@ export const createStyles = (theme: MD3Theme) =>
       fontWeight: '700',
     },
     legendItemPercentage: {
-      color: palette.neutral600,
+      color: theme.colors.onSurfaceVariant,
     },
     actionButtonIcon: {
       margin: 0,
@@ -201,11 +201,11 @@ export const createStyles = (theme: MD3Theme) =>
       marginTop: 4,
     },
     alertLinkText: {
-      color: palette.secondary,
+      color: theme.colors.primary,
       fontWeight: '700',
     },
     alertEmptyText: {
-      color: palette.success,
+      color: theme.colors.secondary,
       fontWeight: '700',
     },
     alertTitleText: {
@@ -213,7 +213,7 @@ export const createStyles = (theme: MD3Theme) =>
       color: theme.colors.onSurface,
     },
     alertTimeText: {
-      color: palette.neutral500,
+      color: theme.colors.onSurfaceVariant,
       marginTop: 2,
     },
     driverContainer: {
@@ -268,7 +268,7 @@ export const createStyles = (theme: MD3Theme) =>
       marginTop: -spacing.xs,
     },
     navigationIconButton: {
-      backgroundColor: '#E0E7FF',
+      backgroundColor: theme.colors.primaryContainer,
       borderRadius: radii.pill,
       margin: 0,
     },
@@ -289,7 +289,7 @@ export const createStyles = (theme: MD3Theme) =>
     },
     statBorder: {
       borderLeftWidth: 1,
-      borderColor: '#E5E7EB',
+      borderColor: theme.colors.outline,
     },
     statValue: {
       fontWeight: '900',
@@ -430,7 +430,7 @@ export const createStyles = (theme: MD3Theme) =>
       width: '100%',
     },
     dniInputHome: {
-      backgroundColor: '#FFFFFF',
+      backgroundColor: theme.colors.surface,
       height: 48,
       fontSize: 14,
     },
@@ -446,7 +446,7 @@ export const createStyles = (theme: MD3Theme) =>
       borderRadius: 24,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: '#EFF6FF',
+      backgroundColor: theme.colors.primaryContainer,
     },
     followingStopCard: {
       borderRadius: radii.lg,
@@ -462,7 +462,7 @@ export const createStyles = (theme: MD3Theme) =>
     followingStopTitle: {
       fontSize: 12,
       fontWeight: '700',
-      color: '#1D4ED8',
+      color: theme.colors.primary,
       textTransform: 'uppercase',
       letterSpacing: 0.8,
     },
@@ -477,7 +477,7 @@ export const createStyles = (theme: MD3Theme) =>
       borderRadius: 18,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: '#EFF6FF',
+      backgroundColor: theme.colors.primaryContainer,
     },
     followingStopMiddle: {
       flex: 1,
@@ -504,13 +504,13 @@ export const createStyles = (theme: MD3Theme) =>
     statusBadgeTextSmall: {
       fontSize: 10,
       fontWeight: '700',
-      color: '#15803D',
+      color: theme.colors.secondary,
     },
     greenDot: {
       width: 6,
       height: 6,
       borderRadius: 3,
-      backgroundColor: '#15803D',
+      backgroundColor: theme.colors.secondary,
       marginRight: 4,
     },
     followingStopClient: {

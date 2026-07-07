@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { StyleSheet, View, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
+import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
 import { Text, Surface, useTheme, type MD3Theme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { spacing, radii, palette } from '../../styles/theme';
+import { radii, spacing } from '../../styles/theme';
 import type { AppNotification } from '../../types/workspace';
 
 interface NotificationsPanelProps {
@@ -24,7 +24,6 @@ export function NotificationsPanel({
   const readNotifications = notifications.filter((n) => n.leida);
   const displayedList = activeSubTab === 'nuevas' ? unreadNotifications : readNotifications;
 
-  // Agrupamiento por hoy y ayer/anteriores
   const isToday = (dateStr: string) => {
     const today = new Date();
     const d = new Date(dateStr);
@@ -45,59 +44,45 @@ export function NotificationsPanel({
 
     if (diffMins < 1) return 'Hace un momento';
     if (diffMins < 60) return `Hace ${diffMins} min`;
-    
+
     const diffHours = Math.floor(diffMins / 60);
     if (diffHours < 24) return `Hace ${diffHours} hr`;
 
     return 'Ayer';
   };
 
-  const getAlertColor = (tipo: AppNotification['tipo']) => {
+  const getAlertConfig = (tipo: AppNotification['tipo']) => {
     switch (tipo) {
       case 'warning':
-        return palette.warning;
+        return {
+          color: theme.colors.tertiary,
+          backgroundColor: theme.colors.tertiaryContainer,
+          icon: 'alert-outline' as const,
+        };
       case 'error':
-        return palette.error;
+        return {
+          color: theme.colors.error,
+          backgroundColor: theme.colors.errorContainer,
+          icon: 'close-circle-outline' as const,
+        };
       case 'success':
-        return palette.success;
+        return {
+          color: theme.colors.secondary,
+          backgroundColor: theme.colors.secondaryContainer,
+          icon: 'check-circle-outline' as const,
+        };
       case 'info':
       default:
-        return palette.secondary;
-    }
-  };
-
-  const getAlertBg = (tipo: AppNotification['tipo']) => {
-    switch (tipo) {
-      case 'warning':
-        return '#FFFBEB'; // amarillo claro
-      case 'error':
-        return '#FEF2F2'; // rojo claro
-      case 'success':
-        return '#F0FDF4'; // verde claro
-      case 'info':
-      default:
-        return '#EFF6FF'; // azul claro
-    }
-  };
-
-  const getAlertIcon = (tipo: AppNotification['tipo']) => {
-    switch (tipo) {
-      case 'warning':
-        return 'alert-outline';
-      case 'error':
-        return 'close-circle-outline';
-      case 'success':
-        return 'check-circle-outline';
-      case 'info':
-      default:
-        return 'information-outline';
+        return {
+          color: theme.colors.primary,
+          backgroundColor: theme.colors.primaryContainer,
+          icon: 'information-outline' as const,
+        };
     }
   };
 
   const renderNotificationCard = (notification: AppNotification) => {
-    const color = getAlertColor(notification.tipo);
-    const bg = getAlertBg(notification.tipo);
-    const icon = getAlertIcon(notification.tipo);
+    const config = getAlertConfig(notification.tipo);
 
     return (
       <TouchableOpacity
@@ -105,9 +90,9 @@ export function NotificationsPanel({
         activeOpacity={0.8}
         onPress={() => !notification.leida && onMarkAsRead(notification.id)}
       >
-        <Surface style={[styles.card, { borderLeftColor: color }]} elevation={1}>
-          <View style={[styles.iconWrapper, { backgroundColor: bg }]}>
-            <MaterialCommunityIcons name={icon} size={22} color={color} />
+        <Surface style={[styles.card, { borderLeftColor: config.color }]} elevation={1}>
+          <View style={[styles.iconWrapper, { backgroundColor: config.backgroundColor }]}>
+            <MaterialCommunityIcons name={config.icon} size={22} color={config.color} />
           </View>
           <View style={styles.contentWrapper}>
             <View style={styles.cardHeader}>
@@ -129,21 +114,19 @@ export function NotificationsPanel({
 
   return (
     <View style={styles.container}>
-      {/* Header local del panel */}
       <View style={styles.header}>
         <Text variant="headlineSmall" style={styles.headerTitle}>
           Notificaciones
         </Text>
-        {unreadNotifications.length > 0 && (
+        {unreadNotifications.length > 0 ? (
           <TouchableOpacity onPress={onMarkAllAsRead} activeOpacity={0.7}>
             <Text variant="labelLarge" style={styles.markAllText}>
               Marcar todas leídas
             </Text>
           </TouchableOpacity>
-        )}
+        ) : null}
       </View>
 
-      {/* Tabs */}
       <View style={styles.tabsContainer}>
         <TouchableOpacity
           style={[styles.tabButton, activeSubTab === 'nuevas' && styles.activeTabButton]}
@@ -157,11 +140,11 @@ export function NotificationsPanel({
             >
               Nuevas
             </Text>
-            {unreadNotifications.length > 0 && (
+            {unreadNotifications.length > 0 ? (
               <View style={styles.badgeContainer}>
                 <Text style={styles.badgeText}>{unreadNotifications.length}</Text>
               </View>
-            )}
+            ) : null}
           </View>
         </TouchableOpacity>
 
@@ -179,11 +162,10 @@ export function NotificationsPanel({
         </TouchableOpacity>
       </View>
 
-      {/* Listado */}
       {displayedList.length === 0 ? (
         <View style={styles.emptyContainer}>
           <View style={styles.emptyIconCircle}>
-            <MaterialCommunityIcons name="bell-off-outline" size={80} color="#D1D5DB" />
+            <MaterialCommunityIcons name="bell-off-outline" size={80} color={theme.colors.outline} />
           </View>
           <Text variant="headlineSmall" style={styles.emptyTitle}>
             No tienes notificaciones
@@ -194,7 +176,7 @@ export function NotificationsPanel({
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          {todayList.length > 0 && (
+          {todayList.length > 0 ? (
             <View style={styles.section}>
               <Text variant="labelMedium" style={styles.sectionTitle}>
                 HOY
@@ -203,9 +185,9 @@ export function NotificationsPanel({
                 {todayList.map(renderNotificationCard)}
               </View>
             </View>
-          )}
+          ) : null}
 
-          {yesterdayList.length > 0 && (
+          {yesterdayList.length > 0 ? (
             <View style={styles.section}>
               <Text variant="labelMedium" style={styles.sectionTitle}>
                 AYER Y ANTERIORES
@@ -214,7 +196,7 @@ export function NotificationsPanel({
                 {yesterdayList.map(renderNotificationCard)}
               </View>
             </View>
-          )}
+          ) : null}
         </ScrollView>
       )}
     </View>
@@ -240,13 +222,13 @@ const createStyles = (theme: MD3Theme) =>
       color: theme.colors.onSurface,
     },
     markAllText: {
-      color: palette.secondary,
+      color: theme.colors.primary,
       fontWeight: '700',
     },
     tabsContainer: {
       flexDirection: 'row',
       borderBottomWidth: 1,
-      borderBottomColor: '#E5E7EB',
+      borderBottomColor: theme.colors.outline,
       marginBottom: 10,
     },
     tabButton: {
@@ -257,7 +239,7 @@ const createStyles = (theme: MD3Theme) =>
       borderBottomColor: 'transparent',
     },
     activeTabButton: {
-      borderBottomColor: palette.secondary,
+      borderBottomColor: theme.colors.primary,
     },
     tabContent: {
       flexDirection: 'row',
@@ -266,14 +248,14 @@ const createStyles = (theme: MD3Theme) =>
     },
     tabText: {
       fontWeight: '600',
-      color: '#6B7280',
+      color: theme.colors.onSurfaceVariant,
     },
     activeTabText: {
-      color: palette.secondary,
+      color: theme.colors.primary,
       fontWeight: '800',
     },
     badgeContainer: {
-      backgroundColor: palette.secondary,
+      backgroundColor: theme.colors.primary,
       borderRadius: 10,
       minWidth: 20,
       height: 20,
@@ -282,7 +264,7 @@ const createStyles = (theme: MD3Theme) =>
       paddingHorizontal: 6,
     },
     badgeText: {
-      color: '#FFFFFF',
+      color: theme.colors.onPrimary,
       fontSize: 11,
       fontWeight: '800',
     },
@@ -294,7 +276,7 @@ const createStyles = (theme: MD3Theme) =>
       marginTop: 14,
     },
     sectionTitle: {
-      color: '#9CA3AF',
+      color: theme.colors.onSurfaceVariant,
       fontWeight: '800',
       marginBottom: 8,
       letterSpacing: 0.5,
@@ -304,7 +286,7 @@ const createStyles = (theme: MD3Theme) =>
     },
     card: {
       flexDirection: 'row',
-      backgroundColor: '#FFFFFF',
+      backgroundColor: theme.colors.surface,
       borderRadius: radii.md,
       borderLeftWidth: 5,
       padding: 14,
@@ -334,11 +316,11 @@ const createStyles = (theme: MD3Theme) =>
       marginRight: 8,
     },
     cardTime: {
-      color: '#9CA3AF',
+      color: theme.colors.onSurfaceVariant,
       fontSize: 11,
     },
     cardMessage: {
-      color: '#4B5563',
+      color: theme.colors.onSurfaceVariant,
       fontSize: 13,
       lineHeight: 18,
     },
@@ -353,7 +335,7 @@ const createStyles = (theme: MD3Theme) =>
       width: 140,
       height: 140,
       borderRadius: 70,
-      backgroundColor: '#F3F4F6',
+      backgroundColor: theme.colors.surfaceVariant,
       justifyContent: 'center',
       alignItems: 'center',
       marginBottom: 24,
@@ -365,7 +347,7 @@ const createStyles = (theme: MD3Theme) =>
       textAlign: 'center',
     },
     emptySubtitle: {
-      color: '#6B7280',
+      color: theme.colors.onSurfaceVariant,
       textAlign: 'center',
       lineHeight: 20,
     },

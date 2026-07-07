@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { StyleSheet, View, TouchableOpacity, FlatList } from 'react-native';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
-import { Text, Portal, Dialog, Button, IconButton, Surface } from 'react-native-paper';
+import { Text, Portal, Dialog, Button, IconButton, Surface, useTheme, type MD3Theme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { MarkerNode, UserAvatar } from '../atoms';
 import { RouteProgress } from '../molecules';
@@ -15,6 +15,8 @@ interface MapPanelProps {
 }
 
 export function MapPanel({ workspace, initialFocusOrderId }: MapPanelProps) {
+  const theme = useTheme<MD3Theme>();
+  const styles = createStyles(theme);
   const mapRef = useRef<MapView>(null);
   const {
     activeDriverName,
@@ -47,7 +49,6 @@ export function MapPanel({ workspace, initialFocusOrderId }: MapPanelProps) {
 
   return (
     <View style={styles.container}>
-      {/* SECCIÓN CABECERA */}
       <View style={styles.headerContainer}>
         {isChofer ? (
           <View style={styles.driverInfoCard}>
@@ -65,11 +66,11 @@ export function MapPanel({ workspace, initialFocusOrderId }: MapPanelProps) {
                 mode="outlined"
                 onPress={() => setMenuVisible(true)}
                 icon="chevron-down"
-                contentStyle={{ flexDirection: 'row-reverse' }}
+                contentStyle={styles.dropdownContent}
                 style={styles.dropdownButton}
               >
-                {selectedDriverId 
-                  ? drivers.find(d => d.id === selectedDriverId)?.nombre 
+                {selectedDriverId
+                  ? drivers.find((d) => d.id === selectedDriverId)?.nombre
                   : 'Todos los choferes'}
               </Button>
 
@@ -90,13 +91,13 @@ export function MapPanel({ workspace, initialFocusOrderId }: MapPanelProps) {
                           }}
                         >
                           <View style={styles.avatarPlaceholder}>
-                            <MaterialCommunityIcons name="account-group" size={20} color="#2196F3" />
+                            <MaterialCommunityIcons name="account-group" size={20} color={theme.colors.primary} />
                           </View>
                           <View style={styles.dialogInfo}>
                             <Text variant="titleSmall" style={styles.dialogName}>Todos los choferes</Text>
                             <Text variant="bodySmall" style={styles.dialogSub}>Visualizar mapa general</Text>
                           </View>
-                          <MaterialCommunityIcons name="chevron-right" size={20} color="#CCCCCC" />
+                          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.outline} />
                         </TouchableOpacity>
                       }
                       renderItem={({ item: driver }) => (
@@ -112,7 +113,7 @@ export function MapPanel({ workspace, initialFocusOrderId }: MapPanelProps) {
                             <Text variant="titleSmall" style={styles.dialogName}>{driver.nombre}</Text>
                             <Text variant="bodySmall" style={styles.dialogSub}>{driver.activo ? 'Activo' : 'Inactivo'}</Text>
                           </View>
-                          <MaterialCommunityIcons name="chevron-right" size={20} color="#CCCCCC" />
+                          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.outline} />
                         </TouchableOpacity>
                       )}
                     />
@@ -127,7 +128,6 @@ export function MapPanel({ workspace, initialFocusOrderId }: MapPanelProps) {
         )}
       </View>
 
-      {/* EL MAPA */}
       <View style={styles.mapContainer}>
         <MapView
           ref={mapRef}
@@ -136,22 +136,20 @@ export function MapPanel({ workspace, initialFocusOrderId }: MapPanelProps) {
           onPress={() => setSelectedMapOrderId(null)}
           initialRegion={MAP_INITIAL_REGION}
         >
-          {/* POLILÍNEA DE RUTA (Líneas que siguen calles reales) */}
-          {(isChofer || selectedDriverId) && streetCoordinates.length > 1 && (
+          {(isChofer || selectedDriverId) && streetCoordinates.length > 1 ? (
             <Polyline
               coordinates={streetCoordinates}
-              strokeColor="#2196F3"
+              strokeColor={theme.colors.primary}
               strokeWidth={3}
             />
-          )}
+          ) : null}
 
-          {/* MARCADORES DE ENTREGAS */}
           {mapData.map((order, idx) => (
             <Marker
               key={order.id}
               coordinate={{
                 latitude: Number(order.latitud),
-                longitude: Number(order.longitud)
+                longitude: Number(order.longitud),
               }}
               zIndex={1}
               onPress={(e) => {
@@ -163,7 +161,6 @@ export function MapPanel({ workspace, initialFocusOrderId }: MapPanelProps) {
             </Marker>
           ))}
 
-          {/* MARCADORES DE CHOFERES GENERALES (Máximo 3) */}
           {!isChofer && !selectedDriverId && activeDriversOnMap.map((drv) => (
             <Marker
               key={drv.id}
@@ -176,8 +173,7 @@ export function MapPanel({ workspace, initialFocusOrderId }: MapPanelProps) {
             </Marker>
           ))}
 
-          {/* MARCADOR DEL CHOFER INDIVIDUAL */}
-          {(isChofer || selectedDriverId) && mapData.length > 0 && (
+          {(isChofer || selectedDriverId) && mapData.length > 0 ? (
             <Marker
               coordinate={driverCoordinate}
               title="Chofer en camino"
@@ -186,55 +182,51 @@ export function MapPanel({ workspace, initialFocusOrderId }: MapPanelProps) {
             >
               <MarkerNode isDriver />
             </Marker>
-          )}
+          ) : null}
         </MapView>
 
-        {/* BOTÓN FLOTANTE PARA CENTRAR CÁMARA EN EL CAMIÓN */}
-        {(isChofer || selectedDriverId) && mapData.length > 0 && (
+        {(isChofer || selectedDriverId) && mapData.length > 0 ? (
           <IconButton
             icon="truck-delivery"
             mode="contained"
-            containerColor="#2196F3"
-            iconColor="#FFFFFF"
+            containerColor={theme.colors.primary}
+            iconColor={theme.colors.onPrimary}
             size={28}
             onPress={centerOnDriver}
             style={styles.fabCenter}
           />
-        )}
+        ) : null}
       </View>
 
-      {/* LEYENDA DEL MAPA */}
       <View style={styles.legendContainer}>
         <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: '#FF9800' }]} />
+          <View style={[styles.legendDot, { backgroundColor: theme.colors.tertiary }]} />
           <Text variant="bodySmall" style={styles.legendText}>Pendiente</Text>
         </View>
         <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: '#2196F3' }]} />
+          <View style={[styles.legendDot, { backgroundColor: theme.colors.primary }]} />
           <Text variant="bodySmall" style={styles.legendText}>En camino</Text>
         </View>
         <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: '#4CAF50' }]} />
+          <View style={[styles.legendDot, { backgroundColor: theme.colors.secondary }]} />
           <Text variant="bodySmall" style={styles.legendText}>Entregada</Text>
         </View>
         <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: '#2196F3', borderRadius: 2 }]} />
+          <View style={[styles.legendDot, styles.legendDotDriver]} />
           <Text variant="bodySmall" style={styles.legendText}>Chofer</Text>
         </View>
       </View>
 
-      {/* DETALLES E INDICADORES DE RUTA */}
-      {/* DETALLES E INDICADORES DE RUTA */}
       {((isChofer || selectedDriverId) || selectedMapOrder) ? (
         <View style={styles.bottomInfoContainer}>
-          {(isChofer || selectedDriverId) && (
+          {(isChofer || selectedDriverId) ? (
             <RouteProgress completed={completedOrders.length} total={mapData.length} />
-          )}
-          {selectedMapOrder && (
+          ) : null}
+          {selectedMapOrder ? (
             <Surface style={styles.selectedOrderCard} elevation={1}>
               <View style={styles.selectedOrderHeader}>
                 <View style={styles.selectedOrderTitleBox}>
-                  <MaterialCommunityIcons name="map-marker" size={18} color="#2196F3" />
+                  <MaterialCommunityIcons name="map-marker" size={18} color={theme.colors.primary} />
                   <Text variant="titleSmall" style={styles.selectedOrderAddress} numberOfLines={1}>
                     {String(selectedMapOrder.direccion_destino || '')}
                   </Text>
@@ -255,227 +247,214 @@ export function MapPanel({ workspace, initialFocusOrderId }: MapPanelProps) {
                 </Text>
               </View>
             </Surface>
-          )}
+          ) : null}
         </View>
       ) : null}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F5F5F5',
-  },
-  headerContainer: {
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  driverInfoCard: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 8,
-    borderRadius: 8,
-    backgroundColor: '#FAFAFA',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-  },
-  infoLabel: {
-    color: '#7C7C7C',
-    fontWeight: 'bold',
-    fontSize: 10,
-    letterSpacing: 0.5,
-  },
-  driverName: {
-    fontWeight: 'bold',
-    color: '#1C1B1F',
-  },
-  vehicleInfo: {
-    color: '#7C7C7C',
-    fontSize: 12,
-  },
-  adminHeader: {
-    paddingVertical: 4,
-  },
-  adminTitle: {
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  chipsContainer: {
-    flexDirection: 'row',
-  },
-  chip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: '#F0F0F0',
-    marginRight: 8,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-  },
-  chipActive: {
-    backgroundColor: '#2196F3',
-    borderColor: '#2196F3',
-  },
-  chipText: {
-    fontSize: 13,
-    color: '#1C1B1F',
-    fontWeight: '600',
-  },
-  chipTextActive: {
-    color: '#FFFFFF',
-  },
-  mapContainer: {
-    flex: 1,
-    backgroundColor: '#E0E0E0',
-  },
-  map: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  legendContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  legendDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    marginRight: 6,
-  },
-  legendText: {
-    color: '#555555',
-    fontSize: 12,
-  },
-  bottomInfoContainer: {
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
-    paddingBottom: 8,
-  },
-  selectedOrderCard: {
-    padding: 14,
-    marginHorizontal: 16,
-    marginBottom: 10,
-    borderRadius: 8,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  selectedOrderHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  selectedOrderTitleBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    flex: 1,
-  },
-  selectedOrderAddress: {
-    fontWeight: 'bold',
-    color: '#1C1B1F',
-    flex: 1,
-  },
-  closeCardBtn: {
-    margin: 0,
-    padding: 0,
-  },
-  selectedOrderBody: {
-    gap: 2,
-    paddingLeft: 22,
-  },
-  selectedOrderText: {
-    color: '#475569',
-  },
-  boldText: {
-    fontWeight: '700',
-  },
-  emptyContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
-  },
-  emptyLabel: {
-    marginTop: 12,
-    color: '#7C7C7C',
-    textAlign: 'center',
-    fontSize: 14,
-  },
-  dropdownContainer: {
-    marginTop: 8,
-    alignSelf: 'stretch',
-  },
-  dropdownButton: {
-    borderRadius: 8,
-    borderColor: '#CCCCCC',
-  },
-  fabCenter: {
-    position: 'absolute',
-    right: 16,
-    bottom: 16,
-    elevation: 4,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  avatarPlaceholder: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  dialog: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-  },
-  dialogTitle: {
-    fontWeight: '700',
-  },
-  dialogContent: {
-    maxHeight: 300,
-  },
-  dialogScroll: {
-    gap: 8,
-  },
-  dialogRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-  },
-  dialogInfo: {
-    flex: 1,
-  },
-  dialogName: {
-    fontWeight: '600',
-    color: '#1C1B1F',
-  },
-  dialogSub: {
-    color: '#7C7C7C',
-  },
-  avatar: {
-    marginRight: 12,
-  },
-});
+const createStyles = (theme: MD3Theme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    headerContainer: {
+      backgroundColor: theme.colors.surface,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.outline,
+    },
+    driverInfoCard: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: 8,
+      borderRadius: 8,
+      backgroundColor: theme.colors.surfaceVariant,
+      borderWidth: 1,
+      borderColor: theme.colors.outline,
+    },
+    infoLabel: {
+      color: theme.colors.onSurfaceVariant,
+      fontWeight: 'bold',
+      fontSize: 10,
+      letterSpacing: 0.5,
+    },
+    driverName: {
+      fontWeight: 'bold',
+      color: theme.colors.onSurface,
+    },
+    vehicleInfo: {
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 12,
+    },
+    adminHeader: {
+      paddingVertical: 4,
+    },
+    adminTitle: {
+      fontWeight: 'bold',
+      marginBottom: 8,
+      color: theme.colors.onSurface,
+    },
+    dropdownContainer: {
+      marginTop: 8,
+      alignSelf: 'stretch',
+    },
+    dropdownContent: {
+      flexDirection: 'row-reverse',
+    },
+    dropdownButton: {
+      borderRadius: 8,
+      borderColor: theme.colors.outline,
+    },
+    mapContainer: {
+      flex: 1,
+      backgroundColor: theme.colors.surfaceVariant,
+    },
+    map: {
+      ...StyleSheet.absoluteFillObject,
+    },
+    legendContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      alignItems: 'center',
+      backgroundColor: theme.colors.surface,
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.outline,
+    },
+    legendItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    legendDot: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+      marginRight: 6,
+    },
+    legendDotDriver: {
+      backgroundColor: theme.colors.primary,
+      borderRadius: 2,
+    },
+    legendText: {
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 12,
+    },
+    bottomInfoContainer: {
+      backgroundColor: theme.colors.surface,
+      borderTopWidth: 1,
+      borderTopColor: theme.colors.outline,
+      paddingBottom: 8,
+    },
+    selectedOrderCard: {
+      padding: 14,
+      marginHorizontal: 16,
+      marginBottom: 10,
+      borderRadius: 8,
+      backgroundColor: theme.colors.surface,
+      borderWidth: 1,
+      borderColor: theme.colors.outline,
+    },
+    selectedOrderHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 4,
+    },
+    selectedOrderTitleBox: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      flex: 1,
+    },
+    selectedOrderAddress: {
+      fontWeight: 'bold',
+      color: theme.colors.onSurface,
+      flex: 1,
+    },
+    closeCardBtn: {
+      margin: 0,
+      padding: 0,
+    },
+    selectedOrderBody: {
+      gap: 2,
+      paddingLeft: 22,
+    },
+    selectedOrderText: {
+      color: theme.colors.onSurfaceVariant,
+    },
+    boldText: {
+      fontWeight: '700',
+    },
+    emptyContainer: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 24,
+    },
+    emptyLabel: {
+      marginTop: 12,
+      color: theme.colors.onSurfaceVariant,
+      textAlign: 'center',
+      fontSize: 14,
+    },
+    avatarPlaceholder: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 12,
+      borderWidth: 1,
+      borderColor: theme.colors.outline,
+      backgroundColor: theme.colors.surfaceVariant,
+    },
+    dialog: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: 8,
+    },
+    dialogTitle: {
+      fontWeight: '700',
+      color: theme.colors.onSurface,
+    },
+    dialogContent: {
+      maxHeight: 300,
+    },
+    dialogScroll: {
+      gap: 8,
+    },
+    dialogRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 10,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.outline,
+    },
+    dialogInfo: {
+      flex: 1,
+    },
+    dialogName: {
+      fontWeight: '600',
+      color: theme.colors.onSurface,
+    },
+    dialogSub: {
+      color: theme.colors.onSurfaceVariant,
+    },
+    avatar: {
+      marginRight: 12,
+    },
+    fabCenter: {
+      position: 'absolute',
+      right: 16,
+      bottom: 16,
+      elevation: 4,
+      shadowColor: theme.colors.onSurface,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+    },
+  });
