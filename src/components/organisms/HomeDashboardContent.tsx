@@ -133,6 +133,8 @@ export function HomeDashboardContent(props: HomeDashboardContentProps) {
           notifications={props.workspace.notifications}
           onMarkAsRead={props.handleMarkAsRead}
           onMarkAllAsRead={props.handleMarkAllAsRead}
+          refreshing={props.refreshing}
+          onRefresh={refreshWorkspace}
         />
       ) : null}
 

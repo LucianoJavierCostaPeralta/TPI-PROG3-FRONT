@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
+import { RefreshControl, StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
 import { Text, Surface, useTheme, type MD3Theme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { radii, spacing } from '../../styles/theme';
@@ -9,12 +9,16 @@ interface NotificationsPanelProps {
   notifications: AppNotification[];
   onMarkAsRead: (id: string) => void;
   onMarkAllAsRead: () => void;
+  refreshing?: boolean;
+  onRefresh?: () => void;
 }
 
 export function NotificationsPanel({
   notifications,
   onMarkAsRead,
   onMarkAllAsRead,
+  refreshing = false,
+  onRefresh,
 }: NotificationsPanelProps) {
   const theme = useTheme<MD3Theme>();
   const styles = createStyles(theme);
@@ -24,9 +28,16 @@ export function NotificationsPanel({
   const readNotifications = notifications.filter((n) => n.leida);
   const displayedList = activeSubTab === 'nuevas' ? unreadNotifications : readNotifications;
 
+  const getDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return Number.isNaN(date.getTime()) ? null : date;
+  };
+
   const isToday = (dateStr: string) => {
     const today = new Date();
-    const d = new Date(dateStr);
+    const d = getDate(dateStr);
+    if (!d) return false;
+
     return (
       d.getDate() === today.getDate() &&
       d.getMonth() === today.getMonth() &&
@@ -38,17 +49,27 @@ export function NotificationsPanel({
   const yesterdayList = displayedList.filter((n) => !isToday(n.created_at));
 
   const getRelativeTime = (dateStr: string) => {
+    const date = getDate(dateStr);
+    if (!date) return '';
+
     const now = new Date();
-    const diffMs = now.getTime() - new Date(dateStr).getTime();
+    const diffMs = now.getTime() - date.getTime();
     const diffMins = Math.floor(diffMs / 60000);
 
     if (diffMins < 1) return 'Hace un momento';
-    if (diffMins < 60) return `Hace ${diffMins} min`;
+    if (diffMins < 60) return 'Hace ' + diffMins + ' min';
 
     const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `Hace ${diffHours} hr`;
+    if (diffHours < 24) return 'Hace ' + diffHours + ' hr';
 
-    return 'Ayer';
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays === 1) return 'Ayer';
+    if (diffDays < 7) return 'Hace ' + diffDays + ' dias';
+
+    return date.toLocaleDateString('es-AR', {
+      day: '2-digit',
+      month: '2-digit',
+    });
   };
 
   const getAlertConfig = (tipo: AppNotification['tipo']) => {
@@ -175,7 +196,12 @@ export function NotificationsPanel({
           </Text>
         </View>
       ) : (
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={
+            onRefresh ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} /> : undefined
+          }
+        >
           {todayList.length > 0 ? (
             <View style={styles.section}>
               <Text variant="labelMedium" style={styles.sectionTitle}>
