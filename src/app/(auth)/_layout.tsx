@@ -1,7 +1,9 @@
 import { Stack } from 'expo-router';
-import { palette } from '../../styles/theme';
+import { useTheme, type MD3Theme } from 'react-native-paper';
 
-export default function AuthLayout() {
+export default () => {
+  const theme = useTheme<MD3Theme>();
+
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="onboarding1" options={{ animation: 'fade', animationDuration: 600 }} />
@@ -16,11 +18,11 @@ export default function AuthLayout() {
           gestureEnabled: true,
           gestureDirection: 'vertical',
           contentStyle: {
-            backgroundColor: palette.blackAlpha20,
+            backgroundColor: theme.colors.backdrop,
           },
         }}
       />
       <Stack.Screen name="reset-password" options={{ animation: 'slide_from_right', animationDuration: 300, gestureEnabled: false }} />
     </Stack>
   );
-}
+};
