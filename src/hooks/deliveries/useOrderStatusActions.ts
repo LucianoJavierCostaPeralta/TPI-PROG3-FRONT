@@ -2,7 +2,6 @@ import { useCallback } from 'react';
 import { Alert } from 'react-native';
 import { acceptDelivery, getApiErrorMessage, updateDeliveryState } from '../../services/api';
 import { mapDelivery, markOrderAsCancelled } from '../../utils/dashboard/homeDashboard';
-import { createStatusNotification } from '../../utils/dashboard/homeDashboardNotifications';
 import { type AppWorkspace, type DeliveryOrder, ORDER_STATUS } from '../../types/workspace';
 
 type UseOrderStatusActionsParams = {
@@ -61,13 +60,6 @@ export const useOrderStatusActions = ({
         }
       }
 
-      const notification = createStatusNotification(action, orderId, workspace.profile);
-      if (notification) {
-        setWorkspace((prev) => ({
-          ...prev,
-          notifications: [notification, ...(prev.notifications || [])],
-        }));
-      }
       if (updatedOrder) {
         setSelectedDelivery(updatedOrder);
       }

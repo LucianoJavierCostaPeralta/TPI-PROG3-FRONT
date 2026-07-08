@@ -38,52 +38,6 @@ export const initialDeliveryForm: DeliveryForm = {
   choferId: null,
 };
 
-export const initialAdminNotifications: AppNotification[] = [
-  {
-    id: 'admin-1',
-    titulo: 'Entrega retrasada',
-    mensaje: 'La entrega #ENT-204 presenta un retraso de 25 minutos.',
-    tipo: 'warning',
-    leida: false,
-    created_at: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
-  },
-  {
-    id: 'admin-2',
-    titulo: 'Chofer desconectado',
-    mensaje: 'El chofer Juan Pérez perdió conexión con el sistema.',
-    tipo: 'error',
-    leida: false,
-    created_at: new Date(Date.now() - 25 * 60 * 1000).toISOString(),
-  },
-  {
-    id: 'admin-3',
-    titulo: 'Entrega completada',
-    mensaje: 'La entrega #ENT-198 fue completada correctamente.',
-    tipo: 'success',
-    leida: true,
-    created_at: new Date(Date.now() - 26 * 60 * 60 * 1000).toISOString(),
-  },
-];
-
-export const initialChoferNotifications: AppNotification[] = [
-  {
-    id: 'chofer-1',
-    titulo: 'Nuevo pedido asignado',
-    mensaje: 'Se te ha asignado el pedido #PED-0002. Por favor, revisá los detalles de la entrega.',
-    tipo: 'info',
-    leida: false,
-    created_at: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
-  },
-  {
-    id: 'chofer-2',
-    titulo: 'Asignación removida',
-    mensaje: 'Se te ha quitado la asignación del pedido #PED-0005.',
-    tipo: 'warning',
-    leida: false,
-    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-  },
-];
-
 export const emptyWorkspace: AppWorkspace = {
   profile: {
     id: 'local-admin-user',
@@ -104,7 +58,7 @@ export const emptyWorkspace: AppWorkspace = {
   drivers: [],
   orders: [],
   admins: [],
-  notifications: initialAdminNotifications,
+  notifications: [],
 };
 
 const CANCELLED_ORDERS_KEY = 'zonescore:cancelled_orders';

@@ -1,13 +1,17 @@
 import { useCallback, useState } from 'react';
-import { getApiErrorMessage, getProfile } from '../../services/api';
+import { getApiErrorMessage, getProfile, listNotifications, markAllNotificationsAsRead, markNotificationAsRead } from '../../services/api';
 import {
   emptyWorkspace,
-  initialAdminNotifications,
-  initialChoferNotifications,
   loadRoleData,
   normalizeRole,
 } from '../../utils/dashboard/homeDashboard';
-import { type AppWorkspace } from '../../types/workspace';
+import { type AppNotification, type AppWorkspace } from '../../types/workspace';
+
+const normalizeNotification = (notification: AppNotification): AppNotification => ({
+  ...notification,
+  tipo: notification.tipo ?? 'info',
+  leida: Boolean(notification.leida),
+});
 
 export const useWorkspaceData = () => {
   const [workspace, setWorkspace] = useState<AppWorkspace>(emptyWorkspace);
@@ -27,8 +31,15 @@ export const useWorkspaceData = () => {
       const user = await getProfile();
       const role = normalizeRole(user.rol?.nombre_rol);
       const roleData = await loadRoleData(user, role);
+      let notifications: AppNotification[] = [];
 
-      setWorkspace((prev) => ({
+      try {
+        notifications = (await listNotifications()).map(normalizeNotification);
+      } catch {
+        notifications = [];
+      }
+
+      setWorkspace(() => ({
         ...emptyWorkspace,
         ...roleData,
         profile: {
@@ -47,9 +58,7 @@ export const useWorkspaceData = () => {
           email: null,
           telefono: null,
         } : null,
-        notifications: prev.notifications.length > 0 && prev.profile.rol === role
-          ? prev.notifications
-          : (role === 'chofer' ? initialChoferNotifications : initialAdminNotifications),
+        notifications,
       }));
     } catch (requestError) {
       setError(getApiErrorMessage(requestError, 'No se pudo cargar el perfil.'));
@@ -59,20 +68,35 @@ export const useWorkspaceData = () => {
     }
   }, []);
 
-  const handleMarkAsRead = useCallback((id: string) => {
-    setWorkspace((prev) => ({
-      ...prev,
-      notifications: prev.notifications.map((notification) =>
-        notification.id === id ? { ...notification, leida: true } : notification,
-      ),
-    }));
+  const handleMarkAsRead = useCallback(async (id: string) => {
+    try {
+      const updated = await markNotificationAsRead(id);
+      setWorkspace((prev) => ({
+        ...prev,
+        notifications: prev.notifications.map((notification) =>
+          notification.id === id ? normalizeNotification(updated) : notification,
+        ),
+      }));
+    } catch (requestError) {
+      setError(getApiErrorMessage(requestError, 'No se pudo marcar la notificación como leída.'));
+    }
   }, []);
 
-  const handleMarkAllAsRead = useCallback(() => {
-    setWorkspace((prev) => ({
-      ...prev,
-      notifications: prev.notifications.map((notification) => ({ ...notification, leida: true })),
-    }));
+  const handleMarkAllAsRead = useCallback(async () => {
+    try {
+      const updated = await markAllNotificationsAsRead();
+      setWorkspace((prev) => ({
+        ...prev,
+        notifications: prev.notifications.map((notification) => ({
+          ...notification,
+          leida: true,
+        })),
+      }));
+      return updated;
+    } catch (requestError) {
+      setError(getApiErrorMessage(requestError, 'No se pudieron marcar todas las notificaciones como leídas.'));
+      return 0;
+    }
   }, []);
 
   return {
