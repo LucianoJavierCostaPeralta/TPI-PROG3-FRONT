@@ -203,16 +203,28 @@ El cliente está en `src/services/api/client.ts`.
 - `logout()` -> `/logout`
 - `clearSession()` elimina el token local
 
-### Logistics service
+### Drivers service
 
-`src/services/api/logistics.ts`
+`src/services/api/drivers.ts`
 
 - `listDrivers()` -> `/admin/choferes`
 - `createDriver()` -> `/admin/choferes`
 - `deleteDriver()` -> `/admin/choferes/:id`
+
+### Admin deliveries service
+
+`src/services/api/adminDeliveries.ts`
+
 - `listAdminDeliveries()` -> `/admin/entregas`
 - `createDelivery()` -> `/admin/entregas`
+- `updateDelivery()` -> `/admin/entregas/:id`
+- `deleteDelivery()` -> `/admin/entregas/:id`
 - `assignDriver()` -> `/admin/entregas/:id/assign`
+
+### Driver deliveries service
+
+`src/services/api/driverDeliveries.ts`
+
 - `listDriverDeliveries()` -> `/chofer/entregas`
 - `acceptDelivery()` -> `/chofer/entregas/:id/accept`
 - `updateDeliveryState()` -> `/chofer/entregas/:id/state`
@@ -496,7 +508,8 @@ También hay persistencia local para la foto de perfil mediante `src/services/pr
 
 ### Cambiar entregas
 
-- `src/services/api/logistics.ts`
+- `src/services/api/adminDeliveries.ts`
+- `src/services/api/driverDeliveries.ts`
 - `src/hooks/deliveries/*`
 - `src/utils/orders/*`
 - `src/components/organisms/DeliveriesPanel.tsx`
@@ -505,7 +518,7 @@ También hay persistencia local para la foto de perfil mediante `src/services/pr
 
 ### Cambiar choferes
 
-- `src/services/api/logistics.ts`
+- `src/services/api/drivers.ts`
 - `src/hooks/drivers/useDriverActions.ts`
 - `src/components/organisms/DriversPanel.tsx`
 - `src/components/organisms/DriverDetailPanel.tsx`

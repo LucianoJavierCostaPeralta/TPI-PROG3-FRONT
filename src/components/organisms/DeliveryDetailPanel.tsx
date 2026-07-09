@@ -21,6 +21,8 @@ interface DeliveryDetailPanelProps {
   drivers: Driver[];
   role: 'administrador' | 'asesor' | 'chofer';
   onEdit: () => void;
+  onDelete?: (orderId: string) => void;
+  deleting?: boolean;
   onUpdateStatus?: (orderId: string, action: string, clienteDni?: string) => void;
   onViewOnMap?: (order: DeliveryOrder) => void;
   updatingOrderId?: string | null;
@@ -31,6 +33,8 @@ export function DeliveryDetailPanel({
   drivers,
   role,
   onEdit,
+  onDelete,
+  deleting = false,
   onUpdateStatus,
   onViewOnMap,
   updatingOrderId,
@@ -162,16 +166,42 @@ export function DeliveryDetailPanel({
           </View>
         </Surface>
 
-        {/* Botón de Edición para el Administrador */}
+        {/* Acciones para el Administrador */}
         {role === 'administrador' && (
-          <CTAButton
-            variant="primary"
-            onPress={onEdit}
-            style={styles.editButton}
-            icon="pencil-outline"
-          >
-            Editar datos de entrega
-          </CTAButton>
+          <View style={styles.adminActions}>
+            <CTAButton
+              variant="primary"
+              onPress={onEdit}
+              style={styles.actionButton}
+              icon="pencil-outline"
+              disabled={deleting}
+            >
+              Editar datos de entrega
+            </CTAButton>
+            <CTAButton
+              variant="destructive"
+              onPress={() => {
+                Alert.alert(
+                  'Eliminar entrega',
+                  '¿Estás seguro de que deseas eliminar esta entrega? Esta acción no se puede deshacer.',
+                  [
+                    { text: 'No, volver', style: 'cancel' },
+                    {
+                      text: 'Eliminar',
+                      style: 'destructive',
+                      onPress: () => onDelete?.(order.id),
+                    },
+                  ],
+                );
+              }}
+              style={styles.actionButton}
+              icon="delete-outline"
+              loading={deleting}
+              disabled={deleting}
+            >
+              Eliminar entrega
+            </CTAButton>
+          </View>
         )}
 
         {/* Sección de acciones para el Chofer */}
@@ -419,8 +449,9 @@ const createStyles = (theme: MD3Theme) =>
       marginVertical: spacing.xs,
       opacity: 0.2,
     },
-    editButton: {
+    adminActions: {
       marginBottom: spacing.xl,
+      gap: spacing.sm,
     },
     driverActionsContainer: {
       marginTop: spacing.md,

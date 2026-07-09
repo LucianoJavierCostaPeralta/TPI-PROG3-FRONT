@@ -96,6 +96,8 @@ export function HomeDashboardContent(props: HomeDashboardContentProps) {
             drivers={props.workspace.drivers}
             role={props.workspace.profile.rol}
             onEdit={props.startEditingDelivery}
+            onDelete={props.handleDeleteDelivery}
+            deleting={props.savingDelivery}
             onUpdateStatus={props.handleUpdateOrderStatus}
             onViewOnMap={() => props.setActiveTab('map')}
             updatingOrderId={props.updatingOrderId}

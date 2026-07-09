@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { Alert } from 'react-native';
-import { assignDriver, createDelivery, getApiErrorMessage } from '../../services/api';
-import { deliveryToForm, initialDeliveryForm } from '../../utils/dashboard/homeDashboard';
+import { assignDriver, createDelivery, deleteDelivery, getApiErrorMessage, updateDelivery } from '../../services/api';
+import { deliveryToForm, initialDeliveryForm, mapDelivery } from '../../utils/dashboard/homeDashboard';
 import { validateDeliveryForm } from '../../utils/dashboard/homeDashboardValidation';
 import { type AppWorkspace, type DeliveryForm, type DeliveryOrder } from '../../types/workspace';
 
@@ -97,21 +97,17 @@ export const useDeliveryActions = ({
     setError('');
 
     try {
-      if (deliveryForm.choferId !== selectedDelivery.chofer_id) {
-        await assignDriver(selectedDelivery.id, deliveryForm.choferId || null);
-      }
-
-      const updatedOrder: DeliveryOrder = {
-        ...selectedDelivery,
+      let updatedOrder: DeliveryOrder = mapDelivery(await updateDelivery(selectedDelivery.id, {
         cliente: deliveryForm.cliente.trim(),
         cliente_dni: deliveryForm.clienteDni,
-        direccion_destino: deliveryForm.destino.trim(),
-        referencia: deliveryForm.referencia.trim(),
         producto: deliveryForm.productos.trim(),
-        observaciones: deliveryForm.observaciones.trim(),
-        chofer_id: deliveryForm.choferId || null,
-        created_at: deliveryForm.fecha ? `${deliveryForm.fecha}T12:00:00.000000Z` : selectedDelivery.created_at,
-      };
+        direccion_destino: deliveryForm.destino.trim(),
+        referencia: deliveryForm.referencia.trim() || null,
+      }));
+
+      if (deliveryForm.choferId !== selectedDelivery.chofer_id) {
+        updatedOrder = mapDelivery(await assignDriver(selectedDelivery.id, deliveryForm.choferId || null));
+      }
 
       setWorkspace((current) => ({
         ...current,
@@ -122,12 +118,32 @@ export const useDeliveryActions = ({
       setDeliveryForm(initialDeliveryForm);
       await loadWorkspace(true);
       Alert.alert('Éxito', 'La entrega ha sido guardada correctamente.');
-    } catch {
-      setError('No se pudo guardar la edición.');
+    } catch (requestError) {
+      setError(getApiErrorMessage(requestError, 'No se pudo guardar la edición.'));
     } finally {
       setSavingDelivery(false);
     }
   }, [deliveryForm, loadWorkspace, selectedDelivery, setDeliveryForm, setError, setIsEditingDelivery, setSavingDelivery, setSelectedDelivery, setWorkspace]);
+
+  const handleDeleteDelivery = useCallback(async (deliveryId: string) => {
+    setSavingDelivery(true);
+    setError('');
+
+    try {
+      await deleteDelivery(deliveryId);
+      setWorkspace((current) => ({
+        ...current,
+        orders: current.orders.filter((order) => order.id !== deliveryId),
+      }));
+      setSelectedDelivery((current) => (current?.id === deliveryId ? null : current));
+      await loadWorkspace(true);
+      Alert.alert('Éxito', 'La entrega ha sido eliminada correctamente.');
+    } catch (requestError) {
+      Alert.alert('Error', getApiErrorMessage(requestError, 'No se pudo eliminar la entrega.'));
+    } finally {
+      setSavingDelivery(false);
+    }
+  }, [loadWorkspace, setError, setSavingDelivery, setSelectedDelivery, setWorkspace]);
 
   const startEditingDelivery = useCallback(() => {
     if (!selectedDelivery) return;
@@ -158,6 +174,7 @@ export const useDeliveryActions = ({
     handleAssignDriver,
     handleCreateDelivery,
     handleEditDelivery,
+    handleDeleteDelivery,
     startEditingDelivery,
     toggleDeliveryForm,
     updateDeliveryField,
