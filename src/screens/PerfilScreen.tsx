@@ -7,7 +7,6 @@ import { CTAButton, UserAvatar } from '../components/atoms';
 import { getProfile, type AuthUser } from '../services/api';
 import { spacing, radii, dimensions } from '../styles/theme';
 import { ScreenLayout } from '../components/templates';
-import { getStoredProfileImageUri } from '../services/profileImage';
 
 type PerfilScreenProps = {
   onBack: () => void;
@@ -21,16 +20,13 @@ export function PerfilScreen({ onBack, onEdit }: PerfilScreenProps) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [profileImageUri, setProfileImageUri] = useState<string | null>(null);
 
   const loadProfile = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
       const profileData = await getProfile();
-      const storedImage = await getStoredProfileImageUri();
       setUser(profileData);
-      setProfileImageUri(storedImage);
     } catch (err) {
       setError('No se pudo cargar la información del perfil.');
     } finally {
@@ -94,7 +90,7 @@ export function PerfilScreen({ onBack, onEdit }: PerfilScreenProps) {
       ) : user ? (
         <>
           <View style={styles.avatarContainer}>
-            <UserAvatar name={user.nombre_completo} size={dimensions.avatar.lg} imageUri={profileImageUri} />
+            <UserAvatar name={user.nombre_completo} size={dimensions.avatar.lg} />
             <Text variant="headlineSmall" style={styles.userName}>
               {user.nombre_completo}
             </Text>

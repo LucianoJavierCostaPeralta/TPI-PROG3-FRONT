@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { BackHandler, Platform } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
 import { getProfile, updateProfile, type AuthUser } from '../../services/api';
-import { saveProfileImageUri } from '../../services/profileImage';
 import {
   formatProfileDateForInput,
   initialEditProfileForm,
@@ -23,7 +21,6 @@ export function useEditProfile({ onBack, onSaveSuccess }: UseEditProfileParams) 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [formErrors, setFormErrors] = useState<EditProfileFormErrors>({});
-  const [selectedImageUri, setSelectedImageUri] = useState<string | null>(null);
   const [form, setForm] = useState<EditProfileFormFields>(initialEditProfileForm);
   const [datePickerVisible, setDatePickerVisible] = useState(false);
 
@@ -43,7 +40,6 @@ export function useEditProfile({ onBack, onSaveSuccess }: UseEditProfileParams) 
         telefono: profileData.telefono || '',
         fecha_nacimiento: profileData.fecha_nacimiento ? profileData.fecha_nacimiento.split('T')[0] : '',
       });
-      setSelectedImageUri(null);
       setFormErrors({});
     } catch {
       setError('No se pudo cargar la información del perfil.');
@@ -74,28 +70,6 @@ export function useEditProfile({ onBack, onSaveSuccess }: UseEditProfileParams) 
     });
   }, []);
 
-  const pickImage = useCallback(async () => {
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-    if (!permissionResult.granted) {
-      setError('Se necesita permiso para elegir una foto de perfil.');
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
-
-    if (!result.canceled && result.assets?.[0]?.uri) {
-      setSelectedImageUri(result.assets[0].uri);
-      await saveProfileImageUri(result.assets[0].uri);
-      setError('');
-    }
-  }, []);
-
   const handleDateChange = useCallback((_event: unknown, date?: Date) => {
     if (Platform.OS === 'android') {
       setDatePickerVisible(false);
@@ -115,10 +89,6 @@ export function useEditProfile({ onBack, onSaveSuccess }: UseEditProfileParams) 
     setError('');
 
     try {
-      if (selectedImageUri) {
-        await saveProfileImageUri(selectedImageUri);
-      }
-
       await updateProfile(user.id, user.rol?.nombre_rol || '', {
         nombre_completo: form.nombre_completo.trim(),
         email: form.email.trim().toLowerCase(),
@@ -132,7 +102,7 @@ export function useEditProfile({ onBack, onSaveSuccess }: UseEditProfileParams) 
     } finally {
       setSaving(false);
     }
-  }, [form, isChofer, onSaveSuccess, selectedImageUri, user]);
+  }, [form, isChofer, onSaveSuccess, user]);
 
   return {
     datePickerVisible,
@@ -145,10 +115,8 @@ export function useEditProfile({ onBack, onSaveSuccess }: UseEditProfileParams) 
     isChofer,
     loadProfileData,
     loading,
-    pickImage,
     saving,
     selectedDate,
-    selectedImageUri,
     setDatePickerVisible,
     user,
   };

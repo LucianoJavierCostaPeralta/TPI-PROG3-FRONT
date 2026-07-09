@@ -1,4 +1,4 @@
-import { Image, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useTheme, type MD3Theme } from 'react-native-paper';
 import { AVATAR_COLORS, commonColors } from '../../constants/colors';
 
@@ -6,10 +6,9 @@ type UserAvatarProps = {
   name: string;
   size?: number;
   style?: StyleProp<ViewStyle>;
-  imageUri?: string | null;
 };
 
-export function UserAvatar({ name, size = 40, style, imageUri }: UserAvatarProps) {
+export function UserAvatar({ name, size = 40, style }: UserAvatarProps) {
   const theme = useTheme<MD3Theme>();
 
   // Genera iniciales tipo Google (por ejemplo: "Juan Pérez" -> "JP", "Mario" -> "M")
@@ -34,23 +33,6 @@ export function UserAvatar({ name, size = 40, style, imageUri }: UserAvatarProps
   const initials = getInitials(name);
   const bgColor = getBackgroundColor();
   const textColor = commonColors.white;
-
-  if (imageUri) {
-    return (
-      <Image
-        source={{ uri: imageUri }}
-        style={[
-          styles.avatarImage,
-          {
-            width: size,
-            height: size,
-            borderRadius: size / 2,
-          },
-          style as any,
-        ]}
-      />
-    );
-  }
 
   return (
     <View
@@ -84,9 +66,6 @@ const styles = StyleSheet.create({
   avatarContainer: {
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  avatarImage: {
-    resizeMode: 'cover',
   },
   text: {
     fontWeight: '700',

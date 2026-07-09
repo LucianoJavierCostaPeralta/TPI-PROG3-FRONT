@@ -11,14 +11,14 @@ Aplicación de gestión logística desarrollada con React Native y Expo. Permite
 - Registro de empresas y administradores.
 - Inicio, recuperación y persistencia de sesión con Laravel Sanctum.
 - Alta, listado, edición y eliminación de choferes.
-- Creación, asignación, consulta y edición de entregas.
+- Creación, asignación, consulta, edición y eliminación de entregas.
 - Flujo operativo del chofer con parada actual, próximas entregas y controles manuales del viaje.
 - Confirmación de entrega mediante el DNI del cliente.
 - Mapa general de entregas, selección de chofer y seguimiento individual de recorridos.
 - Trazado de rutas sobre calles reales mediante OSRM.
 - Panel de métricas de operación y rendimiento de choferes.
 - Centro de notificaciones con alertas leídas y pendientes.
-- Edición del perfil y selección de foto desde el dispositivo.
+- Edición del perfil con avatar de iniciales dinámicas.
 - Solicitudes de contacto con un asesor e información legal.
 - Validación de email, DNI, CUIT, teléfono y fechas.
 - Tema claro, oscuro o sincronizado con el dispositivo.
@@ -36,7 +36,6 @@ Aplicación de gestión logística desarrollada con React Native y Expo. Permite
 - Axios
 - React Hook Form, Zod
 - AsyncStorage
-- Expo Image Picker
 - OSRM para el trazado de rutas
 - Laravel Sanctum en el backend
 
@@ -157,7 +156,7 @@ npx expo start --clear
 10. Consultar la parada y el recorrido en el mapa.
 11. Finalizar la entrega ingresando el DNI correcto del cliente.
 
-Desde el perfil administrador también se pueden consultar las métricas, editar entregas, revisar notificaciones y filtrar el mapa por chofer.
+Desde el perfil administrador también se pueden consultar las métricas, editar o eliminar entregas, revisar notificaciones y filtrar el mapa por chofer.
 
 Los cambios de estado válidos son:
 
@@ -194,12 +193,24 @@ src/
 │   └── templates/
 ├── hooks/            # Estado y operaciones reutilizables
 ├── screens/          # Pantallas y lógica de presentación
-├── services/api/     # Cliente Axios y servicios de Laravel
+├── services/api/     # Cliente Axios y servicios por dominio de Laravel
 ├── store/            # Redux y providers
 ├── styles/           # Tema y tokens visuales
 ├── types/            # Contratos y helpers del espacio de trabajo
 └── utils/            # Validaciones compartidas
 ```
+
+### Servicios API
+
+Los servicios HTTP están segmentados por dominio:
+
+- `auth.ts`: autenticación, sesión y perfil.
+- `drivers.ts`: CRUD de choferes.
+- `adminDeliveries.ts`: CRUD de entregas administradas y asignación de chofer.
+- `driverDeliveries.ts`: flujo operativo del chofer sobre sus entregas.
+- `notifications.ts`: lectura y marcado de notificaciones.
+
+`src/services/api/index.ts` reexporta estos módulos para mantener imports simples desde `src/services/api`.
 
 ## Autenticación
 

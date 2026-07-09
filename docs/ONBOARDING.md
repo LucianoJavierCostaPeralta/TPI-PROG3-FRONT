@@ -25,7 +25,6 @@ La app consume una API Laravel, persiste sesión con token, usa Redux para el te
 - Axios
 - AsyncStorage
 - React Native Maps
-- Expo Image Picker
 - OSRM para trazar rutas reales
 
 ## 3. Cómo arranca la aplicación
@@ -368,9 +367,13 @@ Los tipos centrales están en `src/types/workspace.ts`.
 7. `assignDriver()` hace `PATCH /admin/entregas/:id/assign`.
 8. Luego se resetea el formulario, se cierra el panel y se recarga el workspace.
 9. Para editar una entrega, `startEditingDelivery()` precarga el formulario con `deliveryToForm()`.
-10. `handleEditDelivery()` valida otra vez, compara el chofer actual con el nuevo y, si cambió, vuelve a asignarlo.
-11. La edición actualiza el pedido en memoria, cierra el modo edición, reinicia el formulario y fuerza una recarga del workspace.
-12. El cambio de chofer también puede hacerse sin editar toda la entrega, desde el selector del panel o desde el detalle.
+10. `handleEditDelivery()` valida otra vez y llama a `updateDelivery()`.
+11. `updateDelivery()` hace `PATCH /admin/entregas/:id` para persistir cliente, DNI, producto, destino y referencia.
+12. Si cambió el chofer, `handleEditDelivery()` llama después a `assignDriver()`.
+13. Al terminar, la UI actualiza la entrega seleccionada, cierra el modo edición, reinicia el formulario y recarga el workspace.
+14. Para eliminar una entrega, el detalle del administrador pide confirmación y `handleDeleteDelivery()` llama a `deleteDelivery()`.
+15. `deleteDelivery()` hace `DELETE /admin/entregas/:id`, limpia la selección y recarga el workspace.
+16. El cambio de chofer también puede hacerse sin editar toda la entrega, desde el selector del panel o desde el detalle.
 
 ### Flujo de estado de una entrega
 
@@ -410,14 +413,14 @@ Los tipos centrales están en `src/types/workspace.ts`.
 ### `useHomeDashboard`
 
 - Une estado local + workspace + acciones.
-- Gestiona alta/edición de choferes y entregas.
+- Gestiona alta/edición/eliminación de choferes y entregas.
 - Coordina actualizaciones de estado de pedidos.
 - Maneja el logout y la navegación interna del dashboard.
 
 ### `useEditProfile`
 
 - Carga perfil.
-- Maneja selección de imagen.
+- Usa avatar con iniciales dinámicas generadas desde el nombre.
 - Valida campos y guarda cambios.
 - Soporta fecha de nacimiento para choferes.
 
@@ -432,6 +435,7 @@ Los tipos centrales están en `src/types/workspace.ts`.
 
 - Crear entrega.
 - Editar entrega.
+- Eliminar entrega.
 - Asignar chofer.
 - Toggle/cancel de formularios.
 
@@ -488,7 +492,7 @@ Claves importantes:
 - `zonescore:tema` -> modo de tema.
 - `zonescore:cancelled_orders` -> pedidos cancelados localmente.
 
-También hay persistencia local para la foto de perfil mediante `src/services/profileImage.ts`.
+El avatar del perfil usa iniciales dinámicas generadas desde el nombre del usuario.
 
 ## 15. Dónde tocar cada cambio
 

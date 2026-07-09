@@ -16,12 +16,10 @@ export type EditarPerfilTemplateProps = {
   isChofer: boolean;
   loading: boolean;
   saving: boolean;
-  selectedImageUri: string | null;
   user: AuthUser | null;
   onBack: () => void;
   onCancel: () => void;
   onLoadProfile: () => void;
-  onPickImage: () => void;
   onSave: () => void;
   onChangeField: (field: keyof EditProfileFormFields, value: string) => void;
 };
@@ -33,12 +31,10 @@ export function EditarPerfilTemplate({
   isChofer,
   loading,
   saving,
-  selectedImageUri,
   user,
   onBack,
   onCancel,
   onLoadProfile,
-  onPickImage,
   onSave,
   onChangeField,
 }: EditarPerfilTemplateProps) {
@@ -75,17 +71,7 @@ export function EditarPerfilTemplate({
               <UserAvatar
                 name={form.nombre_completo || user.nombre_completo}
                 size={dimensions.avatar.xl}
-                imageUri={selectedImageUri}
-                style={styles.avatarImage}
-              />
-              <IconButton
-                icon="camera"
-                size={20}
-                mode="contained"
-                containerColor={theme.colors.primary}
-                iconColor={theme.colors.onPrimary}
-                style={styles.avatarEditButton}
-                onPress={onPickImage}
+                style={styles.avatar}
               />
             </View>
 
@@ -259,15 +245,10 @@ const createStyles = (theme: MD3Theme) =>
       borderColor: theme.colors.outline,
       position: 'relative',
     },
-    avatarImage: {
+    avatar: {
       width: dimensions.avatar.xl,
       height: dimensions.avatar.xl,
       borderRadius: dimensions.avatar.xl / 2,
-    },
-    avatarEditButton: {
-      position: 'absolute',
-      right: -4,
-      bottom: -2,
     },
     formContent: {
       gap: spacing.sm,
