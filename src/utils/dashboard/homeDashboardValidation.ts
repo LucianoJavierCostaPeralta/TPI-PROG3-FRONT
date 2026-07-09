@@ -18,6 +18,7 @@ export const validateDriverForm = (driverForm: DriverForm) => {
 export const validateDeliveryForm = (deliveryForm: DeliveryForm, requireProducts: boolean) => {
   if (!deliveryForm.cliente.trim()) return 'Ingresá el cliente.';
   if (!deliveryForm.destino.trim()) return 'Ingresá el destino.';
+  if (!deliveryForm.fecha) return 'Seleccioná la fecha de entrega.';
   if (deliveryForm.cliente.trim().length < 2) return 'El nombre del cliente debe tener al menos 2 caracteres.';
   if (!DNI_PATTERN.test(deliveryForm.clienteDni)) return 'El DNI del cliente debe tener exactamente 8 números.';
   if (deliveryForm.destino.trim().length < 3) return 'El destino debe tener al menos 3 caracteres.';

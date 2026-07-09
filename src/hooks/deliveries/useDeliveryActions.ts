@@ -54,6 +54,7 @@ export const useDeliveryActions = ({
         cliente_dni: deliveryForm.clienteDni,
         producto: deliveryForm.productos.trim(),
         direccion_destino: deliveryForm.destino.trim(),
+        fecha: deliveryForm.fecha,
         referencia: deliveryForm.referencia.trim() || deliveryForm.observaciones.trim() || undefined,
       });
       if (deliveryForm.choferId) {

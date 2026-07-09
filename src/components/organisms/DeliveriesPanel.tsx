@@ -155,6 +155,7 @@ export function DeliveriesPanel({
                   mode="date"
                   display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                   onChange={handleDateChange}
+                  minimumDate={new Date()}
                 />
               ) : null}
               {Platform.OS === 'ios' && datePickerVisible ? (

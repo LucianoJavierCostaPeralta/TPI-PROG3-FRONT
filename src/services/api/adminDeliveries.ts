@@ -9,6 +9,7 @@ export type Delivery = {
   cliente_dni?: string | null;
   producto: string;
   direccion_destino: string;
+  fecha?: string;
   referencia: string | null;
   estado_id: number;
   estado?: { id: number; nombre_estado: string };
@@ -21,6 +22,7 @@ export type CreateDeliveryPayload = {
   cliente_dni: string;
   producto: string;
   direccion_destino: string;
+  fecha: string;
   referencia?: string;
 };
 
