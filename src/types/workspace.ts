@@ -174,21 +174,39 @@ export function formatDateForInput(date: Date) {
   return `${year}-${month}-${day}`;
 }
 
+function formatDatePartsForDisplay(value: string) {
+  const cleanValue = value.split('T')[0];
+  const parts = cleanValue.split('-');
+
+  if (parts.length !== 3) return null;
+
+  const [year, month, day] = parts;
+  if (!year || !month || !day) return null;
+
+  return day + '/' + month + '/' + year;
+}
+
 export function formatDateForDisplay(value: string) {
   if (!value) return '';
 
+  const formatted = formatDatePartsForDisplay(value);
+  if (formatted) return formatted;
+
   const date = parseDeliveryFormDate(value);
-  return date.toLocaleDateString();
+  return date.toLocaleDateString('es-AR');
 }
 
 export function formatOrderDate(order: DeliveryOrder) {
   const value = getOrderField(order, ['fecha_programada', 'fecha', 'fecha_entrega', 'created_at']);
   if (!value) return null;
 
+  const formatted = formatDatePartsForDisplay(value);
+  if (formatted) return formatted;
+
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
 
-  return date.toLocaleDateString();
+  return date.toLocaleDateString('es-AR');
 }
 
 export function normalizeOrderStatus(status: unknown): DeliveryFilter {

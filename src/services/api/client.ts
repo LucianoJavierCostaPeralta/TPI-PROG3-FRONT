@@ -42,7 +42,7 @@ export function getApiErrorMessage(error: unknown, fallback = 'No se pudo comple
     : undefined;
 
   if (firstValidationError) return firstValidationError;
-  if (error.response?.data?.message && error.response.status !== 500) {
+  if (error.response?.data?.message) {
     return error.response.data.message;
   }
   if (error.code === AxiosError.ERR_NETWORK || !error.response) {

@@ -35,8 +35,9 @@ export const useDeliveryActions = ({
   showDeliveryForm,
 }: UseDeliveryActionsParams) => {
   const updateDeliveryField = useCallback((field: keyof DeliveryForm, value: string) => {
+    setError('');
     setDeliveryForm((current) => ({ ...current, [field]: value }));
-  }, [setDeliveryForm]);
+  }, [setDeliveryForm, setError]);
 
   const handleCreateDelivery = useCallback(async () => {
     const validationError = validateDeliveryForm(deliveryForm, true);
@@ -54,12 +55,22 @@ export const useDeliveryActions = ({
         cliente_dni: deliveryForm.clienteDni,
         producto: deliveryForm.productos.trim(),
         direccion_destino: deliveryForm.destino.trim(),
-        fecha: deliveryForm.fecha,
+        fecha: deliveryForm.fecha.slice(0, 10),
         referencia: deliveryForm.referencia.trim() || deliveryForm.observaciones.trim() || undefined,
       });
+
       if (deliveryForm.choferId) {
-        await assignDriver(newDelivery.id, deliveryForm.choferId);
+        try {
+          await assignDriver(newDelivery.id, deliveryForm.choferId);
+        } catch (assignError) {
+          setDeliveryForm(initialDeliveryForm);
+          setShowDeliveryForm(false);
+          await loadWorkspace(true);
+          setError(getApiErrorMessage(assignError, 'La entrega fue creada, pero no se pudo asignar el chofer.'));
+          return;
+        }
       }
+
       setDeliveryForm(initialDeliveryForm);
       setShowDeliveryForm(false);
       await loadWorkspace(true);

@@ -1,6 +1,8 @@
 import { type DeliveryForm, type DriverForm } from '../../types/workspace';
 import { DNI_PATTERN, EMAIL_PATTERN, PHONE_PATTERN, isPastDate } from '../validation';
 
+const DATE_INPUT_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
 export const validateDriverForm = (driverForm: DriverForm) => {
   if (!driverForm.nombre.trim()) return 'Ingresá el nombre del chofer.';
   if (!/^[\p{L}\s]+$/u.test(driverForm.nombre.trim()) || driverForm.nombre.trim().length < 3) {
@@ -19,6 +21,7 @@ export const validateDeliveryForm = (deliveryForm: DeliveryForm, requireProducts
   if (!deliveryForm.cliente.trim()) return 'Ingresá el cliente.';
   if (!deliveryForm.destino.trim()) return 'Ingresá el destino.';
   if (!deliveryForm.fecha) return 'Seleccioná la fecha de entrega.';
+  if (!DATE_INPUT_PATTERN.test(deliveryForm.fecha)) return 'Seleccioná una fecha válida.';
   if (deliveryForm.cliente.trim().length < 2) return 'El nombre del cliente debe tener al menos 2 caracteres.';
   if (!DNI_PATTERN.test(deliveryForm.clienteDni)) return 'El DNI del cliente debe tener exactamente 8 números.';
   if (deliveryForm.destino.trim().length < 3) return 'El destino debe tener al menos 3 caracteres.';

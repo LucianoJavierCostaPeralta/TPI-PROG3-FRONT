@@ -189,7 +189,7 @@ export const deliveryToForm = (delivery: DeliveryOrder): DeliveryForm => {
     clienteDni: delivery.cliente_dni || '',
     destino: delivery.direccion_destino || '',
     referencia: delivery.referencia || '',
-    fecha: delivery.created_at ? delivery.created_at.split('T')[0] : '',
+    fecha: String(delivery.fecha ?? delivery.fecha_programada ?? delivery.fecha_entrega ?? delivery.created_at ?? '').split('T')[0],
     productos: delivery.producto || '',
     observaciones: delivery.observaciones || '',
     choferId: delivery.chofer_id || null,
