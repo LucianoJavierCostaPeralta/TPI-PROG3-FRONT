@@ -5,12 +5,14 @@ import { type AppWorkspace, type DeliveryOrder, type Driver, type HomeTabKey } f
 type UseDashboardNavigationParams = {
   activeTab: HomeTabKey;
   isEditingDelivery: boolean;
+  isEditingDriver: boolean;
   loadWorkspace: () => Promise<void>;
   selectedDelivery: DeliveryOrder | null;
   selectedDriver: Driver | null;
   setActiveTab: React.Dispatch<React.SetStateAction<HomeTabKey>>;
   setDrawerVisible: React.Dispatch<React.SetStateAction<boolean>>;
   setIsEditingDelivery: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsEditingDriver: React.Dispatch<React.SetStateAction<boolean>>;
   setSelectedDelivery: React.Dispatch<React.SetStateAction<DeliveryOrder | null>>;
   setSelectedDriver: React.Dispatch<React.SetStateAction<Driver | null>>;
   setShowDeliveryForm: React.Dispatch<React.SetStateAction<boolean>>;

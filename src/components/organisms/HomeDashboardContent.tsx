@@ -68,11 +68,13 @@ export function HomeDashboardContent(props: HomeDashboardContentProps) {
           showForm={props.showDriverForm}
           filter={props.driverFilter}
           canCreate={isAdmin}
+          isEditing={props.isEditingDriver}
           onFilterChange={props.setDriverFilter}
           onChange={props.updateDriverField}
-          onSubmit={props.handleCreateDriver}
-          onCancel={() => props.setShowDriverForm(false)}
+          onSubmit={props.isEditingDriver ? props.handleEditDriver : props.handleCreateDriver}
+          onCancel={props.isEditingDriver ? props.cancelEditingDriver : () => props.setShowDriverForm(false)}
           onDelete={props.handleDeleteDriver}
+          onEdit={props.startEditingDriver}
           refreshing={props.refreshing}
           onRefresh={refreshWorkspace}
           selectedDriver={props.selectedDriver}
@@ -140,7 +142,7 @@ export function HomeDashboardContent(props: HomeDashboardContentProps) {
         />
       ) : null}
 
-      {isAdmin && props.activeTab === 'drivers' ? (
+      {isAdmin && props.activeTab === 'drivers' && !props.selectedDriver && !props.isEditingDriver ? (
         <FAB
           icon={props.showDriverForm ? 'close' : 'plus'}
           style={styles.fab}

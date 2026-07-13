@@ -152,11 +152,13 @@ export function PerfilScreen({ onBack, onEdit }: PerfilScreenProps) {
             </View>
           </Surface>
 
-          <View style={styles.actionsContainer}>
-            <CTAButton variant="primary" onPress={onEdit} style={styles.actionButton}>
-              Editar Perfil
-            </CTAButton>
-          </View>
+          {!isChofer && (
+            <View style={styles.actionsContainer}>
+              <CTAButton variant="primary" onPress={onEdit} style={styles.actionButton}>
+                Editar Perfil
+              </CTAButton>
+            </View>
+          )}
         </>
       ) : null}
     </ScreenLayout>

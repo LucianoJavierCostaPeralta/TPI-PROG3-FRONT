@@ -5,10 +5,12 @@ import { type AppWorkspace, type DeliveryOrder, type Driver, type HomeTabKey } f
 type UseDashboardHeaderNavParams = {
   activeTab: HomeTabKey;
   isEditingDelivery: boolean;
+  isEditingDriver: boolean;
   selectedDelivery: DeliveryOrder | null;
   selectedDriver: Driver | null;
   setActiveTab: React.Dispatch<React.SetStateAction<HomeTabKey>>;
   setIsEditingDelivery: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsEditingDriver: React.Dispatch<React.SetStateAction<boolean>>;
   setSelectedDelivery: React.Dispatch<React.SetStateAction<DeliveryOrder | null>>;
   setSelectedDriver: React.Dispatch<React.SetStateAction<Driver | null>>;
   setShowDeliveryForm: React.Dispatch<React.SetStateAction<boolean>>;
@@ -21,10 +23,12 @@ type UseDashboardHeaderNavParams = {
 export const useDashboardHeaderNav = ({
   activeTab,
   isEditingDelivery,
+  isEditingDriver,
   selectedDelivery,
   selectedDriver,
   setActiveTab,
   setIsEditingDelivery,
+  setIsEditingDriver,
   setSelectedDelivery,
   setSelectedDriver,
   setShowDeliveryForm,
@@ -44,7 +48,11 @@ export const useDashboardHeaderNav = ({
     let headerSubtitle = subtitle;
     let onBack: (() => void) | undefined;
 
-    if (activeTab === 'drivers' && showDriverForm) {
+    if (activeTab === 'drivers' && selectedDriver && isEditingDriver) {
+      title = 'Editar Chofer';
+      headerSubtitle = 'Modificar datos del conductor';
+      onBack = () => setIsEditingDriver(false);
+    } else if (activeTab === 'drivers' && showDriverForm) {
       title = 'Nuevo Chofer';
       headerSubtitle = 'Registrar un conductor en la empresa';
       onBack = () => setShowDriverForm(false);
@@ -71,5 +79,5 @@ export const useDashboardHeaderNav = ({
     }
 
     return { title, subtitle: headerSubtitle, onBack };
-  }, [activeTab, isEditingDelivery, selectedDelivery, selectedDriver, showDeliveryForm, showDriverForm, subtitle, workspace.profile.rol]);
+  }, [activeTab, isEditingDelivery, isEditingDriver, selectedDelivery, selectedDriver, showDeliveryForm, showDriverForm, subtitle, workspace.profile.rol]);
 };

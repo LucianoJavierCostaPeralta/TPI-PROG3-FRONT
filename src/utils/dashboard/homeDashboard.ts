@@ -13,6 +13,7 @@ import {
   type AppWorkspace,
   type DeliveryForm,
   type DeliveryOrder,
+  type Driver,
   type DriverForm,
   type HomeTabKey,
   type UserRole,
@@ -182,6 +183,16 @@ export const getTitle = (activeTab: HomeTabKey, role: AppWorkspace['profile']['r
 
   return labels[activeTab];
 }
+
+export const driverToForm = (driver: Driver): DriverForm => {
+  return {
+    nombre: driver.nombre || '',
+    email: driver.email || '',
+    telefono: driver.telefono || '',
+    documento: driver.documento || '',
+    fechaNacimiento: driver.fecha_nacimiento ? driver.fecha_nacimiento.split('T')[0] : '',
+  };
+};
 
 export const deliveryToForm = (delivery: DeliveryOrder): DeliveryForm => {
   return {

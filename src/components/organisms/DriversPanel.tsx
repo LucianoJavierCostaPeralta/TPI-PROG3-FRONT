@@ -69,11 +69,13 @@ export function DriversPanel({
   showForm,
   filter,
   canCreate,
+  isEditing = false,
   onFilterChange,
   onChange,
   onSubmit,
   onCancel,
   onDelete,
+  onEdit,
   refreshing,
   onRefresh,
   selectedDriver,
@@ -86,11 +88,13 @@ export function DriversPanel({
   showForm: boolean;
   filter: DriverFilter;
   canCreate: boolean;
+  isEditing?: boolean;
   onFilterChange: (filter: DriverFilter) => void;
   onChange: (field: keyof DriverForm, value: string) => void;
   onSubmit: () => void;
   onCancel: () => void;
   onDelete?: (driverId: string) => void;
+  onEdit?: () => void;
   refreshing?: boolean;
   onRefresh?: () => void;
   selectedDriver: Driver | null;
@@ -105,12 +109,13 @@ export function DriversPanel({
     return true;
   });
 
-  if (selectedDriver) {
+  if (selectedDriver && !isEditing) {
     return (
       <DriverDetailPanel
         driver={selectedDriver}
         orders={orders}
         onBack={() => setSelectedDriver(null)}
+        onEdit={onEdit}
         onDelete={(driverId) => {
           if (onDelete) {
             onDelete(driverId);
@@ -123,7 +128,7 @@ export function DriversPanel({
 
   return (
     <View style={styles.container}>
-      {!showForm && (
+      {!showForm && !isEditing && (
         <View style={styles.filterBarWrapper}>
           <ScrollView
             horizontal
@@ -137,7 +142,7 @@ export function DriversPanel({
         </View>
       )}
 
-      {canCreate && showForm ? (
+      {canCreate && (showForm || isEditing) ? (
         <ScrollView contentContainerStyle={styles.formScroll}>
           <SectionCard style={styles.formCard}>
             <View style={styles.formContent}>
@@ -186,16 +191,18 @@ export function DriversPanel({
                 disabled={saving}
                 icon="phone-outline"
               />
-              <Text variant="bodySmall" style={styles.mutedText}>
-                El chofer podrá ingresar con su email y contraseña inicial 123456.
-              </Text>
+              {!isEditing ? (
+                <Text variant="bodySmall" style={styles.mutedText}>
+                  El chofer podrá ingresar con su email y contraseña inicial 123456.
+                </Text>
+              ) : null}
             </View>
             <View style={styles.formActions}>
               <CTAButton variant="secondary" onPress={onCancel} disabled={saving} style={styles.actionButton}>
                 Cancelar
               </CTAButton>
               <CTAButton onPress={onSubmit} loading={saving} disabled={saving} style={styles.actionButton}>
-                {saving ? 'Guardando...' : 'Guardar'}
+                {saving ? 'Guardando...' : isEditing ? 'Guardar cambios' : 'Guardar'}
               </CTAButton>
             </View>
           </SectionCard>

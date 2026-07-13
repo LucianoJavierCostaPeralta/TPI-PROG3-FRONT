@@ -6,12 +6,14 @@ import { type DeliveryOrder, type Driver, type HomeTabKey } from '../../types/wo
 type UseDashboardRouteEffectsParams = {
   activeTab: HomeTabKey;
   isEditingDelivery: boolean;
+  isEditingDriver: boolean;
   loadWorkspace: () => Promise<void>;
   selectedDelivery: DeliveryOrder | null;
   selectedDriver: Driver | null;
   setActiveTab: React.Dispatch<React.SetStateAction<HomeTabKey>>;
   setDrawerVisible: React.Dispatch<React.SetStateAction<boolean>>;
   setIsEditingDelivery: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsEditingDriver: React.Dispatch<React.SetStateAction<boolean>>;
   setSelectedDelivery: React.Dispatch<React.SetStateAction<DeliveryOrder | null>>;
   setSelectedDriver: React.Dispatch<React.SetStateAction<Driver | null>>;
   setShowDeliveryForm: React.Dispatch<React.SetStateAction<boolean>>;
@@ -23,12 +25,14 @@ type UseDashboardRouteEffectsParams = {
 export const useDashboardRouteEffects = ({
   activeTab,
   isEditingDelivery,
+  isEditingDriver,
   loadWorkspace,
   selectedDelivery,
   selectedDriver,
   setActiveTab,
   setDrawerVisible,
   setIsEditingDelivery,
+  setIsEditingDriver,
   setSelectedDelivery,
   setSelectedDriver,
   setShowDeliveryForm,
@@ -58,7 +62,8 @@ export const useDashboardRouteEffects = ({
           return true;
         }
         if (selectedDriver) {
-          setSelectedDriver(null);
+          if (isEditingDriver) setIsEditingDriver(false);
+          else setSelectedDriver(null);
           return true;
         }
         if (showDeliveryForm) {
@@ -78,6 +83,6 @@ export const useDashboardRouteEffects = ({
 
       const subscription = BackHandler.addEventListener('hardwareBackPress', handleBackPress);
       return () => subscription.remove();
-    }, [activeTab, isEditingDelivery, loadWorkspace, selectedDelivery, selectedDriver, showDeliveryForm, showDriverForm]),
+    }, [activeTab, isEditingDelivery, isEditingDriver, loadWorkspace, selectedDelivery, selectedDriver, showDeliveryForm, showDriverForm]),
   );
 };

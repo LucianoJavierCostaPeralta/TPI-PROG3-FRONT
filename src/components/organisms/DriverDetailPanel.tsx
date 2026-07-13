@@ -11,10 +11,11 @@ interface DriverDetailPanelProps {
   driver: Driver;
   orders?: DeliveryOrder[];
   onBack: () => void;
+  onEdit?: () => void;
   onDelete?: (driverId: string) => void;
 }
 
-export function DriverDetailPanel({ driver, orders, onBack, onDelete }: DriverDetailPanelProps) {
+export function DriverDetailPanel({ driver, orders, onBack, onEdit, onDelete }: DriverDetailPanelProps) {
   const theme = useTheme<MD3Theme>();
   const styles = createStyles(theme);
 
@@ -185,15 +186,26 @@ export function DriverDetailPanel({ driver, orders, onBack, onDelete }: DriverDe
           </View>
         </Surface>
 
-        {onDelete && (
+        {(onEdit || onDelete) && (
           <View style={styles.actionsContainer}>
-            <CTAButton
-              variant="destructive"
-              onPress={handleDeletePress}
-              style={styles.actionButton}
-            >
-              Eliminar Chofer
-            </CTAButton>
+            {onEdit ? (
+              <CTAButton
+                variant="primary"
+                onPress={onEdit}
+                style={styles.actionButton}
+              >
+                Editar Chofer
+              </CTAButton>
+            ) : null}
+            {onDelete ? (
+              <CTAButton
+                variant="destructive"
+                onPress={handleDeletePress}
+                style={styles.actionButton}
+              >
+                Eliminar Chofer
+              </CTAButton>
+            ) : null}
           </View>
         )}
       </ScrollView>

@@ -11,6 +11,7 @@ export const useDashboardUiState = () => {
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
   const [selectedDelivery, setSelectedDelivery] = useState<DeliveryOrder | null>(null);
   const [isEditingDelivery, setIsEditingDelivery] = useState(false);
+  const [isEditingDriver, setIsEditingDriver] = useState(false);
 
   return {
     activeTab,
@@ -18,6 +19,7 @@ export const useDashboardUiState = () => {
     drawerVisible,
     driverFilter,
     isEditingDelivery,
+    isEditingDriver,
     selectedDelivery,
     selectedDriver,
     setActiveTab,
@@ -25,6 +27,7 @@ export const useDashboardUiState = () => {
     setDrawerVisible,
     setDriverFilter,
     setIsEditingDelivery,
+    setIsEditingDriver,
     setSelectedDelivery,
     setSelectedDriver,
     setShowDeliveryForm,

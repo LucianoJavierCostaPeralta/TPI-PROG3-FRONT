@@ -21,6 +21,10 @@ export type CreateDriverPayload = {
   password: string;
 };
 
+export type UpdateDriverPayload = Omit<CreateDriverPayload, 'password'> & {
+  activo?: boolean;
+};
+
 export async function listDrivers() {
   const { data } = await api.get<{ data: Driver[] }>('/admin/choferes');
   return data.data;
@@ -28,6 +32,11 @@ export async function listDrivers() {
 
 export async function createDriver(payload: CreateDriverPayload) {
   const { data } = await api.post<{ data: Driver }>('/admin/choferes', payload);
+  return data.data;
+}
+
+export async function updateDriver(driverId: string, payload: UpdateDriverPayload) {
+  const { data } = await api.put<{ data: Driver }>('/admin/choferes/' + driverId, payload);
   return data.data;
 }
 
